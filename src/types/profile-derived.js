@@ -321,7 +321,6 @@ export type AccumulatedCounterSamples = {|
 export type CollectedCustomMarkerSamples = {|
   +minNumber: number,
   +maxNumber: number,
-  +numberRange: number,
   // startTime
   time: Milliseconds[],
   // This value holds the number per configured line
