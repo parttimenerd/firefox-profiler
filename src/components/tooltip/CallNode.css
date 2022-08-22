@@ -10,9 +10,16 @@
   grid-template-columns: repeat(4, min-content);
 }
 
-.tooltipCallNodeImplementationHeader {
+.tooltipCallNodeHeader {
   padding: 0 5px;
   border-right: 1px solid var(--grey-30);
+  margin-top: 5px;
+  color: var(--grey-50);
+  white-space: nowrap;
+}
+
+.tooltipCallNodeHeaderRight {
+  padding: 0 5px;
   margin-top: 5px;
   color: var(--grey-50);
   white-space: nowrap;
@@ -74,6 +81,19 @@
   min-width: 150px;
   padding: 10px;
   padding-bottom: 5px;
+}
+
+.tooltipCallNodeCategoryGraphRunning {
+  height: var(--graph-height);
+  border-radius: 2px;
+}
+
+.tooltipCallNodeCategoryGraphSelf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: var(--graph-height);
+  border-radius: 2px;
 }
 
 .tooltipCategoryLabel {

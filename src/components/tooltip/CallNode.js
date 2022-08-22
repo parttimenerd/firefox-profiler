@@ -66,48 +66,59 @@ export class TooltipCallNode extends React.PureComponent<Props> {
     displayData: CallNodeDisplayData,
     selfTime: Milliseconds,
     totalTime: Milliseconds,
-    addTooltipCategoryLabelClassToHeader: boolean
+    addTooltipCategoryLabelClassToHeader: boolean,
+    type: string
   ) {
     return (
       <>
         {/* grid row -------------------------------------------------- */}
         <div />
-        <div className="tooltipCallNodeImplementationHeader" />
-        <div className="tooltipCallNodeImplementationHeader">
-          <span className="tooltipCallNodeImplementationHeaderSwatchRunning" />
+        <div className="tooltipCallNodeHeader" />
+        <div className="tooltipCallNodeHeader">
+          <span className="tooltipCallNodeHeaderSwatchRunning" />
           Running
         </div>
-        <div className="tooltipCallNodeImplementationHeader">
-          <span className="tooltipCallNodeImplementationHeaderSwatchSelf" />
+        <div className="tooltipCallNodeHeaderRight">
+          <span className="tooltipCallNodeHeaderSwatchSelf" />
           Self
         </div>
         {/* grid row -------------------------------------------------- */}
         <div
-          className={classNames({
-            tooltipLabel: true,
-            tooltipCategoryLabel: addTooltipCategoryLabelClassToHeader,
-          })}
+          className={
+            'tooltipLabel ' +
+            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
+          }
         >
           Overall
         </div>
-        <div className="tooltipCallNodeImplementationGraph">
+        <div className="tooltipCallNodeGraph">
           <div
-            className="tooltipCallNodeImplementationGraphRunning"
+            className={`tooltipCallNode${type}GraphRunning`}
             style={{
               width: GRAPH_WIDTH,
             }}
           />
           <div
-            className="tooltipCallNodeImplementationGraphSelf"
+            className={`tooltipCallNode${type}GraphSelf`}
             style={{
               width: (GRAPH_WIDTH * selfTime) / totalTime,
             }}
           />
         </div>
-        <div className="tooltipCallNodeImplementationTiming">
+        <div
+          className={
+            'tooltipCallNodeTiming ' +
+            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
+          }
+        >
           {displayData.totalWithUnit}
         </div>
-        <div className="tooltipCallNodeImplementationTiming">
+        <div
+          className={
+            'tooltipCallNodeTiming ' +
+            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
+          }
+        >
           {displayData.selfWithUnit}
         </div>
       </>
@@ -181,9 +192,11 @@ export class TooltipCallNode extends React.PureComponent<Props> {
           displayData,
           selfTime.value,
           totalTime.value,
-          true
+          true,
+          'Category'
         )}
         {categoriesAndTime.map((entry, index) => {
+          const categoryColor = categories[entry.category].color;
           return (
             <React.Fragment key={index}>
               <div
@@ -199,28 +212,43 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                   entry.subCategory
                 )}
               </div>
-              <div className="tooltipCallNodeImplementationGraph">
+              <div
+                className={
+                  'tooltipCallNodeGraph ' +
+                  (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
+                }
+              >
                 <div
-                  className="tooltipCallNodeImplementationGraphRunning"
+                  className={`tooltipCallNodeCategoryGraphRunning category-color-${categoryColor}`}
                   style={{
                     width: (GRAPH_WIDTH * entry.totalTime) / totalTime.value,
                   }}
                 />
                 <div
-                  className="tooltipCallNodeImplementationGraphSelf"
+                  className={`tooltipCallNodeCategoryGraphSelf category-color-${categoryColor}`}
                   style={{
                     width: (GRAPH_WIDTH * entry.selfTime) / totalTime.value,
                   }}
                 />
               </div>
-              <div className="tooltipCallNodeImplementationTiming">
+              <div
+                className={
+                  'tooltipCallNodeImplementationTiming ' +
+                  (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
+                }
+              >
                 {formatCallNodeNumberWithUnit(
                   weightType,
                   isHighPrecision,
                   entry.totalTime
                 )}
               </div>
-              <div className="tooltipCallNodeImplementationTiming">
+              <div
+                className={
+                  'tooltipCallNodeImplementationTiming ' +
+                  (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
+                }
+              >
                 {self === 0
                   ? '—'
                   : formatCallNodeNumberWithUnit(
@@ -277,7 +305,8 @@ export class TooltipCallNode extends React.PureComponent<Props> {
           displayData,
           selfTime.value,
           totalTime.value,
-          false
+          false,
+          'Implementation'
         )}
         {/* grid row -------------------------------------------------- */}
         {sortedTotalBreakdownByImplementation.map(
@@ -293,7 +322,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                 <div className="tooltipCallNodeImplementationName tooltipLabel">
                   {getFriendlyStackTypeName(implementation)}
                 </div>
-                <div className="tooltipCallNodeImplementationGraph">
+                <div className="tooltipCallNodeGraph">
                   <div
                     className="tooltipCallNodeImplementationGraphRunning"
                     style={{
