@@ -2825,14 +2825,27 @@ export function shouldDisplaySubcategoryInfoForCategory(
   return category.subcategories.length > 1;
 }
 
+/** Interprets sub category -1 as the category itself */
 export function getCategoryPairLabel(
   categories: CategoryList,
   categoryIndex: number,
   subcategoryIndex: number
 ): string {
   const category = categories[categoryIndex];
-  return subcategoryIndex !== 0
+  return subcategoryIndex !== -1
     ? `${category.name}: ${category.subcategories[subcategoryIndex]}`
+    : `${category.name}`;
+}
+
+/** Returns the category if the subcategory is -1, else the subcategory */
+export function getLastCategoryPartLabel(
+  categories: CategoryList,
+  categoryIndex: number,
+  subcategoryIndex: number
+): string {
+  const category = categories[categoryIndex];
+  return subcategoryIndex !== -1
+    ? `${category.subcategories[subcategoryIndex]}`
     : `${category.name}`;
 }
 

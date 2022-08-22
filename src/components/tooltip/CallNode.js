@@ -12,6 +12,7 @@ import { Icon } from 'firefox-profiler/components/shared/Icon';
 import {
   getFriendlyStackTypeName,
   getCategoryPairLabel,
+  getLastCategoryPartLabel,
 } from 'firefox-profiler/profile-logic/profile-data';
 
 import type { CallTree } from 'firefox-profiler/profile-logic/call-tree';
@@ -34,6 +35,7 @@ import type {
 } from 'firefox-profiler/profile-logic/profile-data';
 
 import './CallNode.css';
+import classNames from 'classnames';
 
 const GRAPH_WIDTH = 150;
 const GRAPH_HEIGHT = 10;
@@ -142,7 +144,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
           : 0;
         categoriesAndTime.push({
           category,
-          subCategory: 0,
+          subCategory: -1,
           selfTime: selfTimeValue,
           totalTime: entireCategoryValue,
         });
@@ -175,8 +177,14 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         {categoriesAndTime.map((entry, index) => {
           return (
             <React.Fragment key={index}>
-              <div className="tooltipCallNodeImplementationName tooltipLabel">
-                {getCategoryPairLabel(
+              <div
+                className={classNames({
+                  tooltipCallNodeImplementationName: true,
+                  tooltipLabel: true,
+                  tooltipCategoryLabel: entry.subCategory === -1,
+                })}
+              >
+                {getLastCategoryPartLabel(
                   categories,
                   entry.category,
                   entry.subCategory
