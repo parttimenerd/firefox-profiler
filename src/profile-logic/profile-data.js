@@ -2825,14 +2825,14 @@ export function shouldDisplaySubcategoryInfoForCategory(
   return category.subcategories.length > 1;
 }
 
-/** Interprets sub category -1 as the category itself */
+/** Interprets sub category 0 as the category itself */
 export function getCategoryPairLabel(
   categories: CategoryList,
   categoryIndex: number,
   subcategoryIndex: number
 ): string {
   const category = categories[categoryIndex];
-  return subcategoryIndex !== -1
+  return subcategoryIndex !== 0
     ? `${category.name}: ${category.subcategories[subcategoryIndex]}`
     : `${category.name}`;
 }
