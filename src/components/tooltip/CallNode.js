@@ -65,7 +65,8 @@ export class TooltipCallNode extends React.PureComponent<Props> {
   _renderTimingsHeader(
     displayData: CallNodeDisplayData,
     selfTime: Milliseconds,
-    totalTime: Milliseconds
+    totalTime: Milliseconds,
+    addTooltipCategoryLabelClassToHeader: boolean
   ) {
     return (
       <>
@@ -81,7 +82,14 @@ export class TooltipCallNode extends React.PureComponent<Props> {
           Self
         </div>
         {/* grid row -------------------------------------------------- */}
-        <div className="tooltipLabel">Overall</div>
+        <div
+          className={classNames({
+            tooltipLabel: true,
+            tooltipCategoryLabel: addTooltipCategoryLabelClassToHeader,
+          })}
+        >
+          Overall
+        </div>
         <div className="tooltipCallNodeImplementationGraph">
           <div
             className="tooltipCallNodeImplementationGraphRunning"
@@ -172,7 +180,8 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         {this._renderTimingsHeader(
           displayData,
           selfTime.value,
-          totalTime.value
+          totalTime.value,
+          true
         )}
         {categoriesAndTime.map((entry, index) => {
           return (
@@ -267,7 +276,8 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         {this._renderTimingsHeader(
           displayData,
           selfTime.value,
-          totalTime.value
+          totalTime.value,
+          false
         )}
         {/* grid row -------------------------------------------------- */}
         {sortedTotalBreakdownByImplementation.map(
