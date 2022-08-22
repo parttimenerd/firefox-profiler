@@ -648,27 +648,19 @@ export function getMarkerSelectorsPerThread(
 
     const getCollectedCustomMarkerSamples: Selector<CollectedCustomMarkerSamples> =
       createSelector(
-        _getRawMarkerTable,
+        getFullMarkerList,
         threadSelectors.getStringTable,
         _getTrackKeys,
-        (rawTable, stringTable, trackKeys) => {
+        (fullMarkerList, stringTable, trackKeys) => {
           const nameIndex = stringTable.indexForString(name);
-          const filteredIndexes = rawTable.name
+          const filteredIndexes = fullMarkerList
             .map((n, i) => [n, i])
-            .filter((t) => t[0] === nameIndex)
+            .filter((t) => t[0].name === name)
             .map((t) => t[1]);
-          const filteredTimes: Milliseconds[] = filteredIndexes.map((i) => {
-            if (rawTable.startTime[i] === null) {
-              throw new Error(
-                'All start times have to be defined for trackable marker ' +
-                  name
-              );
-            }
-            return rawTable.startTime[i];
-          });
+          const markers = filteredIndexes.map((i) => fullMarkerList[i]);
           const numbersPerLine: number[][] = trackKeys.map((key) =>
-            filteredIndexes.map((index) => {
-              const markerPayload = rawTable.data[index];
+            markers.map((marker) => {
+              const markerPayload = marker.data;
               if (
                 !(markerPayload instanceof Object) ||
                 !(key in markerPayload)
@@ -688,7 +680,8 @@ export function getMarkerSelectorsPerThread(
           return {
             minNumber,
             maxNumber,
-            time: filteredTimes,
+            markers,
+            time: markers.map((marker) => marker.start),
             numbersPerLine,
             indexes: filteredIndexes,
             length,
@@ -720,6 +713,7 @@ export function getMarkerSelectorsPerThread(
     getTimelineJankMarkerIndexes,
     getDerivedMarkerInfo,
     getMarkerIndexToRawMarkerIndexes,
+    getFullMarkerList,
     getFullMarkerListIndexes,
     getNetworkMarkerIndexes,
     getSearchFilteredNetworkMarkerIndexes,
