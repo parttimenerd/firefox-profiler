@@ -58,7 +58,17 @@ export type MarkerFormatType =
   // The decimal should be used for generic representations of numbers. Do not
   // use it for time information.
   // "Label: 52.23, 0.0054, 123,456.78"
-  | 'decimal';
+  | 'decimal'
+
+  // ----------------------------------------------------
+  // Complex types
+
+  // Supports complex format types 'table' (from an array of rows that are arrays of cells),
+  // 'htable' (first row is the header),
+  // 'list' (list of entries), 'olist' (ordered list),
+  // 'url' (URL, label)
+  // Syntax: '<type>[<format column 1>,...]', e.g. 'table[url,duration,bytes]' or 'list[string]' or 'url[string]'
+  | string;
 
 // A list of all the valid locations to surface this marker.
 // We can be free to add more UI areas.

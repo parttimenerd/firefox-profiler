@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @flow
+import React from 'react';
 import { oneLine } from 'common-tags';
 import {
   formatNumber,
@@ -22,6 +23,7 @@ import type {
   Marker,
   MarkerIndex,
 } from 'firefox-profiler/types';
+import memoize from 'memoize-immutable';
 
 /**
  * The marker schema comes from Gecko, and is embedded in the profile. However,
@@ -364,6 +366,15 @@ export function formatFromMarkerSchema(
   format: MarkerFormatType,
   value: any
 ): string {
+  if (
+    (value === undefined || value === null) &&
+    format !== 'string' &&
+    format !== 'url' &&
+    format !== 'file-path'
+  ) {
+    throw new Error("Can't format undefined or null");
+  }
+
   switch (format) {
     case 'url':
     case 'file-path':
@@ -394,8 +405,190 @@ export function formatFromMarkerSchema(
       return formatPercent(value);
     default:
       console.error(
-        `A marker schema of type "${markerType}" had an unknown format "${(format: empty)}"`
+        `A marker schema of type "${markerType}" had an unknown format "${format}"`
       );
       return value;
   }
+}
+
+type ComplexFormatType = 'htable' | 'table' | 'list' | 'olist' | 'url';
+type ParsedComplexFormatType = {|
+  type: ComplexFormatType,
+  children: ParsedFormat[],
+|};
+
+type ParsedFormat = string | ParsedComplexFormatType;
+
+function _splitRestOfFormat(str: string): string[] {
+  const parts = [];
+  let part = '';
+  let depth = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i];
+    if (c === '[') {
+      depth++;
+      part += c;
+    } else if (c === ']') {
+      if (depth === 0) {
+        if (part) {
+          parts.push(part);
+        }
+        return parts;
+      }
+      depth--;
+      part += c;
+    } else if (c === ',' && depth === 0) {
+      parts.push(part);
+      part = '';
+    } else {
+      if (c !== ' ') {
+        part += c;
+      }
+    }
+  }
+  throw new Error(`Expected ']' at the end of '${str}'`);
+}
+
+const _COMPLEX_FORMAT_TYPES = ['table', 'htable', 'list', 'olist', 'url'];
+const _MAYBE_COMPLEX_AND_NON_COMPLEX = ['url'];
+
+function _parseFormat(format: string): ParsedFormat {
+  if (typeof format !== 'string') {
+    throw new Error(`Expected string, got ${JSON.stringify(format)}`);
+  }
+  if (!format.includes('[')) {
+    if (
+      _COMPLEX_FORMAT_TYPES.includes(format) &&
+      !_MAYBE_COMPLEX_AND_NON_COMPLEX.includes(format)
+    ) {
+      throw new Error(
+        `Expected specifications for complex format type '${format}'`
+      );
+    }
+    return format;
+  }
+  const indexOfOpen = format.indexOf('[');
+  const type = format.substring(0, indexOfOpen);
+  const rest = format.substring(indexOfOpen + 1);
+
+  if (!_COMPLEX_FORMAT_TYPES.includes(type)) {
+    throw new Error(`Unknown format type "${type}"`);
+  }
+  return ({
+    type: ((type: any): ComplexFormatType),
+    children: _splitRestOfFormat(rest).map((part) => _parseFormat(part)),
+  }: ParsedComplexFormatType);
+}
+
+const _parseFormatMemoized = memoize(_parseFormat);
+
+export function isDOMRenderingFormat(format: MarkerFormatType): boolean {
+  return format.includes['['];
+}
+
+function _formatDOMFromMarkerSchema(
+  markerType: string,
+  parsedFormat: ParsedFormat,
+  value: any
+) {
+  if (typeof parsedFormat === 'string') {
+    return <>{formatFromMarkerSchema(markerType, parsedFormat, value)}</>;
+  }
+  const parsedFormatDebugStr = JSON.stringify(parsedFormat);
+  if (!(value instanceof Array)) {
+    throw new Error(
+      `Expected an array for complex format type '${parsedFormatDebugStr}'`
+    );
+  }
+  const { type, children } = parsedFormat;
+
+  switch (type) {
+    case 'htable': // table with header row
+    case 'table':
+      return (
+        <table>
+          {value.map((row, i) => {
+            if (!(row instanceof Array)) {
+              throw new Error(
+                `Expected an array for complex format type '${parsedFormatDebugStr}'`
+              );
+            }
+            if (i === 0 && type === 'htable') {
+              return (
+                <tr key={i}>
+                  {row.map((cell, i) => {
+                    return <th key={i}>{String(cell)}</th>;
+                  })}
+                </tr>
+              );
+            }
+            if (row.length !== children.length) {
+              throw new Error(
+                "Row length doesn't match column count (row: " +
+                  row.length +
+                  ', cols: ' +
+                  children.length +
+                  ')'
+              );
+            }
+            return (
+              <tr key={i}>
+                {row.map((cell, i) => {
+                  return (
+                    <td key={i}>
+                      {_formatDOMFromMarkerSchema(
+                        markerType,
+                        children[i],
+                        cell
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </table>
+      );
+    case 'olist': // ordered list
+    case 'list':
+      return ((inner) => {
+        if (parsedFormat.type === 'olist') {
+          return <ol>{inner}</ol>;
+        }
+        return <ul>{inner}</ul>;
+      })(
+        value.map((entry, i) => (
+          <li key={i}>
+            {_formatDOMFromMarkerSchema(markerType, children[0], entry)}
+          </li>
+        ))
+      );
+    case 'url':
+      if (typeof children[0] !== 'string') {
+        throw new Error("No complex types allowed in 'url' format");
+      }
+      return (
+        <a href={value[0]}>
+          {formatFromMarkerSchema(
+            markerType,
+            (children[0]: MarkerFormatType),
+            value[1]
+          )}
+        </a>
+      );
+    default:
+      throw new Error(`Unknown format type "${type}"`);
+  }
+}
+
+export function formatDOMFromMarkerSchema(
+  markerType: string,
+  format: MarkerFormatType,
+  value: any
+) {
+  return _formatDOMFromMarkerSchema(
+    markerType,
+    _parseFormatMemoized(format),
+    value
+  );
 }

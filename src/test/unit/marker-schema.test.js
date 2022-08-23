@@ -4,6 +4,7 @@
 // @flow
 import {
   formatFromMarkerSchema,
+  formatDOMFromMarkerSchema,
   parseLabel,
   markerSchemaFrontEndOnly,
 } from '../../profile-logic/marker-schema';
@@ -290,6 +291,51 @@ describe('marker schema formatting', function () {
         "percentage - 0.0%",
       ]
     `);
+  });
+
+  it('supports complex formats', function () {
+    const entries = [
+      ['url', 'http://example.com'],
+      ['file-path', '/Users/me/gecko'],
+      ['file-path', null],
+      ['file-path', undefined],
+      ['duration', 0],
+      ['duration', 10],
+      ['duration', 12.3456789],
+      [
+        'table[string, integer]',
+        [
+          ['a', 1],
+          ['b', 2],
+        ],
+      ],
+      [
+        'htable[string, integer]',
+        [
+          ['a', 'b'],
+          ['b', 2],
+        ],
+      ],
+      [
+        'table[string, list[integer]]',
+        [
+          ['a', [1, 2]],
+          ['b', [2]],
+        ],
+      ],
+      ['list[integer]', []],
+      ['list[list[integer]]', [[1, 2], [2]]],
+      ['olist[list[integer]]', [[1, 2], [2]]],
+      ['url[string]', ['http://example.com']],
+    ];
+
+    expect(
+      entries.map(([format, value]) => [
+        format,
+        value,
+        formatDOMFromMarkerSchema('none', format, value),
+      ])
+    ).toMatchSnapshot();
   });
 });
 
