@@ -104,28 +104,34 @@
   text-overflow: ellipsis;
 }
 
+:root {
+  --total-col-width: 120px;
+  --min-total-col-width: 40px;
+  --self-col-width: 70px;
+  --min-self-col-width: 20px;
+}
 .treeViewFixedColumn.total {
   left: 0;
-  width: 70px;
+  width: calc(var(--total-col-width) * 7 / 12);
 }
 
 .treeViewFixedColumn.totalPercent {
-  left: 70px;
-  width: 50px;
+  left: calc(var(--total-col-width) * 7 / 12);
+  width: calc(var(--total-col-width) * 5 / 12);
   border-right: none;
 }
 
 .treeViewFixedColumn.self {
-  left: 120px;
-  width: 70px;
+  left: calc(var(--total-col-width));
+  width: var(--self-col-width);
 }
 
 .treeViewHeaderColumn.total {
-  width: 120px;
+  width: var(--total-col-width);
 }
 
 .treeViewFixedColumn.icon {
-  left: 190px;
+  left: calc(var(--total-col-width) + var(--self-col-width));
   display: flex;
   width: 19px;
   flex-flow: column nowrap;
