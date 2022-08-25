@@ -326,14 +326,15 @@ describe('marker schema formatting', function () {
       ['list[integer]', []],
       ['list[list[integer]]', [[1, 2], [2]]],
       ['olist[list[integer]]', [[1, 2], [2]]],
-      ['url[string]', ['http://example.com']],
+      ['url[string]', ['http://example.com', 'http://example.com']],
     ];
 
     expect(
       entries.map(([format, value]) => [
         format,
         value,
-        formatDOMFromMarkerSchema('none', format, value),
+        formatDOMFromMarkerSchema('none', format, value, false),
+        formatDOMFromMarkerSchema('none', format, value, true),
       ])
     ).toMatchSnapshot();
   });

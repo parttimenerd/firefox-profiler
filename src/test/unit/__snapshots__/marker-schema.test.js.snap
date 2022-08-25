@@ -8,10 +8,16 @@ Array [
     <React.Fragment>
       http://example.com
     </React.Fragment>,
+    <React.Fragment>
+      http://example.com
+    </React.Fragment>,
   ],
   Array [
     "file-path",
     "/Users/me/gecko",
+    <React.Fragment>
+      /Users/me/gecko
+    </React.Fragment>,
     <React.Fragment>
       /Users/me/gecko
     </React.Fragment>,
@@ -22,10 +28,16 @@ Array [
     <React.Fragment>
       (empty)
     </React.Fragment>,
+    <React.Fragment>
+      (empty)
+    </React.Fragment>,
   ],
   Array [
     "file-path",
     undefined,
+    <React.Fragment>
+      (empty)
+    </React.Fragment>,
     <React.Fragment>
       (empty)
     </React.Fragment>,
@@ -36,6 +48,9 @@ Array [
     <React.Fragment>
       0s
     </React.Fragment>,
+    <React.Fragment>
+      0s
+    </React.Fragment>,
   ],
   Array [
     "duration",
@@ -43,10 +58,16 @@ Array [
     <React.Fragment>
       10ms
     </React.Fragment>,
+    <React.Fragment>
+      10ms
+    </React.Fragment>,
   ],
   Array [
     "duration",
     12.3456789,
+    <React.Fragment>
+      12.346ms
+    </React.Fragment>,
     <React.Fragment>
       12.346ms
     </React.Fragment>,
@@ -89,6 +110,32 @@ Array [
         </td>
       </tr>
     </table>,
+    <table>
+      <tr>
+        <td>
+          <React.Fragment>
+            a
+          </React.Fragment>
+        </td>
+        <td>
+          <React.Fragment>
+            1
+          </React.Fragment>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <React.Fragment>
+            b
+          </React.Fragment>
+        </td>
+        <td>
+          <React.Fragment>
+            2
+          </React.Fragment>
+        </td>
+      </tr>
+    </table>,
   ],
   Array [
     "htable[string, integer]",
@@ -102,6 +149,28 @@ Array [
         2,
       ],
     ],
+    <table>
+      <tr>
+        <th>
+          a
+        </th>
+        <th>
+          b
+        </th>
+      </tr>
+      <tr>
+        <td>
+          <React.Fragment>
+            b
+          </React.Fragment>
+        </td>
+        <td>
+          <React.Fragment>
+            2
+          </React.Fragment>
+        </td>
+      </tr>
+    </table>,
     <table>
       <tr>
         <th>
@@ -181,10 +250,50 @@ Array [
         </td>
       </tr>
     </table>,
+    <table>
+      <tr>
+        <td>
+          <React.Fragment>
+            a
+          </React.Fragment>
+        </td>
+        <td>
+          <ul>
+            <li>
+              <React.Fragment>
+                1
+              </React.Fragment>
+            </li>
+            <li>
+              <React.Fragment>
+                2
+              </React.Fragment>
+            </li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <React.Fragment>
+            b
+          </React.Fragment>
+        </td>
+        <td>
+          <ul>
+            <li>
+              <React.Fragment>
+                2
+              </React.Fragment>
+            </li>
+          </ul>
+        </td>
+      </tr>
+    </table>,
   ],
   Array [
     "list[integer]",
     Array [],
+    <ul />,
     <ul />,
   ],
   Array [
@@ -198,6 +307,31 @@ Array [
         2,
       ],
     ],
+    <ul>
+      <li>
+        <ul>
+          <li>
+            <React.Fragment>
+              1
+            </React.Fragment>
+          </li>
+          <li>
+            <React.Fragment>
+              2
+            </React.Fragment>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul>
+          <li>
+            <React.Fragment>
+              2
+            </React.Fragment>
+          </li>
+        </ul>
+      </li>
+    </ul>,
     <ul>
       <li>
         <ul>
@@ -260,16 +394,43 @@ Array [
         </ul>
       </li>
     </ol>,
+    <ol>
+      <li>
+        <ul>
+          <li>
+            <React.Fragment>
+              1
+            </React.Fragment>
+          </li>
+          <li>
+            <React.Fragment>
+              2
+            </React.Fragment>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul>
+          <li>
+            <React.Fragment>
+              2
+            </React.Fragment>
+          </li>
+        </ul>
+      </li>
+    </ol>,
   ],
   Array [
     "url[string]",
     Array [
       "http://example.com",
+      "http://example.com",
     ],
+    "http://example.com",
     <a
       href="http://example.com"
     >
-      (empty)
+      http://example.com
     </a>,
   ],
 ]

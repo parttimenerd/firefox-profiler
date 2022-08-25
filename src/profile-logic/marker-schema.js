@@ -489,7 +489,9 @@ export function isDOMRenderingFormat(format: MarkerFormatType): boolean {
 function _formatDOMFromMarkerSchema(
   markerType: string,
   parsedFormat: ParsedFormat,
-  value: any
+  value: any,
+  // add elements that allow interaction (like clickable urls)
+  supportsInteraction: boolean
 ) {
   if (typeof parsedFormat === 'string') {
     return <>{formatFromMarkerSchema(markerType, parsedFormat, value)}</>;
@@ -539,7 +541,8 @@ function _formatDOMFromMarkerSchema(
                       {_formatDOMFromMarkerSchema(
                         markerType,
                         children[i],
-                        cell
+                        cell,
+                        supportsInteraction
                       )}
                     </td>
                   );
@@ -559,7 +562,12 @@ function _formatDOMFromMarkerSchema(
       })(
         value.map((entry, i) => (
           <li key={i}>
-            {_formatDOMFromMarkerSchema(markerType, children[0], entry)}
+            {_formatDOMFromMarkerSchema(
+              markerType,
+              children[0],
+              entry,
+              supportsInteraction
+            )}
           </li>
         ))
       );
@@ -567,15 +575,18 @@ function _formatDOMFromMarkerSchema(
       if (typeof children[0] !== 'string') {
         throw new Error("No complex types allowed in 'url' format");
       }
-      return (
-        <a href={value[0]}>
-          {formatFromMarkerSchema(
-            markerType,
-            (children[0]: MarkerFormatType),
-            value[1]
-          )}
-        </a>
-      );
+      if (supportsInteraction) {
+        return (
+          <a href={value[0]}>
+            {formatFromMarkerSchema(
+              markerType,
+              (children[0]: MarkerFormatType),
+              value[1]
+            )}
+          </a>
+        );
+      }
+      return value[1];
     default:
       throw new Error(`Unknown format type "${type}"`);
   }
@@ -584,11 +595,14 @@ function _formatDOMFromMarkerSchema(
 export function formatDOMFromMarkerSchema(
   markerType: string,
   format: MarkerFormatType,
-  value: any
+  value: any,
+  // add elements that allow interaction (like clickable urls)
+  supportsInteraction: boolean
 ) {
   return _formatDOMFromMarkerSchema(
     markerType,
     _parseFormatMemoized(format),
-    value
+    value,
+    supportsInteraction
   );
 }
