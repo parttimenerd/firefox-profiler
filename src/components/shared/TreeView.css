@@ -106,10 +106,11 @@
 
 :root {
   --total-col-width: 120px;
-  --min-total-col-width: 40px;
+  --min-total-col-width: 100px;
   --self-col-width: 70px;
-  --min-self-col-width: 20px;
+  --min-self-col-width: 50px;
 }
+
 .treeViewFixedColumn.total {
   left: 0;
   width: calc(var(--total-col-width) * 7 / 12);

@@ -27,7 +27,6 @@
 }
 
 .treeViewFixedColumn.duration {
-
   left: var(--start-col-width);
   width: var(--duration-col-width);
   padding-right: 5px;
@@ -41,5 +40,8 @@
 }
 
 .treeViewMainColumn.name {
-  left: calc(var(--start-col-width) + var(--duration-col-width) + var(--type-col-width) + 15px);
+  left: calc(
+    var(--start-col-width) + var(--duration-col-width) + var(--type-col-width) +
+      15px
+  );
 }
