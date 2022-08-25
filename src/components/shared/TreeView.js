@@ -473,13 +473,18 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
 > {
   _list: VirtualList<NodeIndex> | null = null;
   _takeListRef = (list: VirtualList<NodeIndex> | null) => (this._list = list);
-  state = { sortedColumns: new ColumnSortState([]) };
+  _containerRef = React.createRef<HTMLDivElement>();
+  _minColumnWidths: {[string]: number} = {};
+  _resizedColumn: Column<DisplayData> | null = null;
+  _resizeStartX: number = 0;
+  state = { sortedColumns: new ColumnSortState([]), columnWidths: null };
 
   constructor(props: TreeViewProps<DisplayData>) {
     super(props);
     if (props.initialSortedColumns) {
       this.state.sortedColumns = props.initialSortedColumns;
     }
+    this._containerRef = React.createRef<HTMLDivElement>();
   }
 
   // The tuple `specialItems` always contains 2 elements: the first element is
@@ -870,6 +875,76 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     });
   };
 
+  _onColumnResize = (column: Column<DisplayData>, change: number) => {
+    console.log('onColumnResize', column, change);
+    this.setState((s) => {
+      let colWidths;
+      if (!s.columnWidths) {
+        colWidths = {};
+        if (this._containerRef.current === null) {
+          return {};
+        }
+        const style = getComputedStyle(this._containerRef.current);
+        this.props.fixedColumns.forEach((fixedColumn) => {
+          const val = style.getPropertyValue(`--${fixedColumn.propName}-col-width`);
+          if (val) {
+            if (val.endsWith("px")) {
+              colWidths[fixedColumn.propName] = parseInt(val.slice(0, -2), 10);
+            } else {
+              console.warn(`Expected ${val} to end with "px" for property ${fixedColumn.propName}`);
+            }
+          }
+          const minWidth = style.getPropertyValue(`--min-${fixedColumn.propName}-col-width`);
+          if (minWidth) {
+            if (minWidth.endsWith("px")) {
+              this._minColumnWidths[fixedColumn.propName] = parseInt(val.slice(0, -2), 10);
+            } else {
+              console.warn(`Expected ${val} to end with "px" for property ${fixedColumn.propName}`);
+            }
+          } else {
+            this._minColumnWidths[fixedColumn.propName] = 20;
+          }
+        });
+      } else {
+        colWidths = {...s.columnWidths};
+      }
+              if (column.propName in colWidths && column.propName in this._minColumnWidths) {
+                colWidths[column.propName] = Math.max(colWidths[column.propName] + change, this._minColumnWidths[column.propName]);
+        }
+      return {columnWidths: colWidths};
+    });
+  }
+
+  _onMouseDown = (e: MouseEvent) => {
+    if (this._containerRef.current === null || this._minColumnWidths === null) {
+      return;
+    }
+      const nearbyCols = Array.from(this._containerRef.current.querySelectorAll(".treeViewHeaderColumn").values()).filter((col) => Math.abs(col.getBoundingClientRect().right - e.clientX) <= 10);
+      if (nearbyCols.length == 0) {
+        return;
+      }
+      const colElement = nearbyCols[0];
+      const columns = this.props.fixedColumns.filter((col) => colElement.classList.contains(col.propName));
+      if (columns.length === 0) {
+        return;
+      }
+      this._resizedColumn = columns[0];
+      this._resizeStartX = e.clientX;
+  }
+
+  _onMouseUp = (e: MouseEvent) => {
+    this._resizedColumn = null;
+  }
+
+  _onMouseMove = (e: MouseEvent) => {
+    if (!this._resizedColumn) {
+      return;
+    }
+    const difference = e.clientX - this._resizeStartX;
+    this._resizeStartX = e.clientX;
+    this._onColumnResize(this._resizedColumn, difference);
+  }
+
   render() {
     const {
       fixedColumns,
@@ -882,18 +957,27 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
       selectedNodeId,
       sortableColumns,
     } = this.props;
-    const { sortedColumns } = this.state;
+    const { sortedColumns, columnWidths } = this.state;
     const columnSortDirections =
       sortableColumns && sortedColumns
         ? sortedColumns.getSortStateArr(sortableColumns)
         : undefined;
+    const style = columnWidths ? Object.keys(columnWidths).reduce((a, prop) => {
+      if (prop in columnWidths) {
+        a[`--${prop}-col-width`] = `${columnWidths[prop]}px`;
+      }
+      return a;
+    }, {}) : {};
+    console.log(style);
+    console.log(columnWidths);
     return (
-      <div className="treeView">
+      <div className="treeView" style={style} ref={this._containerRef} onMouseMove={this._onMouseMove} onMouseUp={this._onMouseUp} onMouseLeave={this._onMouseUp}  onMouseDown={this._onMouseDown}>
         <TreeViewHeader
           fixedColumns={fixedColumns}
           mainColumn={mainColumn}
           onSort={this._onSort}
           columnSortDirections={columnSortDirections}
+          onColumnResize={(x) => {}}
         />
         <ContextMenuTrigger
           id={contextMenuId ?? 'unknown'}

@@ -10,26 +10,36 @@
   user-select: none;
 }
 
+:root {
+  --start-col-width: 80px;
+  --duration-col-width: 80px;
+  --type-col-width: 80px;
+  --start-col-min-width: 20px;
+  --duration-col-min-width: 20px;
+  --type-col-min-width: 20px;
+}
+
 .treeViewFixedColumn.start {
   left: 0;
-  width: 80px;
+  width: var(--start-col-width);
   padding-right: 5px;
   text-align: right;
 }
 
 .treeViewFixedColumn.duration {
-  left: 80px;
-  width: 80px;
+
+  left: var(--start-col-width);
+  width: var(--duration-col-width);
   padding-right: 5px;
   border-right: none;
   text-align: right;
 }
 
 .treeViewFixedColumn.type {
-  left: 160px;
-  width: 80px;
+  left: calc(var(--start-col-width) + var(--duration-col-width));
+  width: var(--type-col-width);
 }
 
 .treeViewMainColumn.name {
-  left: 255px;
+  left: calc(var(--start-col-width) + var(--duration-col-width) + var(--type-col-width) + 15px);
 }
