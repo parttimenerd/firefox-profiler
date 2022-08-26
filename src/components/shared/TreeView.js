@@ -878,54 +878,58 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     });
   };
 
+  componentDidMount() {
+    this._setupColumnWidths();
+  }
+
+  _setupColumnWidths = () => {
+    if (this._containerRef.current === null) {
+      return;
+    }
+    const style = getComputedStyle(this._containerRef.current);
+    this.props.fixedColumns.forEach((fixedColumn) => {
+      const val = style.getPropertyValue(`--${fixedColumn.propName}-col-width`);
+      if (val) {
+        if (val.endsWith('px')) {
+          const width = parseInt(val.slice(0, -2), 10);
+          this._defaultColumnWidths[fixedColumn.propName] = width;
+        } else {
+          console.warn(
+            `Expected ${val} to end with "px" for property ${fixedColumn.propName}`
+          );
+        }
+      }
+      if (document.body === null) {
+        return;
+      }
+      const minWidth = getComputedStyle(document.body).getPropertyValue(
+        `--min-${fixedColumn.propName}-col-width`
+      );
+      if (minWidth) {
+        if (minWidth.endsWith('px')) {
+          this._minColumnWidths[fixedColumn.propName] = parseInt(
+            minWidth.slice(0, -2),
+            10
+          );
+        } else {
+          console.warn(
+            `Expected ${minWidth} to end with "px" for property ${fixedColumn.propName}`
+          );
+        }
+      } else {
+        this._minColumnWidths[fixedColumn.propName] = 20;
+      }
+    });
+  };
+
   _onColumnResize = (column: Column<DisplayData>, change: number) => {
     this.setState((s) => {
-      let colWidths;
-      if (!s.columnWidths) {
-        colWidths = {};
-        if (this._containerRef.current === null) {
-          return {};
-        }
-        const style = getComputedStyle(this._containerRef.current);
-        this.props.fixedColumns.forEach((fixedColumn) => {
-          const val = style.getPropertyValue(
-            `--${fixedColumn.propName}-col-width`
-          );
-          if (val) {
-            if (val.endsWith('px')) {
-              const width = parseInt(val.slice(0, -2), 10);
-              colWidths[fixedColumn.propName] = width;
-              this._defaultColumnWidths[fixedColumn.propName] = width;
-            } else {
-              console.warn(
-                `Expected ${val} to end with "px" for property ${fixedColumn.propName}`
-              );
-            }
-          }
-          if (document.body === null) {
-            return;
-          }
-          const minWidth = getComputedStyle(document.body).getPropertyValue(
-            `--min-${fixedColumn.propName}-col-width`
-          );
-          if (minWidth) {
-            if (minWidth.endsWith('px')) {
-              this._minColumnWidths[fixedColumn.propName] = parseInt(
-                minWidth.slice(0, -2),
-                10
-              );
-            } else {
-              console.warn(
-                `Expected ${minWidth} to end with "px" for property ${fixedColumn.propName}`
-              );
-            }
-          } else {
-            this._minColumnWidths[fixedColumn.propName] = 20;
-          }
-        });
-      } else {
-        colWidths = { ...s.columnWidths };
+      if (this._containerRef.current === null) {
+        return {};
       }
+      const colWidths = s.columnWidths
+        ? { ...s.columnWidths }
+        : { ...this._defaultColumnWidths };
       if (
         column.propName in colWidths &&
         column.propName in this._minColumnWidths
@@ -965,7 +969,11 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     if (columns.length === 0) {
       return null;
     }
-    return columns[0];
+    const candidate = columns[0];
+    if (this._defaultColumnWidths[candidate.propName] === undefined) {
+      return null;
+    }
+    return candidate;
   };
 
   _onMouseDown = (e: MouseEvent) => {
@@ -973,15 +981,28 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     if (column !== null) {
       this._resizedColumn = column;
       this._resizeStartX = e.clientX;
+      this._setCursor('col-resize');
     }
   };
 
+  _setCursor(cursor: string) {
+    if (this._containerRef.current !== null) {
+      this._containerRef.current.style.cursor = cursor;
+    }
+  }
+
   _onMouseUp = () => {
     this._resizedColumn = null;
+    this._setCursor('default');
   };
 
   _onMouseMove = (e: MouseEvent) => {
     if (!this._resizedColumn) {
+      if (this._columnForMouseEventOnSpacer(e) !== null) {
+        this._setCursor('col-resize');
+      } else {
+        this._setCursor('default');
+      }
       return;
     }
     const difference = e.clientX - this._resizeStartX;

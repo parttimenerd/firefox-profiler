@@ -9377,6 +9377,7 @@ exports[`calltree/ProfileCallTreeView sorts when the total column header is clic
   </ol>
   <div
     class="treeView"
+    style="cursor: default;"
   >
     <div
       class="treeViewHeader"
@@ -10007,6 +10008,7 @@ exports[`calltree/ProfileCallTreeView sorts when the total column header is clic
   </ol>
   <div
     class="treeView"
+    style="cursor: default;"
   >
     <div
       class="treeViewHeader"

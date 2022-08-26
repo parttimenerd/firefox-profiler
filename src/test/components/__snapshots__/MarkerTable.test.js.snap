@@ -509,6 +509,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
     </div>
     <div
       class="treeView"
+      style="cursor: default;"
     >
       <div
         class="treeViewHeader"
@@ -937,6 +938,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
     </div>
     <div
       class="treeView"
+      style="cursor: default;"
     >
       <div
         class="treeViewHeader"
@@ -1365,6 +1367,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
     </div>
     <div
       class="treeView"
+      style="cursor: default;"
     >
       <div
         class="treeViewHeader"
