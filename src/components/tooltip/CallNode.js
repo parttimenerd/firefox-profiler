@@ -337,11 +337,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                   />
                 </div>
                 <div className="tooltipCallNodeImplementationTiming">
-                  {formatCallNodeNumber(
-                    weightType,
-                    isHighPrecision,
-                    time
-                  )}
+                  {formatCallNodeNumber(weightType, isHighPrecision, time)}
                 </div>
                 <div className="tooltipCallNodeImplementationTiming">
                   {selfTimeValue === 0
