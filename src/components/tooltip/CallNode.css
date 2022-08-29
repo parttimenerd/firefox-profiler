@@ -38,13 +38,13 @@
   border-radius: 2px;
 }
 
-.tooltipCallNodeImplementationGraphRunning {
+.tooltipCallNodeGraphRunning {
   height: var(--graph-height);
   background-color: var(--blue-40);
   border-radius: 2px;
 }
 
-.tooltipCallNodeImplementationGraphSelf {
+.tooltipCallNodeGraphSelf {
   position: absolute;
   top: 0;
   left: 0;
@@ -84,14 +84,6 @@
 }
 
 .tooltipCallNodeCategoryGraphRunning {
-  height: var(--graph-height);
-  border-radius: 2px;
-}
-
-.tooltipCallNodeCategoryGraphSelf {
-  position: absolute;
-  top: 0;
-  left: 0;
   height: var(--graph-height);
   border-radius: 2px;
 }

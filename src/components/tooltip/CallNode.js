@@ -7,7 +7,7 @@ import * as React from 'react';
 import { getStackType } from 'firefox-profiler/profile-logic/transforms';
 import { parseFileNameFromSymbolication } from 'firefox-profiler/utils/special-paths';
 import { objectEntries } from 'firefox-profiler/utils/flow';
-import { formatCallNodeNumberWithUnit } from 'firefox-profiler/utils/format-numbers';
+import { formatCallNodeNumber } from 'firefox-profiler/utils/format-numbers';
 import { Icon } from 'firefox-profiler/components/shared/Icon';
 import {
   getFriendlyStackTypeName,
@@ -76,11 +76,11 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         <div className="tooltipCallNodeHeader" />
         <div className="tooltipCallNodeHeader">
           <span className="tooltipCallNodeHeaderSwatchRunning" />
-          Running
+          Running samples
         </div>
         <div className="tooltipCallNodeHeaderRight">
           <span className="tooltipCallNodeHeaderSwatchSelf" />
-          Self
+          Self samples
         </div>
         {/* grid row -------------------------------------------------- */}
         <div
@@ -107,19 +107,19 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         </div>
         <div
           className={
-            'tooltipCallNodeTiming ' +
+            'tooltipCallNodeImplementationTiming ' +
             (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
           }
         >
-          {displayData.totalWithUnit}
+          {displayData.total}
         </div>
         <div
           className={
-            'tooltipCallNodeTiming ' +
+            'tooltipCallNodeImplementationTiming ' +
             (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
           }
         >
-          {displayData.selfWithUnit}
+          {displayData.self}
         </div>
       </>
     );
@@ -237,7 +237,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                   (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
                 }
               >
-                {formatCallNodeNumberWithUnit(
+                {formatCallNodeNumber(
                   weightType,
                   isHighPrecision,
                   entry.totalTime
@@ -251,7 +251,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
               >
                 {self === 0
                   ? '—'
-                  : formatCallNodeNumberWithUnit(
+                  : formatCallNodeNumber(
                       weightType,
                       isHighPrecision,
                       entry.selfTime
@@ -324,20 +324,20 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                 </div>
                 <div className="tooltipCallNodeGraph">
                   <div
-                    className="tooltipCallNodeImplementationGraphRunning"
+                    className="tooltipCallNodeGraphRunning"
                     style={{
                       width: (GRAPH_WIDTH * time) / totalTime.value,
                     }}
                   />
                   <div
-                    className="tooltipCallNodeImplementationGraphSelf"
+                    className="tooltipCallNodeGraphSelf"
                     style={{
                       width: (GRAPH_WIDTH * selfTimeValue) / totalTime.value,
                     }}
                   />
                 </div>
                 <div className="tooltipCallNodeImplementationTiming">
-                  {formatCallNodeNumberWithUnit(
+                  {formatCallNodeNumber(
                     weightType,
                     isHighPrecision,
                     time
@@ -346,7 +346,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                 <div className="tooltipCallNodeImplementationTiming">
                   {selfTimeValue === 0
                     ? '—'
-                    : formatCallNodeNumberWithUnit(
+                    : formatCallNodeNumber(
                         weightType,
                         isHighPrecision,
                         selfTimeValue
@@ -527,10 +527,10 @@ export class TooltipCallNode extends React.PureComponent<Props> {
               {/* Everything in this div needs to come in pairs of two in order to
                 respect the CSS grid. */}
               <div className="tooltipLabel">Total Bytes:</div>
-              <div>{displayData.totalWithUnit}</div>
+              <div>{displayData.total}</div>
               {/* --------------------------------------------------------------- */}
               <div className="tooltipLabel">Self Bytes:</div>
-              <div>{displayData.selfWithUnit}</div>
+              <div>{displayData.self}</div>
               {/* --------------------------------------------------------------- */}
             </div>
           ) : null}
