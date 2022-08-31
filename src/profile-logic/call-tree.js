@@ -141,7 +141,6 @@ export class CallTree {
         const childTotalSummary =
           this._callNodeSummary.total[childCallNodeIndex];
         const childChildCount = this._callNodeChildCount[childCallNodeIndex];
-
         if (
           childPrefixIndex === callNodeIndex &&
           (childTotalSummary !== 0 || childChildCount !== 0)
@@ -549,7 +548,6 @@ export function getCallTree(
   return timeCode('getCallTree', () => {
     const { callNodeSummary, callNodeChildCount, rootTotalSummary, rootCount } =
       callTreeCountsAndSummary;
-
     const jsOnly = implementationFilter === 'js';
     // By default add a single decimal value, e.g 13.1, 0.3, 5234.4
     return new CallTree(

@@ -98,6 +98,48 @@ exports[`calltree/CallNodeContextMenu basic rendering renders a full context men
     tabindex="-1"
   >
     <span
+      class="react-contextmenu-icon callNodeContextMenuIconFocus"
+    />
+    <div
+      class="react-contextmenu-item-content"
+      title="Focusing on the functions that belong to the same category as the selected function thereby removing all other functions."
+    >
+      Focus on category
+    </div>
+    <kbd
+      class="callNodeContextMenuShortcut"
+    >
+      B
+    </kbd>
+  </div>
+  <div
+    aria-disabled="false"
+    class="react-contextmenu-item"
+    role="menuitem"
+    tabindex="-1"
+  >
+    <span
+      class="react-contextmenu-icon callNodeContextMenuIconFocus"
+    />
+    <div
+      class="react-contextmenu-item-content"
+      title="Merge all functions belonging to other categories than the selected function that do not call such functions directly, into the nearest function directly called by function with the same category as the selected function."
+    >
+      Merge other category functions
+    </div>
+    <kbd
+      class="callNodeContextMenuShortcut"
+    >
+      b
+    </kbd>
+  </div>
+  <div
+    aria-disabled="false"
+    class="react-contextmenu-item"
+    role="menuitem"
+    tabindex="-1"
+  >
+    <span
       class="react-contextmenu-icon callNodeContextMenuIconCollapse"
     />
     <div

@@ -78,6 +78,16 @@ CallNodeContextMenu--transform-focus-subtree = Focus on subtree only
         specific part of the call tree. It pulls out a branch of the call tree,
         however it only does it for that single call node. All other calls
         of the function are ignored.
+CallNodeContextMenu--transform-focus-category = Focus on category
+    .title =
+        Focusing on the functions that belong to the same category as the selected
+        function thereby removing all other functions.
+CallNodeContextMenu--transform-focus-category-border = Merge other category functions
+    .title =
+        Merge all functions belonging to other categories than the selected function
+        that do not call such functions directly,
+        into the nearest function directly called by function with the same category
+        as the selected function.
 CallNodeContextMenu--transform-collapse-function-subtree = Collapse function
     .title =
         Collapsing a function will remove everything it called, and assign
@@ -824,6 +834,18 @@ TransformNavigator--focus-subtree = Focus Node: { $item }
 # Variables:
 #   $item (String) - Name of the function that transform applied to.
 TransformNavigator--focus-function = Focus: { $item }
+
+# "Focus category" transform.
+# See: https://profiler.firefox.com/docs/#/./guide-filtering-call-trees?id=focus-category
+# Variables:
+#   $item (String) - Name of the category that transform applied to.
+TransformNavigator--focus-category = Focus category: { $item }
+
+# "Merge other category functions" transform.
+# See: https://profiler.firefox.com/docs/#/./guide-filtering-call-trees?id=merge-other-categories
+# Variables:
+#   $item (String) - Name of the category that transform applied to.
+TransformNavigator--focus-category-border = Merge other categories: { $item }
 
 # "Merge call node" transform.
 # See: https://profiler.firefox.com/docs/#/./guide-filtering-call-trees?id=merge

@@ -236,8 +236,10 @@ class CallNodeContextMenuImpl extends React.PureComponent<Props> {
       );
     }
 
-    const { threadsKey, callNodePath, thread } = rightClickedCallNodeInfo;
+    const { threadsKey, callNodePath, thread, callNodeInfo } =
+      rightClickedCallNodeInfo;
     const selectedFunc = callNodePath[callNodePath.length - 1];
+    const category = callNodeInfo.callNodeTable.category[selectedFunc];
 
     switch (type) {
       case 'focus-subtree':
@@ -299,6 +301,20 @@ class CallNodeContextMenuImpl extends React.PureComponent<Props> {
         addTransformToStack(threadsKey, {
           type: 'collapse-function-subtree',
           funcIndex: selectedFunc,
+        });
+        break;
+      }
+      case 'focus-category': {
+        addTransformToStack(threadsKey, {
+          type: 'focus-category',
+          category,
+        });
+        break;
+      }
+      case 'focus-category-border': {
+        addTransformToStack(threadsKey, {
+          type: 'focus-category-border',
+          category,
         });
         break;
       }
@@ -440,6 +456,7 @@ class CallNodeContextMenuImpl extends React.PureComponent<Props> {
 
     const funcIndex = callNodeTable.func[callNodeIndex];
     const isJS = funcTable.isJS[funcIndex];
+    const hasCategory = callNodeTable.category[callNodeIndex] !== -1;
     // This could be the C++ library, or the JS filename.
     const nameForResource = this.getNameForSelectedResource();
     const showExpandAll = selectedTab === 'calltree';
@@ -492,6 +509,30 @@ class CallNodeContextMenuImpl extends React.PureComponent<Props> {
           title: '',
           content: 'Focus on subtree only',
         })}
+
+        {hasCategory
+          ? this.renderTransformMenuItem({
+              l10nId: 'CallNodeContextMenu--transform-focus-category',
+              shortcut: 'B',
+              icon: 'Focus',
+              onClick: this._handleClick,
+              transform: 'focus-category',
+              title: '',
+              content: 'Focus on category',
+            })
+          : null}
+
+        {hasCategory
+          ? this.renderTransformMenuItem({
+              l10nId: 'CallNodeContextMenu--transform-focus-category-border',
+              shortcut: 'b',
+              icon: 'Focus',
+              onClick: this._handleClick,
+              transform: 'focus-category-border',
+              title: '',
+              content: 'Merge other category functions',
+            })
+          : null}
 
         {this.renderTransformMenuItem({
           l10nId: 'CallNodeContextMenu--transform-collapse-function-subtree',

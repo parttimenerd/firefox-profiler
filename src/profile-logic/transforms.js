@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @flow
 
+import memoize from 'memoize-immutable';
 import {
   encodeUintArrayForUrlComponent,
   decodeUintArrayFromUrlComponent,
@@ -38,6 +39,7 @@ import type {
   Transform,
   TransformType,
   TransformStack,
+  ProfileMeta,
 } from 'firefox-profiler/types';
 
 /**
@@ -51,6 +53,8 @@ const SHORT_KEY_TO_TRANSFORM: { [string]: TransformType } = {};
 [
   'focus-subtree',
   'focus-function',
+  'focus-category',
+  'focus-category-border',
   'merge-call-node',
   'merge-function',
   'drop-function',
@@ -67,6 +71,12 @@ const SHORT_KEY_TO_TRANSFORM: { [string]: TransformType } = {};
       break;
     case 'focus-function':
       shortKey = 'ff';
+      break;
+    case 'focus-category':
+      shortKey = 'fB';
+      break;
+    case 'focus-category-border':
+      shortKey = 'fb';
       break;
     case 'merge-call-node':
       shortKey = 'mcn';
@@ -199,6 +209,32 @@ export function parseTransforms(transformString: string): TransformStack {
         }
         break;
       }
+      case 'focus-category':
+      case 'focus-category-border': {
+        // e.g. "fc-3"
+        const [, categoryRaw] = tuple;
+        const category = parseInt(categoryRaw, 10);
+        // Validate that the category makes sense.
+        if (!isNaN(category) && category >= 0) {
+          switch (type) {
+            case 'focus-category':
+              transforms.push({
+                type: 'focus-category',
+                category,
+              });
+              break;
+            case 'focus-category-border':
+              transforms.push({
+                type: 'focus-category-border',
+                category,
+              });
+              break;
+            default:
+              throw new Error('Unmatched transform.');
+          }
+        }
+        break;
+      }
       case 'focus-subtree':
       case 'merge-call-node': {
         // e.g. "f-js-xFFpUMl-i" or "f-cpp-0KV4KV5KV61KV7KV8K"
@@ -261,6 +297,9 @@ export function stringifyTransforms(transformStack: TransformStack): string {
         case 'collapse-function-subtree':
         case 'focus-function':
           return `${shortKey}-${transform.funcIndex}`;
+        case 'focus-category-border':
+        case 'focus-category':
+          return `${shortKey}-${transform.category}`;
         case 'collapse-resource':
           return `${shortKey}-${transform.implementation}-${transform.resourceIndex}-${transform.collapsedFuncIndex}`;
         case 'collapse-direct-recursion':
@@ -296,11 +335,13 @@ export type TransformLabeL10nIds = {|
  * transform strings as desired.
  */
 export function getTransformLabelL10nIds(
+  meta: ProfileMeta,
   thread: Thread,
   threadName: string,
   transforms: Transform[]
 ): Array<TransformLabeL10nIds> {
   const { funcTable, stringTable, resourceTable } = thread;
+  const { categories } = meta;
   const labels: TransformLabeL10nIds[] = transforms.map((transform) => {
     // Lookup library information.
     if (transform.type === 'collapse-resource') {
@@ -309,6 +350,19 @@ export function getTransformLabelL10nIds(
       return {
         l10nId: 'TransformNavigator--collapse-resource',
         item: resourceName,
+      };
+    }
+
+    if (
+      transform.type === 'focus-category' ||
+      transform.type === 'focus-category-border'
+    ) {
+      if (categories === undefined) {
+        throw new Error('Expected categories to be defined.');
+      }
+      return {
+        l10nId: 'TransformNavigator--' + transform.type,
+        item: categories[transform.category].name,
       };
     }
 
@@ -380,6 +434,14 @@ export function applyTransformToCallNodePath(
       );
     case 'focus-function':
       return _startCallNodePathWithFunction(transform.funcIndex, callNodePath);
+    case 'focus-category':
+    case 'focus-category-border':
+      return _mergeOtherCategoryFunctionsInNodePathWithFunction(
+        transformedThread,
+        transform.category,
+        callNodePath,
+        transform.type === 'focus-category-border'
+      );
     case 'merge-call-node':
       return _mergeNodeInCallNodePath(transform.callNodePath, callNodePath);
     case 'merge-function':
@@ -448,6 +510,47 @@ function _dropFunctionInCallNodePath(
   // If the CallNodePath contains the function, return an empty path.
   return callNodePath.includes(funcIndex) ? [] : callNodePath;
 }
+
+function _mergeOtherCategoryFunctionsInNodePathWithFunction(
+  thread: Thread,
+  category: IndexIntoCategoryList,
+  callNodePath: CallNodePath,
+  includeBorder: boolean
+): CallNodePath {
+  const catsPerFunc = getCategoriesPerFunction(thread);
+  const inCategory = callNodePath.map((n) => catsPerFunc[n].includes(category));
+  return callNodePath.filter((n, i) => {
+    if (inCategory[i]) {
+      return true;
+    }
+    return (
+      includeBorder &&
+      ((i > 0 && inCategory[i - 1]) ||
+        (i < inCategory.length - 1 && inCategory[i + 1]))
+    );
+  });
+}
+
+/** returns the categories that frames related to this function have */
+function _getCategoriesPerFunction(thread: Thread): IndexIntoCategoryList[][] {
+  const categoriesPerFunc: IndexIntoCategoryList[][] = new Array(
+    thread.funcTable.length
+  );
+  for (let i = 0; i < thread.funcTable.length; i++) {
+    categoriesPerFunc[i] = [];
+  }
+  thread.frameTable.category.forEach((c, i) => {
+    if (c !== null) {
+      const func = thread.frameTable.func[i];
+      if (!categoriesPerFunc[func].includes(c)) {
+        categoriesPerFunc[func].push(c);
+      }
+    }
+  });
+  return categoriesPerFunc;
+}
+
+const getCategoriesPerFunction = memoize(_getCategoriesPerFunction);
 
 function _collapseResourceInCallNodePath(
   resourceIndex: IndexIntoResourceTable,
@@ -1254,6 +1357,154 @@ export function focusFunction(
   });
 }
 
+export function focusCategory(
+  thread: Thread,
+  category: IndexIntoCategoryList,
+  includeBorder: boolean
+) {
+  return timeCode('focusCategory', () => {
+    const { stackTable, frameTable } = thread;
+    const oldStackToNewStack: Map<
+      IndexIntoStackTable | null,
+      IndexIntoStackTable | null
+    > = new Map();
+
+    const catsPerFunc = getCategoriesPerFunction(thread);
+
+    const frameIncluded: boolean[] = frameTable.func.map((f) =>
+      catsPerFunc[f].includes(category)
+    );
+    let stackFrameIncluded: boolean[] = stackTable.category.map(
+      (c, i) => frameIncluded[stackTable.frame[i]]
+    );
+    if (includeBorder) {
+      const stackFramePrefixIncluded: boolean[] = stackTable.prefix.map(
+        (p) => p !== null && stackFrameIncluded[p]
+      );
+      const stackFramePostfixIncluded: boolean[] = new Array(
+        stackTable.length
+      ).fill(false);
+      for (let stackIndex = 0; stackIndex < stackTable.length; stackIndex++) {
+        const prefix = stackTable.prefix[stackIndex];
+        if (prefix !== null && stackFrameIncluded[stackIndex]) {
+          stackFramePostfixIncluded[prefix] = true;
+        }
+      }
+      stackFrameIncluded = stackFrameIncluded.map(
+        (included, i) =>
+          included ||
+          stackFramePrefixIncluded[i] ||
+          stackFramePostfixIncluded[i]
+      );
+    }
+
+    // fix point iteration to find replacements for stack frames which are not included
+    const replacementIndex: (number | null)[] = stackTable.category.map(
+      (_, i) => i
+    );
+    let modified = true;
+    // $FlowExpectError
+    let indexesThatRequireReplacement: number[] = replacementIndex.filter(
+      (i) => i !== null && !stackFrameIncluded[i]
+    );
+    while (modified) {
+      modified = false;
+      const newIndexes = [];
+      for (const stackIndex of indexesThatRequireReplacement) {
+        // for every stack index that we need a replacement for
+        const repl = replacementIndex[stackIndex];
+        if (repl === null) {
+          // no replacement available
+          continue;
+        }
+        const prefix = stackTable.prefix[repl];
+        if (prefix !== null) {
+          // check if the replacement has a prefix
+          const prefixReplacement = replacementIndex[prefix]; // and get its replacement (handle replacement chains)
+          if (prefixReplacement === null) {
+            replacementIndex[stackIndex] = null;
+            continue;
+          }
+          replacementIndex[stackIndex] = prefixReplacement; // we found suitable replacement
+          modified = true;
+          if (!stackFrameIncluded[prefixReplacement]) {
+            // still more work to do
+            newIndexes.push(stackIndex);
+          }
+        } else {
+          // have to forget about this stack
+          replacementIndex[stackIndex] = null;
+        }
+      }
+      indexesThatRequireReplacement = newIndexes;
+    }
+
+    const newStackTable = getEmptyStackTable();
+    const indizesToReMap: number[] = []; // contains indeces that need a replacement because they are not included
+    for (let stackIndex = 0; stackIndex < stackTable.length; stackIndex++) {
+      if (!stackFrameIncluded[stackIndex]) {
+        indizesToReMap.push(stackIndex);
+        continue;
+      }
+      const newStackIndex = newStackTable.length++;
+      const prefix = stackTable.prefix[stackIndex];
+      newStackTable.prefix[newStackIndex] = prefix; // but the prefix is still the old unreplaced one
+      newStackTable.frame[newStackIndex] = stackTable.frame[stackIndex];
+      newStackTable.category[newStackIndex] = stackTable.category[stackIndex];
+      newStackTable.subcategory[newStackIndex] =
+        stackTable.subcategory[stackIndex];
+      oldStackToNewStack.set(stackIndex, newStackIndex);
+    }
+    for (let stackIndex = 0; stackIndex < newStackTable.length; stackIndex++) {
+      // replace the prefixes
+      const prefix = newStackTable.prefix[stackIndex]; // withoout any replacement
+      if (prefix === null || replacementIndex[prefix] === null) {
+        // no replacement available
+        newStackTable.prefix[stackIndex] = null;
+        continue;
+      }
+      const replacement = replacementIndex[prefix];
+      const newIndex = oldStackToNewStack.get(replacement);
+      newStackTable.prefix[stackIndex] =
+        newIndex !== undefined ? newIndex : null;
+    }
+
+    for (const stackIndex of indizesToReMap) {
+      // replace the indices of that are not included
+      const repl = replacementIndex[stackIndex];
+      if (repl === null) {
+        oldStackToNewStack.set(stackIndex, null);
+      } else {
+        const newIndex = oldStackToNewStack.get(repl);
+        oldStackToNewStack.set(
+          stackIndex,
+          newIndex !== undefined ? newIndex : null
+        );
+      }
+    }
+    const updated = updateThreadStacks(
+      thread,
+      newStackTable,
+      getMapStackUpdater(oldStackToNewStack)
+    );
+    updated.samples.stack.forEach((s) => {
+      if (s !== null && s >= updated.stackTable.length) {
+        throw new Error(
+          `invalid stack index ${s} ${updated.stackTable.length}`
+        );
+      }
+    });
+    updated.stackTable.prefix.forEach((p) => {
+      if (p !== null && p >= updated.stackTable.length) {
+        throw new Error(
+          `invalid prefix index ${p} ${updated.stackTable.length}`
+        );
+      }
+    });
+    return updated;
+  });
+}
+
 /**
  * When restoring function in a CallNodePath there can be multiple correct CallNodePaths
  * that could be restored. The best approach would probably be to restore to the
@@ -1419,6 +1670,13 @@ export function applyTransform(
       return dropFunction(thread, transform.funcIndex);
     case 'focus-function':
       return focusFunction(thread, transform.funcIndex);
+    case 'focus-category':
+    case 'focus-category-border':
+      return focusCategory(
+        thread,
+        transform.category,
+        transform.type === 'focus-category-border'
+      );
     case 'collapse-resource':
       return collapseResource(
         thread,

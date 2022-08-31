@@ -1430,7 +1430,7 @@ describe('url upgrading', function () {
 
 describe('URL serialization of the transform stack', function () {
   const transformString =
-    'f-combined-0w2~mcn-combined-2w4~f-js-3w5-i~mf-6~ff-7~cr-combined-8-9~' +
+    'f-combined-0w2~mcn-combined-2w4~f-js-3w5-i~mf-6~ff-7~fb-43~fB-42~cr-combined-8-9~' +
     'rec-combined-10~df-11~cfs-12';
   const { getState } = _getStoreWithURL({
     search: '?transforms=' + transformString,
@@ -1467,6 +1467,14 @@ describe('URL serialization of the transform stack', function () {
       {
         type: 'focus-function',
         funcIndex: 7,
+      },
+      {
+        type: 'focus-category-border',
+        category: 43,
+      },
+      {
+        type: 'focus-category',
+        category: 42,
       },
       {
         type: 'collapse-resource',

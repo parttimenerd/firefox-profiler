@@ -25,6 +25,7 @@ import type {
   CallNodePath,
   IndexIntoFuncTable,
   IndexIntoResourceTable,
+  IndexIntoCategoryList,
 } from 'firefox-profiler/types';
 
 type KeyPressOptions = { key: string, ... };
@@ -36,6 +37,7 @@ type TestSetup = {|
   // This should be expectedCallNodePath[expectedCallNodePath.length - 1], but this simplifies tests a bit.
   expectedFuncIndex: IndexIntoFuncTable,
   expectedResourceIndex: IndexIntoResourceTable,
+  expectedCategory: IndexIntoCategoryList,
 |};
 
 function testTransformKeyboardShortcuts(setup: () => TestSetup) {
@@ -54,6 +56,24 @@ function testTransformKeyboardShortcuts(setup: () => TestSetup) {
     expect(getTransform()).toEqual({
       type: 'focus-function',
       funcIndex: expectedFuncIndex,
+    });
+  });
+
+  it('handles focus-category', () => {
+    const { pressKey, getTransform, expectedCategory } = setup();
+    pressKey({ key: 'B' });
+    expect(getTransform()).toEqual({
+      type: 'focus-category',
+      category: expectedCategory,
+    });
+  });
+
+  it('handles focus-category-border', () => {
+    const { pressKey, getTransform, expectedCategory } = setup();
+    pressKey({ key: 'b' });
+    expect(getTransform()).toEqual({
+      type: 'focus-category-border',
+      category: expectedCategory,
     });
   });
 
@@ -230,6 +250,7 @@ describe('flame graph transform shortcuts', () => {
           expectedCallNodePath: [A, B],
           expectedFuncIndex: B,
           expectedResourceIndex: 0,
+          expectedCategory: 0,
         };
       });
     });
@@ -255,6 +276,7 @@ describe('CallTree transform shortcuts', () => {
           expectedCallNodePath: [A, B],
           expectedFuncIndex: B,
           expectedResourceIndex: 0,
+          expectedCategory: 0,
         };
       });
     });
@@ -278,6 +300,7 @@ describe('stack chart transform shortcuts', () => {
           expectedCallNodePath: [A, B],
           expectedFuncIndex: B,
           expectedResourceIndex: 0,
+          expectedCategory: 0,
         };
       });
     });

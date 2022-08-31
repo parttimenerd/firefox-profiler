@@ -1989,6 +1989,7 @@ export function handleCallNodeTransformShortcut(
     const inverted = getInvertCallstack(getState());
     const callNodePath = getCallNodePathFromIndex(callNodeIndex, callNodeTable);
     const funcIndex = callNodeTable.func[callNodeIndex];
+    const category = callNodeTable.category[callNodeIndex];
 
     switch (event.key) {
       case 'F':
@@ -2071,6 +2072,22 @@ export function handleCallNodeTransformShortcut(
         );
         break;
       }
+      case 'b':
+        dispatch(
+          addTransformToStack(threadsKey, {
+            type: 'focus-category-border',
+            category,
+          })
+        );
+        break;
+      case 'B':
+        dispatch(
+          addTransformToStack(threadsKey, {
+            type: 'focus-category',
+            category,
+          })
+        );
+        break;
       default:
       // This did not match a call tree transform.
     }

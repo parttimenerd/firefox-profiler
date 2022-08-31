@@ -82,6 +82,11 @@ describe('calltree/CallNodeContextMenu', function () {
       { matcher: /Merge node only/, type: 'merge-call-node' },
       { matcher: /Focus on subtree only/, type: 'focus-subtree' },
       { matcher: /Focus on function/, type: 'focus-function' },
+      { matcher: /Focus on category/, type: 'focus-category' },
+      {
+        matcher: /Merge other category functions/,
+        type: 'focus-category-border',
+      },
       { matcher: /Collapse function/, type: 'collapse-function-subtree' },
       { matcher: /XUL/, type: 'collapse-resource' },
       {

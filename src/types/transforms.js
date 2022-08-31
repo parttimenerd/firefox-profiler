@@ -16,7 +16,11 @@
  * This combination of information will provide a stable reference to a call node for a
  * given view into a call tree.
  */
-import type { IndexIntoFuncTable, IndexIntoResourceTable } from './profile';
+import type {
+  IndexIntoFuncTable,
+  IndexIntoResourceTable,
+  IndexIntoCategoryList,
+} from './profile';
 import type { CallNodePath, ThreadsKey } from './profile-derived';
 import type { ImplementationFilter } from './actions';
 
@@ -277,6 +281,58 @@ export type TransformDefinitions = {
   'collapse-function-subtree': {|
     +type: 'collapse-function-subtree',
     +funcIndex: IndexIntoFuncTable,
+  |},
+  /**
+   * Focus on the functions that belong to the same category as the current function.
+   * A example of this is given below with 'function:category' as the node name.
+   *
+   *             A:JS                        A:JS
+   *            /    \                      /    \
+   *           v      v        Focus A     v      v
+   *         B:JS     E:JS       ->       B:JS   E:JS
+   *          |        |                          |
+   *          v        v                          v
+   *      C:Native    B:JS                       B:JS
+   *                   |                       /    \
+   *                   v                      v      v
+   *               D:Native                  F:JS   A:JS
+   *               /     \
+   *              v       v
+   *              F:JS   A:JS
+   */
+  'focus-category': {|
+    +type: 'focus-category',
+    +category: IndexIntoCategoryList,
+  |},
+  /**
+   * Focus on the functions that belong to the same category as the current function
+   * and include all functions that are called directly by or directly such functions.
+   * This leaves the inner workings of the other categories out.
+   * A example of this is given below with 'function:category' as the node name.
+   *
+   *       A:JS                          A:JS
+   *        |                             |
+   *        v                             v
+   *       B:JS                          B:JS
+   *        |               Focus A       |
+   *        v                 ->          v
+   *       X:Native                      X:Native
+   *        |                             |
+   *        v                             v
+   *       X_inner:Native                Y:Native
+   *        |                             |
+   *        v                             v
+   *       X_inner2:Native               C:JS
+   *        |
+   *        v
+   *       Y:Native
+   *        |
+   *        v
+   *       C:JS
+   */
+  'focus-category-border': {|
+    +type: 'focus-category-border',
+    +category: IndexIntoCategoryList,
   |},
 };
 
