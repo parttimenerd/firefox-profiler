@@ -31,6 +31,7 @@ import type {
   TracedTiming,
   SamplesTable,
   ExtraBadgeInfo,
+  IndexIntoStackTable,
 } from 'firefox-profiler/types';
 
 import ExtensionIcon from '../../res/img/svg/extension.svg';
@@ -38,6 +39,7 @@ import { formatCallNodeNumber, formatPercent } from '../utils/format-numbers';
 import { assertExhaustiveCheck, ensureExists } from '../utils/flow';
 import * as ProfileData from './profile-data';
 import type { CallTreeSummaryStrategy } from '../types/actions';
+import type { CallNodeInfoWithFuncMapping } from './profile-data';
 
 type CallNodeChildren = IndexIntoCallNodeTable[];
 type CallNodeSummary = {
@@ -141,7 +143,6 @@ export class CallTree {
         const childTotalSummary =
           this._callNodeSummary.total[childCallNodeIndex];
         const childChildCount = this._callNodeChildCount[childCallNodeIndex];
-
         if (
           childPrefixIndex === callNodeIndex &&
           (childTotalSummary !== 0 || childChildCount !== 0)
@@ -549,7 +550,135 @@ export function getCallTree(
   return timeCode('getCallTree', () => {
     const { callNodeSummary, callNodeChildCount, rootTotalSummary, rootCount } =
       callTreeCountsAndSummary;
+    const jsOnly = implementationFilter === 'js';
+    // By default add a single decimal value, e.g 13.1, 0.3, 5234.4
+    return new CallTree(
+      thread,
+      categories,
+      callNodeInfo.callNodeTable,
+      callNodeSummary,
+      callNodeChildCount,
+      rootTotalSummary,
+      rootCount,
+      jsOnly,
+      interval,
+      Boolean(thread.isJsTracer),
+      weightType
+    );
+  });
+}
 
+/**
+ * Return the self and total per call node index
+ *
+ * It's not as simple as expected because their might be recursion happening and we do not want to count the same function multiple times for a time slot.
+ */
+function _getSummaryPerFunction(
+  thread: Thread,
+  samples: SamplesLikeTable,
+  funcToCallNodeIndex: Int32Array
+): {
+  callNodeSelf: Float32Array, // Milliseconds[]
+  callNodeTotal: Float32Array, // Milliseconds[]
+} {
+  const { frameTable, stackTable } = thread;
+  const callNodeSelf = new Float32Array(funcToCallNodeIndex.length); // intialized to 0
+  const callNodeTotal = new Float32Array(funcToCallNodeIndex.length);
+
+  for (let sampleIndex = 0; sampleIndex < samples.stack.length; sampleIndex++) {
+    const stackIndex = samples.stack[sampleIndex];
+    const weight = samples.weight ? samples.weight[sampleIndex] : 1;
+    let stackStart: IndexIntoStackTable | null = stackIndex;
+    const alreadyCountedFuncs: Set<IndexIntoFuncTable> = new Set();
+    while (stackStart !== null) {
+      const funcIndex = frameTable.func[stackTable.frame[stackStart]];
+      if (!alreadyCountedFuncs.has(funcIndex)) {
+        alreadyCountedFuncs.add(funcIndex);
+        const callNodeIndex = funcToCallNodeIndex[funcIndex];
+        callNodeSelf[callNodeIndex] += stackStart === stackIndex ? weight : 0;
+        callNodeTotal[callNodeIndex] += weight;
+      }
+      stackStart = stackTable.prefix[stackStart];
+    }
+  }
+
+  return { callNodeSelf, callNodeTotal };
+}
+
+/**
+ * This computes all of the count and timing information displayed in the method table view.
+ *
+ * Note: The "timionmgs" could have a number of different meanings based on the
+ * what type of weight is in the SamplesLikeTable. For instance, it could be
+ * milliseconds, sample counts, or bytes.
+ */
+export function computeMethodTableCallTreeCountsAndSummary(
+  thread: Thread,
+  samples: SamplesLikeTable,
+  {
+    callNodeInfo: { callNodeTable, stackIndexToCallNodeIndex },
+    funcToCallNodeIndex,
+  }: CallNodeInfoWithFuncMapping
+): CallTreeCountsAndSummary {
+  const { callNodeSelf, callNodeTotal } = _getSummaryPerFunction(
+    thread,
+    samples,
+    funcToCallNodeIndex
+  );
+  console.log({
+    callNodeTable,
+    stackIndexToCallNodeIndex,
+    funcToCallNodeIndex,
+  });
+  funcToCallNodeIndex.forEach((callNodeIndex, funcIndex) => {
+    if (callNodeIndex === -1) {
+      return;
+    }
+    console.log(
+      `funcIndex: ${funcIndex}, callNodeIndex: ${callNodeIndex}, func: ${thread.stringTable.getString(
+        thread.funcTable.name[funcIndex]
+      )}, callNodeSelf: ${callNodeSelf[callNodeIndex]}, callNodeTotal: ${
+        callNodeTotal[callNodeIndex]
+      }`
+    );
+  });
+
+  // one call node for each function
+
+  // Compute the following variables:
+  const callNodeTotalSummary = callNodeTotal;
+  const callNodeChildCount = new Uint32Array(callNodeTable.length).fill(0);
+  const rootTotalSummary = callNodeTotal.reduce((a, b) => a + b, 0);
+  const rootCount = callNodeTable.length;
+
+  return {
+    callNodeSummary: {
+      self: callNodeSelf,
+      total: callNodeTotalSummary,
+    },
+    callNodeChildCount,
+    rootTotalSummary,
+    rootCount,
+  };
+}
+
+/**
+ * An exported interface to get an instance of the CallTree class.
+ * This handles computing timing information, and passing it all into
+ * the CallTree constructor.
+ */
+export function getMethodTableCallTree(
+  thread: Thread,
+  interval: Milliseconds,
+  { callNodeInfo }: CallNodeInfoWithFuncMapping,
+  categories: CategoryList,
+  implementationFilter: string,
+  callTreeCountsAndSummary: CallTreeCountsAndSummary,
+  weightType: WeightType
+): CallTree {
+  return timeCode('getMethodTableCallTree', () => {
+    const { callNodeSummary, callNodeChildCount, rootTotalSummary, rootCount } =
+      callTreeCountsAndSummary;
     const jsOnly = implementationFilter === 'js';
     // By default add a single decimal value, e.g 13.1, 0.3, 5234.4
     return new CallTree(

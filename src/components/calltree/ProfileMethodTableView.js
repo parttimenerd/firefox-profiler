@@ -21,17 +21,17 @@ type StateProps = {|
 
 type Props = ConnectedProps<{||}, StateProps, {||}>;
 
-class ProfileCallTreeViewImpl extends PureComponent<Props> {
+class ProfileMethodTableViewImpl extends PureComponent<Props> {
   render() {
     const { tree, callNodeInfo } = this.props;
     return (
       <div
-        className="treeAndSidebarWrapper"
+        className="methodtableAndSidebarWrapper"
         id="calltree-tab"
         role="tabpanel"
-        aria-labelledby="calltree-tab-button"
+        aria-labelledby="methodtable-tab-button"
       >
-        <StackSettings />
+        <StackSettings hideInvertCallstack={true} />
         <TransformNavigator />
         <CallTree tree={tree} callNodeInfo={callNodeInfo} />
       </div>
@@ -39,10 +39,11 @@ class ProfileCallTreeViewImpl extends PureComponent<Props> {
   }
 }
 
-export const ProfileCallTreeView = explicitConnect<{||}, StateProps, {||}>({
+export const ProfileMethodTableView = explicitConnect<{||}, StateProps, {||}>({
   mapStateToProps: (state) => ({
-    tree: selectedThreadSelectors.getCallTree(state),
-    callNodeInfo: selectedThreadSelectors.getCallNodeInfo(state),
+    tree: selectedThreadSelectors.getMethodTableCallTree(state),
+    callNodeInfo:
+      selectedThreadSelectors.getMethodTableCallNodeInfo(state).callNodeInfo,
   }),
-  component: ProfileCallTreeViewImpl,
+  component: ProfileMethodTableViewImpl,
 });
