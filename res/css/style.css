@@ -46,3 +46,9 @@ body {
   flex: 1;
   flex-flow: column nowrap;
 }
+
+.methodtableAndSidebarWrapper {
+  display: flex;
+  flex: 1;
+  flex-flow: column nowrap;
+}

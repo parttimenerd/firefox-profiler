@@ -16,6 +16,7 @@ import {
   getStackLineInfo,
   getLineTimings,
 } from '../../profile-logic/line-timings';
+import type { CallNodeInfoWithFuncMapping } from '../../profile-logic/profile-data';
 
 import type {
   Thread,
@@ -86,6 +87,23 @@ export function getStackAndSampleSelectorsPerThread(
       );
     }
   );
+
+  const getMethodTableCallNodeInfo: Selector<CallNodeInfoWithFuncMapping> =
+    createSelector(
+      threadSelectors.getFilteredThread,
+      ProfileSelectors.getDefaultCategory,
+      (
+        { stackTable, frameTable, funcTable }: Thread,
+        defaultCategory: IndexIntoCategoryList
+      ): CallNodeInfoWithFuncMapping => {
+        return ProfileData.getMethodTableCallNodeInfo(
+          stackTable,
+          frameTable,
+          funcTable,
+          defaultCategory
+        );
+      }
+    );
 
   const getSourceViewStackLineInfo: Selector<StackLineInfo | null> =
     createSelector(
@@ -242,6 +260,26 @@ export function getStackAndSampleSelectorsPerThread(
     CallTree.getCallTree
   );
 
+  const getMethodTableCallTreeCountsAndSummary: Selector<CallTree.CallTreeCountsAndSummary> =
+    createSelector(
+      threadSelectors.getPreviewFilteredThread,
+      threadSelectors.getPreviewFilteredSamplesForCallTree,
+      getMethodTableCallNodeInfo,
+      CallTree.computeMethodTableCallTreeCountsAndSummary
+    );
+
+  /** returns a flat call tree used for the MethodTable view */
+  const getMethodTableCallTree: Selector<CallTree.CallTree> = createSelector(
+    threadSelectors.getPreviewFilteredThread,
+    ProfileSelectors.getProfileInterval,
+    getMethodTableCallNodeInfo,
+    ProfileSelectors.getCategories,
+    UrlState.getImplementationFilter,
+    getMethodTableCallTreeCountsAndSummary,
+    getWeightTypeForCallTree,
+    CallTree.getMethodTableCallTree
+  );
+
   const getSourceViewLineTimings: Selector<LineTimings> = createSelector(
     getSourceViewStackLineInfo,
     threadSelectors.getPreviewFilteredSamplesForCallTree,
@@ -296,6 +334,7 @@ export function getStackAndSampleSelectorsPerThread(
     unfilteredSamplesRange,
     getWeightTypeForCallTree,
     getCallNodeInfo,
+    getMethodTableCallNodeInfo,
     getSourceViewStackLineInfo,
     getSelectedCallNodePath,
     getSelectedCallNodeIndex,
@@ -304,6 +343,7 @@ export function getStackAndSampleSelectorsPerThread(
     getSamplesSelectedStatesInFilteredThread,
     getTreeOrderComparatorInFilteredThread,
     getCallTree,
+    getMethodTableCallTree,
     getSourceViewLineTimings,
     getTracedTiming,
     getStackTimingByDepth,

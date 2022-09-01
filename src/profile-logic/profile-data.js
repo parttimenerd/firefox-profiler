@@ -213,13 +213,129 @@ export function getCallNodeInfo(
       func: new Int32Array(func),
       category: new Int32Array(category),
       subcategory: new Int32Array(subcategory),
-      innerWindowID: new Float64Array(innerWindowID),
+      innerWindowID: new Float64Array(func.length).fill(0),
       sourceFramesInlinedIntoSymbol,
       depth,
       length,
     };
 
     return { callNodeTable, stackIndexToCallNodeIndex };
+  });
+}
+
+export type CallNodeInfoWithFuncMapping = {|
+  callNodeInfo: CallNodeInfo,
+  funcToCallNodeIndex: Int32Array,
+|};
+
+/**
+ * Generate the CallNodeInfo which contains the CallNodeTable, and a map to convert
+ * an IndexIntoStackTable to a IndexIntoCallNodeTable. This function runs
+ * produces infos with one call node per function for the MethodTable view.
+ *
+ * It removes all functions without any samples and uses the category (and subcategory) of the last
+ * frame for each function.
+ *
+ * See `src/types/profile-derived.js` for the type definitions.
+ * See `docs-developer/call-trees.md` for a detailed explanation of CallNodes.
+ */
+export function getMethodTableCallNodeInfo(
+  stackTable: StackTable,
+  frameTable: FrameTable,
+  funcTable: FuncTable,
+  defaultCategory: IndexIntoCategoryList
+): CallNodeInfoWithFuncMapping {
+  return timeCode('getMethodTableCallNodeInfo', () => {
+    const funcToCallNodeIndex = new Int32Array(funcTable.length).fill(-1);
+    const stackIndexToCallNodeIndex = new Uint32Array(stackTable.length);
+
+    // The callNodeTable components, per function index
+    const prefix: Array<IndexIntoCallNodeTable> = [];
+    const func: Array<IndexIntoFuncTable> = [];
+    const category: Array<IndexIntoCategoryList> = [];
+    const subcategory: Array<IndexIntoSubcategoryListForCategory> = [];
+    const depth: Array<number> = [];
+    const sourceFramesInlinedIntoSymbol: Array<
+      IndexIntoNativeSymbolTable | -1 | null
+    > = [];
+    let length = 0;
+
+    function addCallNode(
+      funcIndex: number,
+      categoryIndex: number,
+      subcategoryIndex: number,
+      inlinedIntoSymbol: IndexIntoNativeSymbolTable | null
+    ) {
+      if (funcToCallNodeIndex[funcIndex] === -1) {
+        // we found a new function
+        funcToCallNodeIndex[funcIndex] = length;
+        length++;
+      }
+      const callNodeIndex = funcToCallNodeIndex[funcIndex]; // index into the other tables
+      prefix[callNodeIndex] = -1; // we have a flat call tree
+      func[callNodeIndex] = funcIndex;
+      depth[callNodeIndex] = 0; // we have a flat call tree
+
+      if (sourceFramesInlinedIntoSymbol[callNodeIndex] === undefined) {
+        // first time we visit it
+        sourceFramesInlinedIntoSymbol[callNodeIndex] = inlinedIntoSymbol;
+        category[callNodeIndex] = categoryIndex;
+        subcategory[callNodeIndex] = subcategoryIndex;
+      } else {
+        if (
+          sourceFramesInlinedIntoSymbol[callNodeIndex] !== inlinedIntoSymbol
+        ) {
+          sourceFramesInlinedIntoSymbol[callNodeIndex] = -1; // conflicting information
+        }
+        if (category[callNodeIndex] !== categoryIndex) {
+          category[callNodeIndex] = defaultCategory;
+        } else {
+          category[callNodeIndex] = categoryIndex;
+        }
+        if (subcategory[callNodeIndex] !== subcategoryIndex) {
+          subcategory[callNodeIndex] = 0;
+        } else {
+          subcategory[callNodeIndex] = subcategoryIndex;
+        }
+      }
+    }
+
+    // Go through each stack, and create a new callNode table, which is based off of
+    // functions rather than frames.
+    for (let stackIndex = 0; stackIndex < stackTable.length; stackIndex++) {
+      const frameIndex = stackTable.frame[stackIndex];
+      const categoryIndex = stackTable.category[stackIndex];
+      const subcategoryIndex = stackTable.subcategory[stackIndex];
+      const funcIndex = frameTable.func[frameIndex];
+      const inlinedIntoSymbol =
+        frameTable.inlineDepth[frameIndex] > 0
+          ? frameTable.nativeSymbol[frameIndex]
+          : null;
+
+      addCallNode(
+        funcIndex,
+        categoryIndex,
+        subcategoryIndex,
+        inlinedIntoSymbol
+      );
+      stackIndexToCallNodeIndex[stackIndex] = funcToCallNodeIndex[funcIndex]; // map the stackIndex correctly
+    }
+
+    const callNodeTable: CallNodeTable = {
+      prefix: new Int32Array(prefix),
+      func: new Int32Array(func),
+      category: new Int32Array(category),
+      subcategory: new Int32Array(subcategory),
+      depth: new Array(length).fill(0),
+      innerWindowID: new Float64Array(length),
+      sourceFramesInlinedIntoSymbol,
+      length: length,
+    };
+
+    return {
+      callNodeInfo: { callNodeTable, stackIndexToCallNodeIndex },
+      funcToCallNodeIndex,
+    };
   });
 }
 

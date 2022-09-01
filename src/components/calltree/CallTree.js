@@ -72,9 +72,14 @@ type DispatchProps = {|
   +openSourceView: typeof openSourceView,
 |};
 
-type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
+type Props = {|
+  tree: CallTreeType,
+  callNodeInfo: CallNodeInfo,
+|};
 
-class CallTreeImpl extends PureComponent<Props> {
+type AllProps = ConnectedProps<Props, StateProps, DispatchProps>;
+
+class CallTreeImpl extends PureComponent<AllProps> {
   _mainColumn: Column<CallNodeDisplayData> = {
     propName: 'name',
     titleL10nId: '',
@@ -299,13 +304,13 @@ class CallTreeImpl extends PureComponent<Props> {
   }
 }
 
-export const CallTree = explicitConnect<{||}, StateProps, DispatchProps>({
-  mapStateToProps: (state: State) => ({
+export const CallTree = explicitConnect<Props, StateProps, DispatchProps>({
+  mapStateToProps: (state: State, props: Props) => ({
     threadsKey: getSelectedThreadsKey(state),
     scrollToSelectionGeneration: getScrollToSelectionGeneration(state),
     focusCallTreeGeneration: getFocusCallTreeGeneration(state),
-    tree: selectedThreadSelectors.getCallTree(state),
-    callNodeInfo: selectedThreadSelectors.getCallNodeInfo(state),
+    tree: props.tree,
+    callNodeInfo: props.callNodeInfo,
     selectedCallNodeIndex:
       selectedThreadSelectors.getSelectedCallNodeIndex(state),
     rightClickedCallNodeIndex:
