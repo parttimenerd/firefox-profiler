@@ -90,14 +90,12 @@ exports[`FlameGraph has a tooltip that matches the snapshot with categories 1`] 
         <div
           class="tooltipCallNodeTiming "
         >
-          3
-           samples
+          3 samples
         </div>
         <div
           class="tooltipCallNodeTiming "
         >
           —
-           samples
         </div>
         <div
           class="tooltipCallNodeName tooltipLabel"
@@ -238,14 +236,12 @@ exports[`FlameGraph has a tooltip that matches the snapshot with implementation 
         <div
           class="tooltipCallNodeTiming "
         >
-          3
-           samples
+          3 samples
         </div>
         <div
           class="tooltipCallNodeTiming "
         >
           —
-           samples
         </div>
         <div
           class="tooltipCallNodeName tooltipLabel"
@@ -916,14 +912,12 @@ exports[`FlameGraph shows a tooltip with the resource information with categorie
         <div
           class="tooltipCallNodeTiming "
         >
-          1
-           samples
+          1 sample
         </div>
         <div
           class="tooltipCallNodeTiming "
         >
-          1
-           samples
+          1 sample
         </div>
         <div
           class="tooltipCallNodeName tooltipLabel"
@@ -1070,14 +1064,12 @@ exports[`FlameGraph shows a tooltip with the resource information with implement
         <div
           class="tooltipCallNodeTiming "
         >
-          1
-           samples
+          1 sample
         </div>
         <div
           class="tooltipCallNodeTiming "
         >
-          1
-           samples
+          1 sample
         </div>
         <div
           class="tooltipCallNodeName tooltipLabel"
