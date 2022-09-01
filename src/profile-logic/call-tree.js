@@ -648,7 +648,7 @@ export function computeMethodTableCallTreeCountsAndSummary(
   // Compute the following variables:
   const callNodeTotalSummary = callNodeTotal;
   const callNodeChildCount = new Uint32Array(callNodeTable.length).fill(0);
-  const rootTotalSummary = callNodeTotal.reduce((a, b) => a + b, 0);
+  const rootTotalSummary = samples.length;
   const rootCount = callNodeTable.length;
 
   return {
