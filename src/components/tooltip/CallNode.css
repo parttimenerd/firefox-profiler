@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.tooltipCallNodeImplementation {
+.tooltipCallNodeImplementation,
+.tooltipCallNodeCategory {
   display: grid;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--grey-30);
@@ -25,22 +26,25 @@
   white-space: nowrap;
 }
 
-.tooltipCallNodeImplementationName {
+.tooltipCallNodeName {
   white-space: nowrap;
 }
 
-.tooltipCallNodeImplementationGraph {
+.tooltipCallNodeGraph {
   position: relative;
   width: var(--graph-width);
   height: var(--graph-height);
   margin-top: 2px;
   background-color: var(--grey-30);
   border-radius: 2px;
+
+  --running-color: var(--blue-40);
+  --self-color: var(--blue-60);
 }
 
 .tooltipCallNodeGraphRunning {
   height: var(--graph-height);
-  background-color: var(--blue-40);
+  background-color: var(--running-color);
   border-radius: 2px;
 }
 
@@ -49,18 +53,28 @@
   top: 0;
   left: 0;
   height: var(--graph-height);
-  background-color: var(--blue-60);
+  background-color: var(--self-color);
   border-radius: 2px;
 }
 
-.tooltipCallNodeImplementationTiming {
+.tooltipCallNodeCategory .tooltipCallNodeGraphRunning {
+  filter: brightness(170%) contrast(90%) saturate(90%);
+}
+
+/* used for hard to lighten color */
+.tooltipCallNodeCategory .tooltipCallNodeGraphRunning.outlineBorder {
+  outline: #3c3c3c solid 1px;
+  outline-offset: -1px;
+}
+
+.tooltipCallNodeTiming {
   padding: 0 5px;
   text-align: right;
   white-space: nowrap;
 }
 
-.tooltipCallNodeImplementationHeaderSwatchRunning,
-.tooltipCallNodeImplementationHeaderSwatchSelf {
+.tooltipCallNodeHeaderSwatchRunning,
+.tooltipCallNodeHeaderSwatchSelf {
   display: inline-block;
   width: 9px;
   height: 9px;
@@ -69,12 +83,17 @@
   margin-right: 3px;
 }
 
-.tooltipCallNodeImplementationHeaderSwatchRunning {
+.tooltipCallNodeHeaderSwatchRunning {
   background-color: var(--blue-40);
 }
 
-.tooltipCallNodeImplementationHeaderSwatchSelf {
+.tooltipCallNodeHeaderSwatchSelf {
   background-color: var(--blue-60);
+}
+
+.tooltipCallNodeCategory .tooltipCallNodeHeaderSwatchSelf,
+.tooltipCallNodeCategory .tooltipCallNodeHeaderSwatchRunning {
+  display: none;
 }
 
 .tooltipCallNodeDetailsLeft {
@@ -83,11 +102,17 @@
   padding-bottom: 5px;
 }
 
-.tooltipCallNodeCategoryGraphRunning {
-  height: var(--graph-height);
-  border-radius: 2px;
+.tooltipCallNodeGraph.tooltipCategoryLabel {
+  height: calc(var(--graph-height) * 1.2);
+}
+
+.tooltipCallNodeGraph.tooltipCategoryLabel .tooltipCallNodeGraphRunning,
+.tooltipCallNodeGraph.tooltipCategoryLabel .tooltipCallNodeGraphSelf {
+  height: calc(var(--graph-height) * 1.2);
 }
 
 .tooltipCategoryLabel {
+  padding-left: 3px;
+  margin-top: 8px;
   font-weight: bold;
 }

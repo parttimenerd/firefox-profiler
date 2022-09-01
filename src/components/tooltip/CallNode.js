@@ -7,7 +7,7 @@ import * as React from 'react';
 import { getStackType } from 'firefox-profiler/profile-logic/transforms';
 import { parseFileNameFromSymbolication } from 'firefox-profiler/utils/special-paths';
 import { objectEntries } from 'firefox-profiler/utils/flow';
-import { formatCallNodeNumber } from 'firefox-profiler/utils/format-numbers';
+import { formatCallNodeNumberWithUnit } from 'firefox-profiler/utils/format-numbers';
 import { Icon } from 'firefox-profiler/components/shared/Icon';
 import {
   getFriendlyStackTypeName,
@@ -39,6 +39,10 @@ import classNames from 'classnames';
 
 const GRAPH_WIDTH = 150;
 const GRAPH_HEIGHT = 10;
+
+function isHardToLightenCategoryColor(category: string): boolean {
+  return ['grey', 'yellow', 'red', 'lightred', 'darkgray'].includes(category);
+}
 
 type Props = {|
   +thread: Thread,
@@ -76,11 +80,11 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         <div className="tooltipCallNodeHeader" />
         <div className="tooltipCallNodeHeader">
           <span className="tooltipCallNodeHeaderSwatchRunning" />
-          Running samples
+          Running
         </div>
-        <div className="tooltipCallNodeHeaderRight">
+        <div className="tooltipCallNodeHeader">
           <span className="tooltipCallNodeHeaderSwatchSelf" />
-          Self samples
+          Self
         </div>
         {/* grid row -------------------------------------------------- */}
         <div
@@ -91,7 +95,12 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         >
           Overall
         </div>
-        <div className="tooltipCallNodeGraph">
+        <div
+          className={
+            'tooltipCallNodeGraph ' +
+            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
+          }
+        >
           <div
             className={`tooltipCallNode${type}GraphRunning`}
             style={{
@@ -107,19 +116,19 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         </div>
         <div
           className={
-            'tooltipCallNodeImplementationTiming ' +
+            'tooltipCallNodeTiming ' +
             (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
           }
         >
-          {displayData.total}
+          {displayData.total} samples
         </div>
         <div
           className={
-            'tooltipCallNodeImplementationTiming ' +
+            'tooltipCallNodeTiming ' +
             (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
           }
         >
-          {displayData.self}
+          {displayData.self} samples
         </div>
       </>
     );
@@ -187,7 +196,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
     );
 
     return (
-      <div className="tooltipCallNodeImplementation">
+      <div className="tooltipCallNodeCategory">
         {this._renderTimingsHeader(
           displayData,
           selfTime.value,
@@ -201,7 +210,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
             <React.Fragment key={index}>
               <div
                 className={classNames({
-                  tooltipCallNodeImplementationName: true,
+                  tooltipCallNodeName: true,
                   tooltipLabel: true,
                   tooltipCategoryLabel: entry.subCategory === -1,
                 })}
@@ -217,15 +226,22 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                   'tooltipCallNodeGraph ' +
                   (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
                 }
+                style={{
+                  '--running-color': `var(--category-color-${categoryColor})`,
+                  '--self-color': `var(--category-color-${categoryColor})`,
+                }}
               >
                 <div
-                  className={`tooltipCallNodeCategoryGraphRunning category-color-${categoryColor}`}
+                  className={classNames({
+                    tooltipCallNodeGraphRunning: true,
+                    outlineBorder: isHardToLightenCategoryColor(categoryColor),
+                  })}
                   style={{
                     width: (GRAPH_WIDTH * entry.totalTime) / totalTime.value,
                   }}
                 />
                 <div
-                  className={`tooltipCallNodeCategoryGraphSelf category-color-${categoryColor}`}
+                  className="tooltipCallNodeGraphSelf"
                   style={{
                     width: (GRAPH_WIDTH * entry.selfTime) / totalTime.value,
                   }}
@@ -233,11 +249,11 @@ export class TooltipCallNode extends React.PureComponent<Props> {
               </div>
               <div
                 className={
-                  'tooltipCallNodeImplementationTiming ' +
+                  'tooltipCallNodeTiming ' +
                   (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
                 }
               >
-                {formatCallNodeNumber(
+                {formatCallNodeNumberWithUnit(
                   weightType,
                   isHighPrecision,
                   entry.totalTime
@@ -245,13 +261,13 @@ export class TooltipCallNode extends React.PureComponent<Props> {
               </div>
               <div
                 className={
-                  'tooltipCallNodeImplementationTiming ' +
+                  'tooltipCallNodeTiming ' +
                   (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
                 }
               >
                 {self === 0
                   ? '—'
-                  : formatCallNodeNumber(
+                  : formatCallNodeNumberWithUnit(
                       weightType,
                       isHighPrecision,
                       entry.selfTime
@@ -319,7 +335,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
 
             return (
               <React.Fragment key={index}>
-                <div className="tooltipCallNodeImplementationName tooltipLabel">
+                <div className="tooltipCallNodeName tooltipLabel">
                   {getFriendlyStackTypeName(implementation)}
                 </div>
                 <div className="tooltipCallNodeGraph">
@@ -336,13 +352,17 @@ export class TooltipCallNode extends React.PureComponent<Props> {
                     }}
                   />
                 </div>
-                <div className="tooltipCallNodeImplementationTiming">
-                  {formatCallNodeNumber(weightType, isHighPrecision, time)}
+                <div className="tooltipCallNodeTiming">
+                  {formatCallNodeNumberWithUnit(
+                    weightType,
+                    isHighPrecision,
+                    time
+                  )}
                 </div>
-                <div className="tooltipCallNodeImplementationTiming">
+                <div className="tooltipCallNodeTiming">
                   {selfTimeValue === 0
                     ? '—'
-                    : formatCallNodeNumber(
+                    : formatCallNodeNumberWithUnit(
                         weightType,
                         isHighPrecision,
                         selfTimeValue

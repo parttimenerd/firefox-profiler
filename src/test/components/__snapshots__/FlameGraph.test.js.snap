@@ -60,15 +60,15 @@ exports[`FlameGraph has a tooltip that matches the snapshot with categories 1`] 
           <span
             class="tooltipCallNodeHeaderSwatchRunning"
           />
-          Running samples
+          Running
         </div>
         <div
-          class="tooltipCallNodeHeaderRight"
+          class="tooltipCallNodeHeader"
         >
           <span
             class="tooltipCallNodeHeaderSwatchSelf"
           />
-          Self samples
+          Self
         </div>
         <div
           class="tooltipLabel "
@@ -76,7 +76,7 @@ exports[`FlameGraph has a tooltip that matches the snapshot with categories 1`] 
           Overall
         </div>
         <div
-          class="tooltipCallNodeGraph"
+          class="tooltipCallNodeGraph "
         >
           <div
             class="tooltipCallNodeImplementationGraphRunning"
@@ -88,17 +88,19 @@ exports[`FlameGraph has a tooltip that matches the snapshot with categories 1`] 
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           3
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           —
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationName tooltipLabel"
+          class="tooltipCallNodeName tooltipLabel"
         >
           Native code
         </div>
@@ -115,12 +117,12 @@ exports[`FlameGraph has a tooltip that matches the snapshot with categories 1`] 
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
-          3
+          3 samples
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
           —
         </div>
@@ -206,15 +208,15 @@ exports[`FlameGraph has a tooltip that matches the snapshot with implementation 
           <span
             class="tooltipCallNodeHeaderSwatchRunning"
           />
-          Running samples
+          Running
         </div>
         <div
-          class="tooltipCallNodeHeaderRight"
+          class="tooltipCallNodeHeader"
         >
           <span
             class="tooltipCallNodeHeaderSwatchSelf"
           />
-          Self samples
+          Self
         </div>
         <div
           class="tooltipLabel "
@@ -222,7 +224,7 @@ exports[`FlameGraph has a tooltip that matches the snapshot with implementation 
           Overall
         </div>
         <div
-          class="tooltipCallNodeGraph"
+          class="tooltipCallNodeGraph "
         >
           <div
             class="tooltipCallNodeImplementationGraphRunning"
@@ -234,17 +236,19 @@ exports[`FlameGraph has a tooltip that matches the snapshot with implementation 
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           3
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           —
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationName tooltipLabel"
+          class="tooltipCallNodeName tooltipLabel"
         >
           Native code
         </div>
@@ -261,12 +265,12 @@ exports[`FlameGraph has a tooltip that matches the snapshot with implementation 
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
-          3
+          3 samples
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
           —
         </div>
@@ -882,15 +886,15 @@ exports[`FlameGraph shows a tooltip with the resource information with categorie
           <span
             class="tooltipCallNodeHeaderSwatchRunning"
           />
-          Running samples
+          Running
         </div>
         <div
-          class="tooltipCallNodeHeaderRight"
+          class="tooltipCallNodeHeader"
         >
           <span
             class="tooltipCallNodeHeaderSwatchSelf"
           />
-          Self samples
+          Self
         </div>
         <div
           class="tooltipLabel "
@@ -898,7 +902,7 @@ exports[`FlameGraph shows a tooltip with the resource information with categorie
           Overall
         </div>
         <div
-          class="tooltipCallNodeGraph"
+          class="tooltipCallNodeGraph "
         >
           <div
             class="tooltipCallNodeImplementationGraphRunning"
@@ -910,17 +914,19 @@ exports[`FlameGraph shows a tooltip with the resource information with categorie
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           1
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           1
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationName tooltipLabel"
+          class="tooltipCallNodeName tooltipLabel"
         >
           Native code
         </div>
@@ -937,14 +943,14 @@ exports[`FlameGraph shows a tooltip with the resource information with categorie
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
-          1
+          1 sample
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
-          1
+          1 sample
         </div>
       </div>
       <div
@@ -1034,15 +1040,15 @@ exports[`FlameGraph shows a tooltip with the resource information with implement
           <span
             class="tooltipCallNodeHeaderSwatchRunning"
           />
-          Running samples
+          Running
         </div>
         <div
-          class="tooltipCallNodeHeaderRight"
+          class="tooltipCallNodeHeader"
         >
           <span
             class="tooltipCallNodeHeaderSwatchSelf"
           />
-          Self samples
+          Self
         </div>
         <div
           class="tooltipLabel "
@@ -1050,7 +1056,7 @@ exports[`FlameGraph shows a tooltip with the resource information with implement
           Overall
         </div>
         <div
-          class="tooltipCallNodeGraph"
+          class="tooltipCallNodeGraph "
         >
           <div
             class="tooltipCallNodeImplementationGraphRunning"
@@ -1062,17 +1068,19 @@ exports[`FlameGraph shows a tooltip with the resource information with implement
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           1
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming "
+          class="tooltipCallNodeTiming "
         >
           1
+           samples
         </div>
         <div
-          class="tooltipCallNodeImplementationName tooltipLabel"
+          class="tooltipCallNodeName tooltipLabel"
         >
           Native code
         </div>
@@ -1089,14 +1097,14 @@ exports[`FlameGraph shows a tooltip with the resource information with implement
           />
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
-          1
+          1 sample
         </div>
         <div
-          class="tooltipCallNodeImplementationTiming"
+          class="tooltipCallNodeTiming"
         >
-          1
+          1 sample
         </div>
       </div>
       <div
