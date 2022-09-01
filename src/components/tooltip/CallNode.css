@@ -102,13 +102,18 @@
   padding-bottom: 5px;
 }
 
-.tooltipCallNodeGraph.tooltipCategoryLabel {
+.tooltipCallNodeGraph.tooltipCategoryRow {
   height: calc(var(--graph-height) * 1.2);
 }
 
-.tooltipCallNodeGraph.tooltipCategoryLabel .tooltipCallNodeGraphRunning,
-.tooltipCallNodeGraph.tooltipCategoryLabel .tooltipCallNodeGraphSelf {
+.tooltipCallNodeGraph.tooltipCategoryRow .tooltipCallNodeGraphRunning,
+.tooltipCallNodeGraph.tooltipCategoryRow .tooltipCallNodeGraphSelf {
   height: calc(var(--graph-height) * 1.2);
+}
+
+.tooltipCategoryRow {
+  margin-top: 8px;
+  font-weight: bold;
 }
 
 .tooltipCategoryLabel {

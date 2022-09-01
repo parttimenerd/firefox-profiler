@@ -98,7 +98,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         <div
           className={
             'tooltipCallNodeGraph ' +
-            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
+            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryRow' : '')
           }
         >
           <div
@@ -117,7 +117,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         <div
           className={
             'tooltipCallNodeTiming ' +
-            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
+            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryRow' : '')
           }
         >
           {displayData.total} samples
@@ -125,7 +125,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
         <div
           className={
             'tooltipCallNodeTiming ' +
-            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryLabel' : '')
+            (addTooltipCategoryLabelClassToHeader ? 'tooltipCategoryRow' : '')
           }
         >
           {displayData.self} samples
@@ -224,7 +224,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
               <div
                 className={
                   'tooltipCallNodeGraph ' +
-                  (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
+                  (entry.subCategory === -1 ? 'tooltipCategoryRow' : '')
                 }
                 style={{
                   '--running-color': `var(--category-color-${categoryColor})`,
@@ -250,7 +250,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
               <div
                 className={
                   'tooltipCallNodeTiming ' +
-                  (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
+                  (entry.subCategory === -1 ? 'tooltipCategoryRow' : '')
                 }
               >
                 {formatCallNodeNumberWithUnit(
@@ -262,7 +262,7 @@ export class TooltipCallNode extends React.PureComponent<Props> {
               <div
                 className={
                   'tooltipCallNodeTiming ' +
-                  (entry.subCategory === -1 ? 'tooltipCategoryLabel' : '')
+                  (entry.subCategory === -1 ? 'tooltipCategoryRow' : '')
                 }
               >
                 {self === 0
