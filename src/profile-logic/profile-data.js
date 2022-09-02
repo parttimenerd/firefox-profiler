@@ -213,7 +213,7 @@ export function getCallNodeInfo(
       func: new Int32Array(func),
       category: new Int32Array(category),
       subcategory: new Int32Array(subcategory),
-      innerWindowID: new Float64Array(func.length).fill(0),
+      innerWindowID: new Float64Array(innerWindowID),
       sourceFramesInlinedIntoSymbol,
       depth,
       length,
@@ -461,6 +461,76 @@ export function getSamplesSelectedStates(
     /* eslint-disable no-unreachable */
     throw new Error('unreachable');
     /* eslint-enable no-unreachable */
+  }
+
+  // Go through each sample, and label its state.
+  for (
+    let sampleIndex = 0;
+    sampleIndex < sampleCallNodes.length;
+    sampleIndex++
+  ) {
+    result[sampleIndex] = getSelectedStateFromCallNode(
+      sampleCallNodes[sampleIndex],
+      activeTabFilteredCallNodes[sampleIndex]
+    );
+  }
+  return result;
+}
+
+/**
+ * Go through the samples, and determine their current state.
+ *
+ * For samples that are neither 'FILTERED_OUT_*' nor 'SELECTED', this function compares
+ * the sample's call node to the selected call node, in tree order. It uses the same
+ * ordering as the function compareCallNodes in getTreeOrderComparator. But it does not
+ * call compareCallNodes with the selected node for each sample's call node, because doing
+ * so would recompute information about the selected call node on every call. Instead, it
+ * has an equivalent implementation that is faster because it only computes information
+ * about the selected call node's ancestors once.
+ */
+export function getSamplesSelectedStatesForFunction(
+  callNodeTable: CallNodeTable,
+  sampleCallNodes: Array<IndexIntoCallNodeTable | null>,
+  activeTabFilteredCallNodes: Array<IndexIntoCallNodeTable | null>,
+  selectedCallNodeIndex: IndexIntoCallNodeTable | null
+): SelectedState[] {
+  const result = new Array(sampleCallNodes.length);
+
+  /**
+   * Take a call node, and compute its selected state.
+   */
+  function getSelectedStateFromCallNode(
+    callNode: IndexIntoCallNodeTable | null,
+    activeTabFilteredCallNode: IndexIntoCallNodeTable | null
+  ): SelectedState {
+    let callNodeIndex = callNode;
+    if (callNodeIndex === null) {
+      return activeTabFilteredCallNode === null
+        ? // This sample was not part of the active tab.
+          'FILTERED_OUT_BY_ACTIVE_TAB'
+        : // This sample was filtered out in the transform pipeline.
+          'FILTERED_OUT_BY_TRANSFORM';
+    }
+
+    // When there's no selected call node, we don't want to shadow everything
+    // because everything is unselected. So let's decide this is as if
+    // everything is selected so that anything not filtered out will be nicely
+    // visible.
+    if (selectedCallNodeIndex === null) {
+      return 'SELECTED';
+    }
+
+    // Walk the call nodes toward the root, and search for the selected call node
+    while (callNodeIndex !== -1 && callNodeIndex !== selectedCallNodeIndex) {
+      callNodeIndex = callNodeTable.prefix[callNodeIndex];
+    }
+
+    if (callNodeIndex === selectedCallNodeIndex) {
+      // This sample's call node at the depth matches the selected call node.
+      return 'SELECTED';
+    }
+
+    return 'UNSELECTED_ORDERED_AFTER_SELECTED';
   }
 
   // Go through each sample, and label its state.
@@ -926,6 +996,41 @@ export function getTimingsForCallNodeIndex(
   }
 
   return { forPath: pathTimings, forFunc: funcTimings, rootTime };
+}
+
+/**
+ * This function returns the timings for a specific path. The algorithm is
+ * adjusted when the call tree is inverted.
+ * Note that the unfilteredThread should be the original thread before any filtering
+ * (by range or other) happens. Also sampleIndexOffset needs to be properly
+ * specified and is the offset to be applied on thread's indexes to access
+ * the same samples in unfilteredThread.
+ */
+export function getTimingsForFunction(
+  funcIndex: IndexIntoFuncTable | null,
+  { callNodeInfo, funcToCallNodeIndex }: CallNodeInfoWithFuncMapping,
+  interval: Milliseconds,
+  thread: Thread,
+  unfilteredThread: Thread,
+  sampleIndexOffset: number,
+  categories: CategoryList,
+  samples: SamplesLikeTable,
+  unfilteredSamples: SamplesLikeTable,
+  displayImplementation: boolean
+): TimingsForPath {
+  return getTimingsForCallNodeIndex(
+    funcIndex === null ? null : funcToCallNodeIndex[funcIndex],
+    callNodeInfo,
+    interval,
+    false,
+    thread,
+    unfilteredThread,
+    sampleIndexOffset,
+    categories,
+    samples,
+    unfilteredSamples,
+    displayImplementation
+  );
 }
 
 // This function computes the time range for a thread, using both its samples
@@ -1958,6 +2063,17 @@ export function getCallNodeIndexFromPath(
 ): IndexIntoCallNodeTable | null {
   const [result] = getCallNodeIndicesFromPaths([callNodePath], callNodeTable);
   return result;
+}
+
+// This function returns a CallNodeIndex from a CallNodePath, using the
+// specified `callNodeTable` for the MethodTable
+export function getMethodTableCallNodeIndexFromPath(
+  callNodePath: CallNodePath,
+  { funcToCallNodeIndex }: CallNodeInfoWithFuncMapping
+): IndexIntoCallNodeTable | null {
+  return callNodePath.length > 0
+    ? funcToCallNodeIndex[callNodePath[callNodePath.length - 1]]
+    : null;
 }
 
 // This function returns a CallNodePath from a CallNodeIndex.
