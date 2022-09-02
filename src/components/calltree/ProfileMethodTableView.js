@@ -9,21 +9,34 @@ import type { ConnectedProps } from 'firefox-profiler/utils/connect';
 import { StackSettings } from 'firefox-profiler/components/shared/StackSettings';
 import { TransformNavigator } from 'firefox-profiler/components/shared/TransformNavigator';
 import { selectedThreadSelectors } from '../../selectors/per-thread';
-import type { CallNodeInfo } from '../../types';
+import type { CallNodeInfo, IndexIntoCallNodeTable } from '../../types';
 import type { CallTree as CallTreeType } from 'firefox-profiler/profile-logic/call-tree';
 import { CallTree } from './CallTree';
 import explicitConnect from 'firefox-profiler/utils/connect';
+import {
+  changeSelectedMethodTableCallNode,
+  changeSelectedCallNode,
+} from 'firefox-profiler/actions/profile-view';
+import type { TabSlug } from 'firefox-profiler/app-logic/tabs-handling';
 
 type StateProps = {|
+  +tabslug: TabSlug,
   +tree: CallTreeType,
   +callNodeInfo: CallNodeInfo,
+  +selectedCallNodeIndex: IndexIntoCallNodeTable | null,
+  +rightClickedCallNodeIndex: IndexIntoCallNodeTable | null,
+  +expandedCallNodeIndexes: Array<IndexIntoCallNodeTable | null>,
+  +callNodeMaxDepth: number,
 |};
 
-type Props = ConnectedProps<{||}, StateProps, {||}>;
+type DispatchProps = {|
+  +changeSelectedCallNode: typeof changeSelectedCallNode,
+|};
+
+type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
 
 class ProfileMethodTableViewImpl extends PureComponent<Props> {
   render() {
-    const { tree, callNodeInfo } = this.props;
     return (
       <div
         className="methodtableAndSidebarWrapper"
@@ -33,17 +46,33 @@ class ProfileMethodTableViewImpl extends PureComponent<Props> {
       >
         <StackSettings hideInvertCallstack={true} />
         <TransformNavigator />
-        <CallTree tree={tree} callNodeInfo={callNodeInfo} />
+        <CallTree {...this.props} />
       </div>
     );
   }
 }
 
-export const ProfileMethodTableView = explicitConnect<{||}, StateProps, {||}>({
+export const ProfileMethodTableView = explicitConnect<
+  {||},
+  StateProps,
+  DispatchProps
+>({
   mapStateToProps: (state) => ({
+    tabslug: 'methodtable',
     tree: selectedThreadSelectors.getMethodTableCallTree(state),
     callNodeInfo:
       selectedThreadSelectors.getMethodTableCallNodeInfo(state).callNodeInfo,
+    selectedCallNodeIndex:
+      selectedThreadSelectors.getSelectedMethodTableCallNodeIndex(state),
+    // right clicking is not supported for now
+    // as most of the transformations do not make sense in this context
+    rightClickedCallNodeIndex: null,
+    // we cannot expand any call nodes
+    expandedCallNodeIndexes: [],
+    callNodeMaxDepth: 0,
   }),
+  mapDispatchToProps: {
+    changeSelectedCallNode: changeSelectedMethodTableCallNode,
+  },
   component: ProfileMethodTableViewImpl,
 });

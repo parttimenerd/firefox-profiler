@@ -140,6 +140,7 @@ const symbolicationStatus: Reducer<SymbolicationStatus> = (
 export const defaultThreadViewOptions = {
   selectedCallNodePath: [],
   expandedCallNodePaths: new PathSet(),
+  selectedMethodTableFunction: null,
   selectedMarker: null,
   selectedNetworkMarker: null,
 };
@@ -260,6 +261,25 @@ const viewOptionsPerThread: Reducer<ThreadViewOptionsPerThreads> = (
       return _updateThreadViewOptions(state, threadsKey, {
         selectedCallNodePath,
         expandedCallNodePaths,
+        selectedMethodTableFunction: null,
+      });
+    }
+    case 'CHANGE_SELECTED_METHODTABLE_CALL_NODE': {
+      const { selectedFunction, threadsKey } = action;
+
+      const threadState = _getThreadViewOptions(state, threadsKey);
+
+      const previousSelectedFunction = threadState.selectedMethodTableFunction;
+
+      // If the selected function doesn't actually change, let's return the previous
+      // state to avoid rerenders.
+      if (selectedFunction === previousSelectedFunction) {
+        return state;
+      }
+
+      return _updateThreadViewOptions(state, threadsKey, {
+        selectedMethodTableFunction: selectedFunction,
+        selectedCallNodePath: [],
       });
     }
     case 'CHANGE_INVERT_CALLSTACK': {
@@ -447,6 +467,7 @@ const scrollToSelectionGeneration: Reducer<number> = (state = 0, action) => {
   switch (action.type) {
     case 'CHANGE_INVERT_CALLSTACK':
     case 'CHANGE_SELECTED_CALL_NODE':
+    case 'CHANGE_SELECTED_METHODTABLE_CALL_NODE':
     case 'CHANGE_SELECTED_THREAD':
     case 'SELECT_TRACK':
     case 'HIDE_GLOBAL_TRACK':

@@ -41,6 +41,7 @@ import type {
   CallNodeDisplayData,
   WeightType,
 } from 'firefox-profiler/types';
+import type { TabSlug } from 'firefox-profiler/app-logic/tabs-handling';
 import type { CallTree as CallTreeType } from 'firefox-profiler/profile-logic/call-tree';
 
 import type { Column } from 'firefox-profiler/components/shared/TreeView';
@@ -50,31 +51,32 @@ type StateProps = {|
   +threadsKey: ThreadsKey,
   +scrollToSelectionGeneration: number,
   +focusCallTreeGeneration: number,
-  +tree: CallTreeType,
-  +callNodeInfo: CallNodeInfo,
-  +selectedCallNodeIndex: IndexIntoCallNodeTable | null,
-  +rightClickedCallNodeIndex: IndexIntoCallNodeTable | null,
-  +expandedCallNodeIndexes: Array<IndexIntoCallNodeTable | null>,
   +searchStringsRegExp: RegExp | null,
   +disableOverscan: boolean,
   +invertCallstack: boolean,
   +implementationFilter: ImplementationFilter,
-  +callNodeMaxDepth: number,
   +weightType: WeightType,
 |};
 
 type DispatchProps = {|
-  +changeSelectedCallNode: typeof changeSelectedCallNode,
-  +changeRightClickedCallNode: typeof changeRightClickedCallNode,
-  +changeExpandedCallNodes: typeof changeExpandedCallNodes,
   +addTransformToStack: typeof addTransformToStack,
   +handleCallNodeTransformShortcut: typeof handleCallNodeTransformShortcut,
   +openSourceView: typeof openSourceView,
 |};
 
 type Props = {|
+  tabslug: TabSlug,
   tree: CallTreeType,
   callNodeInfo: CallNodeInfo,
+  +selectedCallNodeIndex: IndexIntoCallNodeTable | null,
+  +rightClickedCallNodeIndex: IndexIntoCallNodeTable | null,
+  +expandedCallNodeIndexes: Array<IndexIntoCallNodeTable | null>,
+  +callNodeMaxDepth: number,
+
+  // dispatchers
+  +changeSelectedCallNode: typeof changeSelectedCallNode,
+  +changeRightClickedCallNode?: typeof changeRightClickedCallNode,
+  +changeExpandedCallNodes?: typeof changeExpandedCallNodes,
 |};
 
 type AllProps = ConnectedProps<Props, StateProps, DispatchProps>;
@@ -187,22 +189,29 @@ class CallTreeImpl extends PureComponent<AllProps> {
 
   _onRightClickSelection = (newSelectedCallNode: IndexIntoCallNodeTable) => {
     const { callNodeInfo, threadsKey, changeRightClickedCallNode } = this.props;
-    changeRightClickedCallNode(
-      threadsKey,
-      getCallNodePathFromIndex(newSelectedCallNode, callNodeInfo.callNodeTable)
-    );
+    if (changeRightClickedCallNode) {
+      changeRightClickedCallNode(
+        threadsKey,
+        getCallNodePathFromIndex(
+          newSelectedCallNode,
+          callNodeInfo.callNodeTable
+        )
+      );
+    }
   };
 
   _onExpandedCallNodesChange = (
     newExpandedCallNodeIndexes: Array<IndexIntoCallNodeTable | null>
   ) => {
     const { callNodeInfo, threadsKey, changeExpandedCallNodes } = this.props;
-    changeExpandedCallNodes(
-      threadsKey,
-      newExpandedCallNodeIndexes.map((callNodeIndex) =>
-        getCallNodePathFromIndex(callNodeIndex, callNodeInfo.callNodeTable)
-      )
-    );
+    if (changeExpandedCallNodes) {
+      changeExpandedCallNodes(
+        threadsKey,
+        newExpandedCallNodeIndexes.map((callNodeIndex) =>
+          getCallNodePathFromIndex(callNodeIndex, callNodeInfo.callNodeTable)
+        )
+      );
+    }
   };
 
   _onKeyDown = (event: SyntheticKeyboardEvent<>) => {
@@ -223,12 +232,12 @@ class CallTreeImpl extends PureComponent<AllProps> {
   };
 
   _onEnterOrDoubleClick = (nodeId: IndexIntoCallNodeTable) => {
-    const { tree, openSourceView } = this.props;
+    const { tree, openSourceView, tabslug } = this.props;
     const file = tree.getRawFileNameForCallNode(nodeId);
     if (file === null) {
       return;
     }
-    openSourceView(file, 'calltree');
+    openSourceView(file, tabslug);
   };
 
   procureInterestingInitialSelection() {
@@ -305,33 +314,17 @@ class CallTreeImpl extends PureComponent<AllProps> {
 }
 
 export const CallTree = explicitConnect<Props, StateProps, DispatchProps>({
-  mapStateToProps: (state: State, props: Props) => ({
+  mapStateToProps: (state: State) => ({
     threadsKey: getSelectedThreadsKey(state),
     scrollToSelectionGeneration: getScrollToSelectionGeneration(state),
     focusCallTreeGeneration: getFocusCallTreeGeneration(state),
-    tree: props.tree,
-    callNodeInfo: props.callNodeInfo,
-    selectedCallNodeIndex:
-      selectedThreadSelectors.getSelectedCallNodeIndex(state),
-    rightClickedCallNodeIndex:
-      selectedThreadSelectors.getRightClickedCallNodeIndex(state),
-    expandedCallNodeIndexes:
-      selectedThreadSelectors.getExpandedCallNodeIndexes(state),
     searchStringsRegExp: getSearchStringsAsRegExp(state),
     disableOverscan: getPreviewSelection(state).isModifying,
     invertCallstack: getInvertCallstack(state),
     implementationFilter: getImplementationFilter(state),
-    // Use the filtered call node max depth, rather than the preview filtered call node
-    // max depth so that the width of the TreeView component is stable across preview
-    // selections.
-    callNodeMaxDepth:
-      selectedThreadSelectors.getFilteredCallNodeMaxDepth(state),
     weightType: selectedThreadSelectors.getWeightTypeForCallTree(state),
   }),
   mapDispatchToProps: {
-    changeSelectedCallNode,
-    changeRightClickedCallNode,
-    changeExpandedCallNodes,
     addTransformToStack,
     handleCallNodeTransformShortcut,
     openSourceView,

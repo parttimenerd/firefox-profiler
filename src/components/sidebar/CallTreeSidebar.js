@@ -13,6 +13,7 @@ import { assertExhaustiveCheck } from 'firefox-profiler/utils/flow';
 import {
   selectedThreadSelectors,
   selectedNodeSelectors,
+  selectedMethodTableNodeSelectors,
 } from 'firefox-profiler/selectors/per-thread';
 import { getSelectedThreadsKey } from 'firefox-profiler/selectors/url-state';
 import { toggleOpenCategoryInSidebar } from 'firefox-profiler/actions/app';
@@ -507,6 +508,28 @@ export const CallTreeSidebar = explicitConnect<{||}, StateProps, {||}>({
     name: getFunctionName(selectedNodeSelectors.getName(state)),
     lib: selectedNodeSelectors.getLib(state),
     timings: selectedNodeSelectors.getTimingsForSidebar(state),
+    categoryList: getCategories(state),
+    weightType: selectedThreadSelectors.getWeightTypeForCallTree(state),
+    tracedTiming: selectedThreadSelectors.getTracedTiming(state),
+  }),
+  component: CallTreeSidebarImpl,
+});
+
+export const MethodTableCallTreeSidebar = explicitConnect<
+  {||},
+  StateProps,
+  {||}
+>({
+  mapStateToProps: (state) => ({
+    selectedNodeIndex:
+      selectedThreadSelectors.getSelectedMethodTableCallNodeIndex(state),
+    callNodeTable:
+      selectedThreadSelectors.getMethodTableCallNodeInfo(state).callNodeInfo
+        .callNodeTable,
+    selectedThreadsKey: getSelectedThreadsKey(state),
+    name: getFunctionName(selectedMethodTableNodeSelectors.getName(state)),
+    lib: selectedMethodTableNodeSelectors.getLib(state),
+    timings: selectedMethodTableNodeSelectors.getTimingsForSidebar(state),
     categoryList: getCategories(state),
     weightType: selectedThreadSelectors.getWeightTypeForCallTree(state),
     tracedTiming: selectedThreadSelectors.getTracedTiming(state),

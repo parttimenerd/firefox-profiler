@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 
-import { CallTreeSidebar } from './CallTreeSidebar';
+import { CallTreeSidebar, MethodTableCallTreeSidebar } from './CallTreeSidebar';
 import { MarkerSidebar } from './MarkerSidebar';
 
 import type { TabSlug } from 'firefox-profiler/app-logic/tabs-handling';
@@ -17,7 +17,7 @@ export function selectSidebar(
 ): React.ComponentType<{||}> | null {
   return {
     calltree: CallTreeSidebar,
-    methodtable: CallTreeSidebar,
+    methodtable: MethodTableCallTreeSidebar,
     'flame-graph': CallTreeSidebar,
     'stack-chart': null,
     'marker-chart': null,

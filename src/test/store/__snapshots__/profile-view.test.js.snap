@@ -4535,6 +4535,7 @@ Object {
     1,
   ],
   "selectedMarker": 1,
+  "selectedMethodTableFunction": null,
   "selectedNetworkMarker": null,
 }
 `;
