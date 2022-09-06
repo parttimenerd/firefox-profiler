@@ -10,6 +10,7 @@ import { MetaOverheadStatistics } from './MetaOverheadStatistics';
 import {
   getProfile,
   getSymbolicationStatus,
+  hasProfileExtraInfo,
 } from 'firefox-profiler/selectors/profile';
 import { resymbolicateProfile } from 'firefox-profiler/actions/receive-profile';
 
@@ -33,6 +34,8 @@ import './MetaInfo.css';
 type StateProps = $ReadOnly<{|
   profile: Profile,
   symbolicationStatus: SymbolicationStatus,
+  hasProfileExtraInfo: boolean,
+  onMoreInfoButtonClick: () => void,
 |}>;
 
 type DispatchProps = $ReadOnly<{|
@@ -403,6 +406,19 @@ class MetaInfoPanelImpl extends React.PureComponent<Props> {
         {profilerOverhead ? (
           <MetaOverheadStatistics profilerOverhead={profilerOverhead} />
         ) : null}
+        {this.props.hasProfileExtraInfo ? (
+          <div className="metaInfoRow">
+            <button
+              type="button"
+              className="moreInfoButton photon-button photon-button-default photon-button-micro"
+              onClick={this.props.onMoreInfoButtonClick}
+            >
+              <Localized id="MenuButtons--index--moreInfo-button">
+                Additional Information
+              </Localized>
+            </button>
+          </div>
+        ) : null}
       </>
     );
   }
@@ -440,10 +456,20 @@ function _formatDate(timestamp: number): string {
   return timestampDate;
 }
 
-export const MetaInfoPanel = explicitConnect<{||}, StateProps, DispatchProps>({
-  mapStateToProps: (state) => ({
+type ImplProps = {|
+  onMoreInfoButtonClick: () => void,
+|};
+
+export const MetaInfoPanel = explicitConnect<
+  ImplProps,
+  StateProps,
+  DispatchProps
+>({
+  mapStateToProps: (state, props) => ({
     profile: getProfile(state),
     symbolicationStatus: getSymbolicationStatus(state),
+    hasProfileExtraInfo: hasProfileExtraInfo(state),
+    onMoreInfoButtonClick: props.onMoreInfoButtonClick,
   }),
   mapDispatchToProps: {
     resymbolicateProfile,

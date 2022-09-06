@@ -57,6 +57,7 @@ import type {
 } from 'firefox-profiler/types';
 
 import type { ConnectedProps } from 'firefox-profiler/utils/connect';
+import { MoreInfoPanel } from './MoreInfoPanel';
 
 type OwnProps = {|
   // This is for injecting a URL shortener for tests. Normally we would use a Jest mock
@@ -88,10 +89,15 @@ type DispatchProps = {|
 type Props = ConnectedProps<OwnProps, StateProps, DispatchProps>;
 type State = $ReadOnly<{|
   metaInfoPanelState: 'initial' | 'delete-confirmation' | 'profile-deleted',
+  isMoreInfoPanelOpen: boolean,
 |}>;
 
 class MenuButtonsImpl extends React.PureComponent<Props, State> {
-  state = { metaInfoPanelState: 'initial' };
+  state = {
+    metaInfoPanelState: 'initial',
+    isMoreInfoPanelOpen: false,
+  };
+  _metaInfoButton: ButtonWithPanel | null = null;
 
   componentDidMount() {
     // Clear out the newly published notice from the URL.
@@ -134,6 +140,23 @@ class MenuButtonsImpl extends React.PureComponent<Props, State> {
   _resetMetaInfoState = () => {
     this.setState({
       metaInfoPanelState: 'initial',
+    });
+  };
+
+  _switchToMoreInfoPanel = () => {
+    if (this._metaInfoButton !== null) {
+      this._metaInfoButton.closePanel();
+    }
+    this.setState({
+      metaInfoPanelState: 'initial',
+      isMoreInfoPanelOpen: true,
+    });
+  };
+
+  _resetMoreInfoPanelState = () => {
+    this.setState({
+      metaInfoPanelState: 'initial',
+      isMoreInfoPanelOpen: false,
     });
   };
 
@@ -188,7 +211,9 @@ class MenuButtonsImpl extends React.PureComponent<Props, State> {
                   currentProfileUploadedInformation
                 )
               : null}
-            <MetaInfoPanel />
+            <MetaInfoPanel
+              onMoreInfoButtonClick={this._switchToMoreInfoPanel}
+            />
           </>
         );
       }
@@ -228,27 +253,37 @@ class MenuButtonsImpl extends React.PureComponent<Props, State> {
         // we still have to pass jwtToken / profileToken, and we don't have
         // these values anymore when we're in this state.
         return <ProfileDeleteSuccess />;
-
       default:
         throw assertExhaustiveCheck(metaInfoPanelState);
     }
   }
 
+  _takeMetaInfoButtonRef = (button: ButtonWithPanel | null) => {
+    this._metaInfoButton = button;
+  };
+
   _renderMetaInfoButton() {
     return (
-      <Localized
-        id="MenuButtons--index--metaInfo-button"
-        attrs={{ label: true }}
-      >
-        <ButtonWithPanel
-          buttonClassName="menuButtonsButton menuButtonsMetaInfoButtonButton menuButtonsButton-hasIcon"
-          // The empty string value for the label following will be replaced by the <Localized /> wrapper.
-          label=""
-          onPanelClose={this._resetMetaInfoState}
-          panelClassName="metaInfoPanel"
-          panelContent={this._renderMetaInfoPanel()}
+      <>
+        <Localized
+          id="MenuButtons--index--metaInfo-button"
+          attrs={{ label: true }}
+        >
+          <ButtonWithPanel
+            buttonClassName="menuButtonsButton menuButtonsMetaInfoButtonButton menuButtonsButton-hasIcon"
+            // The empty string value for the label following will be replaced by the <Localized /> wrapper.
+            label=""
+            onPanelClose={this._resetMetaInfoState}
+            panelClassName="metaInfoPanel"
+            panelContent={this._renderMetaInfoPanel()}
+            ref={this._takeMetaInfoButtonRef}
+          />
+        </Localized>
+        <MoreInfoPanel
+          open={this.state.isMoreInfoPanelOpen}
+          onPanelClose={this._resetMoreInfoPanelState}
         />
-      </Localized>
+      </>
     );
   }
 

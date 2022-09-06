@@ -2,36 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.metaInfoPanel {
-  width: 350px;
-  font-size: 12px;
-  line-height: 20px;
-}
-
-.metaInfoPanel,
-.metaInfoPanel .arrowPanelArrow::before {
-  background-color: white;
-}
-
-.metaInfoSection {
+.moreInfoSection {
   margin-top: 7px;
   margin-bottom: 12px;
 }
 
-.metaInfoLabel,
-.metaInfoWideLabel {
+.moreInfoLabel,
+.moreInfoWideLabel {
   display: inline-block;
   width: 120px;
   color: var(--grey-50);
 }
 
-.metaInfoLargeContent {
+.moreInfoLargeContent {
   overflow: scroll;
   height: 100px;
   overflow-wrap: anywhere;
 }
 
-.metaInfoWideLabel {
+.moreInfoWideLabel {
   width: 140px;
 }
 
@@ -41,7 +30,7 @@
   color: var(--grey-50);
 }
 
-.metaInfoList {
+.moreInfoList {
   padding: 0;
 
   /* Explanations about this margin line:
@@ -55,11 +44,11 @@
   list-style: circle inside;
 }
 
-.metaInfoListRow + .metaInfoListRow {
+.moreInfoListRow + .moreInfoListRow {
   margin-top: 7px;
 }
 
-.metaInfoSubTitle {
+.moreInfoSubTitle {
   padding-top: 4px;
   padding-bottom: 4px;
   border-bottom: 1px solid rgb(0 0 0 / 0.05);
@@ -68,7 +57,41 @@
   font-weight: 700;
 }
 
-.moreInfoButton {
+.moreInfoContent {
+  overflow: scroll;
+  max-height: calc(100vh - 100px);
+  padding: 16px;
+  background-color: white;
+  border-radius: 5px;
+}
+
+.moreInfoContainer {
+  width: 800px;
+  margin: auto;
+  background: hsl(0deg 0% 97%/0.95);
+  background-color: white;
+  border-radius: 5px;
+  filter: url(../../../../res/img/svg/shadowfilter.svg#menushadow);
+  font-size: 12px;
+  line-height: 20px;
+  opacity: 100%;
+  vertical-align: center;
+}
+
+@media screen and (max-width: 800px) {
+  .moreInfoContainer {
+    width: 100%;
+  }
+}
+
+.moreInfoContainerVoid {
+  position: absolute;
+  z-index: 1000;
+  left: 0;
   width: 100%;
-  margin-top: 30px;
+  height: calc(100vh - var(--more-info-padding-top));
+  padding-top: var(--more-info-padding-top);
+  background-color: var(--grey-90-a10);
+
+  --more-info-padding-top: 25px;
 }
