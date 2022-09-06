@@ -75,6 +75,9 @@ import type {
   Address,
   AddressProof,
   TimelineType,
+  SampleLikeMarkerConfig,
+  RawMarkerTable,
+  WeightType,
 } from 'firefox-profiler/types';
 import type { UniqueStringArray } from 'firefox-profiler/utils/unique-string-array';
 
@@ -3702,4 +3705,114 @@ export function determineTimelineType(profile: Profile): TimelineType {
 
   // Have both category and CPU usage information. Use 'cpu-category'.
   return 'cpu-category';
+}
+
+export const getAdditionalStrategiesForThread = memoize((thread: Thread) => {
+  const ret = [];
+  (thread.sampleLikeMarkersConfig || []).forEach((config) => {
+    ret.push(config.name);
+    if (config.additionalPropField) {
+      ret.push(`${config.name} ${config.additionalPropField}`);
+    }
+  });
+  return ret;
+});
+
+export const applyAdditionalStrategy: (
+  thread: Thread,
+  additionalStrategy: string
+) => SamplesLikeTable = memoize(
+  (thread: Thread, additionalStrategy: string) => {
+    if (thread.sampleLikeMarkersConfig === undefined) {
+      throw new Error("Thread doesn't have sampleLikeMarkersConfig");
+    }
+    const config = thread.sampleLikeMarkersConfig.find(
+      (config) =>
+        config.name === additionalStrategy ||
+        `${config.name} ${config.additionalPropField || 'null'}` ===
+          additionalStrategy
+    );
+
+    if (config === undefined) {
+      throw new Error(
+        `Thread doesn't have sampleLikeMarkersConfig for ${additionalStrategy}`
+      );
+    }
+
+    return applyAdditionalStrategyOnMarkers(
+      thread.markers,
+      config,
+      additionalStrategy !== config.name,
+      thread
+    );
+  }
+);
+
+function applyAdditionalStrategyOnMarkers(
+  rawTable: RawMarkerTable,
+  config: SampleLikeMarkerConfig,
+  useAdditionalPropField: boolean,
+  // required solely for the additional props
+  { stackTable, frameTable, funcTable, stringTable, ..._ }: Thread
+): SamplesLikeTable {
+  const stack: (IndexIntoStackTable | null)[] = [];
+  const time: Milliseconds[] = [];
+  const weight: number[] = [];
+  const weightType: WeightType = config.weightType;
+  let length = 0;
+  rawTable.data.forEach((data, i) => {
+    if (rawTable.name[i] !== config.name) {
+      return;
+    }
+    time[length] = rawTable.startTime[i] || rawTable.endTime[i] || -1;
+    const rawData = rawTable.data[i] || {};
+    weight[length] = rawData[config.weightField] || -1;
+    if (!useAdditionalPropField) {
+      // $FlowExpectError
+      stack[length] = rawData.cause || null;
+    } else {
+      if (config.additionalPropField === undefined) {
+        throw new Error('additionalPropField is undefined');
+      }
+      // we add a pseudo stack, so we don't have to change all 
+      // the other code
+      stack[length] = stackTable.length;
+      stackTable.frame.push(frameTable.length);
+      stackTable.category.push(0);
+      stackTable.subcategory.push(0);
+      stackTable.prefix.push(null);
+      stackTable.length++;
+      frameTable.address.push(-1);
+      frameTable.category.push(0);
+      frameTable.subcategory.push(0);
+      frameTable.inlineDepth.push(0);
+      frameTable.nativeSymbol.push(null);
+      frameTable.innerWindowID.push(null);
+      frameTable.implementation.push(null);
+      frameTable.line.push(null);
+      frameTable.column.push(null);
+      frameTable.optimizations.push(null);
+      frameTable.func.push(funcTable.length);
+      frameTable.length++;
+      funcTable.name.push(
+        // $FlowExpectError
+        stringTable.indexForString(rawData[config.additionalPropField] || '')
+      );
+      funcTable.isJS.push(true);
+      funcTable.relevantForJS.push(true);
+      funcTable.resource.push(-1);
+      funcTable.fileName.push(null);
+      funcTable.lineNumber.push(null);
+      funcTable.columnNumber.push(null);
+      funcTable.length++;
+    }
+    length++;
+  });
+  return {
+    stack,
+    time,
+    weight,
+    weightType,
+    length,
+  };
 }

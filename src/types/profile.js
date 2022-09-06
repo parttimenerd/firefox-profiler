@@ -665,6 +665,19 @@ export type Thread = {|
   // It's absent in Firefox 97 and before, or in Firefox 98+ when this thread
   // had no extra attribute at all.
   userContextId?: number,
+  sampleLikeMarkersConfig?: SampleLikeMarkerConfig[],
+|};
+
+/**
+ * configute markers for which a SamplesLikeTable can be generated
+ * (using the cause property for the stacktrace) */
+export type SampleLikeMarkerConfig = {|
+  /** name of the marker */
+  name: string,
+  weightType: WeightType,
+  weightField: string,
+  /** name of the property like 'allocatedClass' */
+  additionalPropField?: string,
 |};
 
 export type ExtensionTable = {|

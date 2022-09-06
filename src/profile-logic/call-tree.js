@@ -9,6 +9,7 @@ import {
   getSampleIndexToCallNodeIndex,
   getOriginAnnotationForFunc,
   getCategoryPairLabel,
+  getAdditionalStrategiesForThread,
 } from './profile-data';
 import { resourceTypes } from './data-structures';
 import { getFunctionName } from './function-info';
@@ -763,6 +764,9 @@ export function extractSamplesLikeTable(
     }
     /* istanbul ignore next */
     default:
+      if (getAdditionalStrategiesForThread(thread).includes(strategy)) {
+        return ProfileData.applyAdditionalStrategy(thread, strategy);
+      }
       throw assertExhaustiveCheck(strategy);
   }
 }

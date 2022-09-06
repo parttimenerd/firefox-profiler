@@ -39,6 +39,7 @@ import type {
   EventDelayInfo,
   ThreadsKey,
   CallTreeSummaryStrategy,
+  SampleLikeMarkerConfig,
 } from 'firefox-profiler/types';
 
 import type { UniqueStringArray } from '../../utils/unique-string-array';
@@ -463,6 +464,10 @@ export function getThreadSelectorsPerThread(
       'Could not get the processed event delays'
     );
 
+  const getAdditionalStrategies: Selector<string[]> = (state) => {
+    return ProfileData.getAdditionalStrategiesForThread(getThread(state));
+  };
+
   return {
     getThread,
     getStringTable,
@@ -496,5 +501,6 @@ export function getThreadSelectorsPerThread(
     getActiveTabFilteredThread,
     getProcessedEventDelays,
     getCallTreeSummaryStrategy,
+    getAdditionalStrategies,
   };
 }

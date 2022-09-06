@@ -56,6 +56,7 @@ type StateProps = {|
   +hasNativeAllocations: boolean,
   +canShowRetainedMemory: boolean,
   +allowSwitchingStackType: boolean,
+  +additionalStrategies: string[],
 |};
 
 type DispatchProps = {|
@@ -136,13 +137,14 @@ class StackSettingsImpl extends PureComponent<Props> {
       hideInvertCallstack,
       currentSearchString,
       hasJsAllocations,
+      additionalStrategies,
       hasNativeAllocations,
       canShowRetainedMemory,
       callTreeSummaryStrategy,
       allowSwitchingStackType,
     } = this.props;
-
-    const hasAllocations = hasJsAllocations || hasNativeAllocations;
+    const hasAllocations =
+      hasJsAllocations || hasNativeAllocations || additionalStrategies.length > 0;
 
     return (
       <div className="stackSettings">
@@ -206,6 +208,9 @@ class StackSettingsImpl extends PureComponent<Props> {
                         'native-deallocations-sites'
                       )
                     : null}
+                  {additionalStrategies.map((strategy) => (
+                    <option key={strategy} value={strategy}></option>
+                  ))}
                 </select>
               </label>
             </li>
@@ -273,6 +278,8 @@ export const StackSettings = explicitConnect<
     implementationFilter: getImplementationFilter(state),
     currentSearchString: getCurrentSearchString(state),
     hasJsAllocations: selectedThreadSelectors.getHasJsAllocations(state),
+    additionalStrategies:
+      selectedThreadSelectors.getAdditionalStrategies(state),
     hasNativeAllocations:
       selectedThreadSelectors.getHasNativeAllocations(state),
     canShowRetainedMemory:
