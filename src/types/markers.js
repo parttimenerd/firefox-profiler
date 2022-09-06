@@ -14,7 +14,9 @@ import type {
 import type { ObjectMap } from './utils';
 
 // Provide different formatting options for strings.
-export type MarkerFormatType =
+export type MarkerFormatType = BasicMarkerFormatType | ComplexMarkerFormatType;
+
+export type BasicMarkerFormatType =
   // ----------------------------------------------------
   // String types.
 
@@ -58,17 +60,18 @@ export type MarkerFormatType =
   // The decimal should be used for generic representations of numbers. Do not
   // use it for time information.
   // "Label: 52.23, 0.0054, 123,456.78"
-  | 'decimal'
+  | 'decimal';
 
-  // ----------------------------------------------------
-  // Complex types
+type ComplexMarkerFormatType =
+  | 'list'
+  | {| type: 'table', columns: TableColumnFormat[] |};
 
-  // Supports complex format types 'table' (from an array of rows that are arrays of cells),
-  // 'htable' (first row is the header),
-  // 'list' (list of entries), 'olist' (ordered list),
-  // 'url' (URL, label)
-  // Syntax: '<type>[<format column 1>,...]', e.g. 'table[url,duration,bytes]' or 'list[string]' or 'url[string]'
-  | string;
+type TableColumnFormat = {|
+  // type for formatting, default is string
+  type?: BasicMarkerFormatType,
+  // header column label
+  label?: string,
+|};
 
 // A list of all the valid locations to surface this marker.
 // We can be free to add more UI areas.

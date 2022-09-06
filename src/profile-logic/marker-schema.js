@@ -23,7 +23,6 @@ import type {
   Marker,
   MarkerIndex,
 } from 'firefox-profiler/types';
-import memoize from 'memoize-immutable';
 
 /**
  * The marker schema comes from Gecko, and is embedded in the profile. However,
@@ -405,190 +404,104 @@ export function formatFromMarkerSchema(
       return formatPercent(value);
     default:
       console.error(
-        `A marker schema of type "${markerType}" had an unknown format "${format}"`
+        `A marker schema of type "${markerType}" had an unknown format ${JSON.stringify(
+          format
+        )}`
       );
       return value;
   }
 }
 
-type ComplexFormatType = 'htable' | 'table' | 'list' | 'olist' | 'url';
-type ParsedComplexFormatType = {|
-  type: ComplexFormatType,
-  children: ParsedFormat[],
-|};
-
-type ParsedFormat = string | ParsedComplexFormatType;
-
-function _splitRestOfFormat(str: string): string[] {
-  const parts = [];
-  let part = '';
-  let depth = 0;
-  for (let i = 0; i < str.length; i++) {
-    const c = str[i];
-    if (c === '[') {
-      depth++;
-      part += c;
-    } else if (c === ']') {
-      if (depth === 0) {
-        if (part) {
-          parts.push(part);
-        }
-        return parts;
-      }
-      depth--;
-      part += c;
-    } else if (c === ',' && depth === 0) {
-      parts.push(part);
-      part = '';
-    } else {
-      if (c !== ' ') {
-        part += c;
-      }
-    }
-  }
-  throw new Error(`Expected ']' at the end of '${str}'`);
-}
-
-const _COMPLEX_FORMAT_TYPES = ['table', 'htable', 'list', 'olist', 'url'];
-const _MAYBE_COMPLEX_AND_NON_COMPLEX = ['url'];
-
-function _parseFormat(format: string): ParsedFormat {
-  if (typeof format !== 'string') {
-    throw new Error(`Expected string, got ${JSON.stringify(format)}`);
-  }
-  if (!format.includes('[')) {
-    if (
-      _COMPLEX_FORMAT_TYPES.includes(format) &&
-      !_MAYBE_COMPLEX_AND_NON_COMPLEX.includes(format)
-    ) {
-      throw new Error(
-        `Expected specifications for complex format type '${format}'`
-      );
-    }
-    return format;
-  }
-  const indexOfOpen = format.indexOf('[');
-  const type = format.substring(0, indexOfOpen);
-  const rest = format.substring(indexOfOpen + 1);
-
-  if (!_COMPLEX_FORMAT_TYPES.includes(type)) {
-    throw new Error(`Unknown format type "${type}"`);
-  }
-  return ({
-    type: ((type: any): ComplexFormatType),
-    children: _splitRestOfFormat(rest).map((part) => _parseFormat(part)),
-  }: ParsedComplexFormatType);
-}
-
-const _parseFormatMemoized = memoize(_parseFormat);
-
 export function isDOMRenderingFormat(format: MarkerFormatType): boolean {
-  return format.includes['['];
+  return format === 'url' || typeof format === 'object' || format === 'list';
 }
 
 function _formatDOMFromMarkerSchema(
   markerType: string,
-  parsedFormat: ParsedFormat,
+  format: MarkerFormatType,
   value: any,
   // add elements that allow interaction (like clickable urls)
   supportsInteraction: boolean
 ) {
-  if (typeof parsedFormat === 'string') {
-    return <>{formatFromMarkerSchema(markerType, parsedFormat, value)}</>;
+  if (!isDOMRenderingFormat(format)) {
+    return <>{formatFromMarkerSchema(markerType, format, value)}</>;
   }
-  const parsedFormatDebugStr = JSON.stringify(parsedFormat);
-  if (!(value instanceof Array)) {
-    throw new Error(
-      `Expected an array for complex format type '${parsedFormatDebugStr}'`
-    );
-  }
-  const { type, children } = parsedFormat;
+  if (typeof format === 'object') {
+    switch (format.type) {
+      case 'table': {
+        const { columns } = format;
+        if (!(value instanceof Array)) {
+          throw new Error('Expected an array for table type');
+        }
+        const hasHeader = columns.some((column) => column.label);
+        return (
+          <table>
+            {hasHeader ? (
+              <tr>
+                {columns.map((col, i) => (
+                  <th key={i}>{col.label || ''}</th>
+                ))}
+              </tr>
+            ) : null}
+            {value.map((row, i) => {
+              if (!(row instanceof Array)) {
+                throw new Error('Expected an array for table row');
+              }
 
-  switch (type) {
-    case 'htable': // table with header row
-    case 'table':
-      return (
-        <table>
-          {value.map((row, i) => {
-            if (!(row instanceof Array)) {
-              throw new Error(
-                `Expected an array for complex format type '${parsedFormatDebugStr}'`
-              );
-            }
-            if (i === 0 && type === 'htable') {
+              if (row.length !== columns.length) {
+                throw new Error(
+                  "Row length doesn't match column count (row: " +
+                    row.length +
+                    ', cols: ' +
+                    columns.length +
+                    ')'
+                );
+              }
               return (
                 <tr key={i}>
                   {row.map((cell, i) => {
-                    return <th key={i}>{String(cell)}</th>;
+                    return (
+                      <td key={i}>
+                        {_formatDOMFromMarkerSchema(
+                          markerType,
+                          columns[i].type || 'string',
+                          cell,
+                          supportsInteraction
+                        )}
+                      </td>
+                    );
                   })}
                 </tr>
               );
-            }
-            if (row.length !== children.length) {
-              throw new Error(
-                "Row length doesn't match column count (row: " +
-                  row.length +
-                  ', cols: ' +
-                  children.length +
-                  ')'
-              );
-            }
-            return (
-              <tr key={i}>
-                {row.map((cell, i) => {
-                  return (
-                    <td key={i}>
-                      {_formatDOMFromMarkerSchema(
-                        markerType,
-                        children[i],
-                        cell,
-                        supportsInteraction
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </table>
-      );
-    case 'olist': // ordered list
-    case 'list':
-      return ((inner) => {
-        if (parsedFormat.type === 'olist') {
-          return <ol>{inner}</ol>;
-        }
-        return <ul>{inner}</ul>;
-      })(
-        value.map((entry, i) => (
-          <li key={i}>
-            {_formatDOMFromMarkerSchema(
-              markerType,
-              children[0],
-              entry,
-              supportsInteraction
-            )}
-          </li>
-        ))
-      );
-    case 'url':
-      if (typeof children[0] !== 'string') {
-        throw new Error("No complex types allowed in 'url' format");
+            })}
+          </table>
+        );
       }
+      default:
+        throw new Error(`Unknown format type ${JSON.stringify(format)}`);
+    }
+  }
+  switch (format) {
+    case 'list':
+      if (!(value instanceof Array)) {
+        throw new Error('Expected an array for list format');
+      }
+      return value.map((entry, i) => (
+        <li key={i}>
+          {formatFromMarkerSchema(markerType, 'string', value[i])}
+        </li>
+      ));
+    case 'url':
       if (supportsInteraction) {
         return (
-          <a href={value[0]}>
-            {formatFromMarkerSchema(
-              markerType,
-              (children[0]: MarkerFormatType),
-              value[1]
-            )}
+          <a href={value}>
+            {formatFromMarkerSchema(markerType, 'string', value)}
           </a>
         );
       }
-      return value[1];
+      return <>value</>;
     default:
-      throw new Error(`Unknown format type "${type}"`);
+      throw new Error(`Unknown format type ${JSON.stringify(format)}`);
   }
 }
 
@@ -601,7 +514,7 @@ export function formatDOMFromMarkerSchema(
 ) {
   return _formatDOMFromMarkerSchema(
     markerType,
-    _parseFormatMemoized(format),
+    format,
     value,
     supportsInteraction
   );

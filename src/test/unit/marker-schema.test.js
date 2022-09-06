@@ -303,30 +303,35 @@ describe('marker schema formatting', function () {
       ['duration', 10],
       ['duration', 12.3456789],
       [
-        'table[string, integer]',
+        { type: 'table', columns: [{ type: 'string' }, { type: 'integer' }] },
         [
           ['a', 1],
           ['b', 2],
         ],
       ],
       [
-        'htable[string, integer]',
-        [
-          ['a', 'b'],
-          ['b', 2],
-        ],
+        {
+          type: 'table',
+          columns: [
+            { type: 'string', label: 'a' },
+            { type: 'integer', label: 'b' },
+          ],
+        },
+        [['b', 2]],
       ],
       [
-        'table[string, list[integer]]',
-        [
-          ['a', [1, 2]],
-          ['b', [2]],
-        ],
+        {
+          type: 'table',
+          columns: [{ type: 'string', label: 'a' }, { type: 'integer' }],
+        },
+        [['b', 2]],
       ],
-      ['list[integer]', []],
-      ['list[list[integer]]', [[1, 2], [2]]],
-      ['olist[list[integer]]', [[1, 2], [2]]],
-      ['url[string]', ['http://example.com', 'http://example.com']],
+      [
+        { type: 'table', columns: [{ type: 'string', label: 'a' }, {}] },
+        [['b', 2]],
+      ],
+      ['list', []],
+      ['list', ['a', 'b']],
     ];
 
     expect(

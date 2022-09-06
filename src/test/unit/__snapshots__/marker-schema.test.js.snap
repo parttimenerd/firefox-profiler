@@ -6,11 +6,13 @@ Array [
     "url",
     "http://example.com",
     <React.Fragment>
-      http://example.com
+      value
     </React.Fragment>,
-    <React.Fragment>
+    <a
+      href="http://example.com"
+    >
       http://example.com
-    </React.Fragment>,
+    </a>,
   ],
   Array [
     "file-path",
@@ -73,7 +75,17 @@ Array [
     </React.Fragment>,
   ],
   Array [
-    "table[string, integer]",
+    Object {
+      "columns": Array [
+        Object {
+          "type": "string",
+        },
+        Object {
+          "type": "integer",
+        },
+      ],
+      "type": "table",
+    },
     Array [
       Array [
         "a",
@@ -138,12 +150,20 @@ Array [
     </table>,
   ],
   Array [
-    "htable[string, integer]",
-    Array [
-      Array [
-        "a",
-        "b",
+    Object {
+      "columns": Array [
+        Object {
+          "label": "a",
+          "type": "string",
+        },
+        Object {
+          "label": "b",
+          "type": "integer",
+        },
       ],
+      "type": "table",
+    },
+    Array [
       Array [
         "b",
         2,
@@ -195,43 +215,32 @@ Array [
     </table>,
   ],
   Array [
-    "table[string, list[integer]]",
+    Object {
+      "columns": Array [
+        Object {
+          "label": "a",
+          "type": "string",
+        },
+        Object {
+          "type": "integer",
+        },
+      ],
+      "type": "table",
+    },
     Array [
       Array [
-        "a",
-        Array [
-          1,
-          2,
-        ],
-      ],
-      Array [
         "b",
-        Array [
-          2,
-        ],
+        2,
       ],
     ],
     <table>
       <tr>
-        <td>
-          <React.Fragment>
-            a
-          </React.Fragment>
-        </td>
-        <td>
-          <ul>
-            <li>
-              <React.Fragment>
-                1
-              </React.Fragment>
-            </li>
-            <li>
-              <React.Fragment>
-                2
-              </React.Fragment>
-            </li>
-          </ul>
-        </td>
+        <th>
+          a
+        </th>
+        <th>
+          
+        </th>
       </tr>
       <tr>
         <td>
@@ -240,37 +249,20 @@ Array [
           </React.Fragment>
         </td>
         <td>
-          <ul>
-            <li>
-              <React.Fragment>
-                2
-              </React.Fragment>
-            </li>
-          </ul>
+          <React.Fragment>
+            2
+          </React.Fragment>
         </td>
       </tr>
     </table>,
     <table>
       <tr>
-        <td>
-          <React.Fragment>
-            a
-          </React.Fragment>
-        </td>
-        <td>
-          <ul>
-            <li>
-              <React.Fragment>
-                1
-              </React.Fragment>
-            </li>
-            <li>
-              <React.Fragment>
-                2
-              </React.Fragment>
-            </li>
-          </ul>
-        </td>
+        <th>
+          a
+        </th>
+        <th>
+          
+        </th>
       </tr>
       <tr>
         <td>
@@ -279,159 +271,103 @@ Array [
           </React.Fragment>
         </td>
         <td>
-          <ul>
-            <li>
-              <React.Fragment>
-                2
-              </React.Fragment>
-            </li>
-          </ul>
+          <React.Fragment>
+            2
+          </React.Fragment>
         </td>
       </tr>
     </table>,
   ],
   Array [
-    "list[integer]",
+    Object {
+      "columns": Array [
+        Object {
+          "label": "a",
+          "type": "string",
+        },
+        Object {},
+      ],
+      "type": "table",
+    },
+    Array [
+      Array [
+        "b",
+        2,
+      ],
+    ],
+    <table>
+      <tr>
+        <th>
+          a
+        </th>
+        <th>
+          
+        </th>
+      </tr>
+      <tr>
+        <td>
+          <React.Fragment>
+            b
+          </React.Fragment>
+        </td>
+        <td>
+          <React.Fragment>
+            2
+          </React.Fragment>
+        </td>
+      </tr>
+    </table>,
+    <table>
+      <tr>
+        <th>
+          a
+        </th>
+        <th>
+          
+        </th>
+      </tr>
+      <tr>
+        <td>
+          <React.Fragment>
+            b
+          </React.Fragment>
+        </td>
+        <td>
+          <React.Fragment>
+            2
+          </React.Fragment>
+        </td>
+      </tr>
+    </table>,
+  ],
+  Array [
+    "list",
     Array [],
-    <ul />,
-    <ul />,
+    Array [],
+    Array [],
   ],
   Array [
-    "list[list[integer]]",
+    "list",
     Array [
-      Array [
-        1,
-        2,
-      ],
-      Array [
-        2,
-      ],
+      "a",
+      "b",
     ],
-    <ul>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              1
-            </React.Fragment>
-          </li>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-    </ul>,
-    <ul>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              1
-            </React.Fragment>
-          </li>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-    </ul>,
-  ],
-  Array [
-    "olist[list[integer]]",
     Array [
-      Array [
-        1,
-        2,
-      ],
-      Array [
-        2,
-      ],
+      <li>
+        a
+      </li>,
+      <li>
+        b
+      </li>,
     ],
-    <ol>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              1
-            </React.Fragment>
-          </li>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-    </ol>,
-    <ol>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              1
-            </React.Fragment>
-          </li>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <ul>
-          <li>
-            <React.Fragment>
-              2
-            </React.Fragment>
-          </li>
-        </ul>
-      </li>
-    </ol>,
-  ],
-  Array [
-    "url[string]",
     Array [
-      "http://example.com",
-      "http://example.com",
+      <li>
+        a
+      </li>,
+      <li>
+        b
+      </li>,
     ],
-    "http://example.com",
-    <a
-      href="http://example.com"
-    >
-      http://example.com
-    </a>,
   ],
 ]
 `;
