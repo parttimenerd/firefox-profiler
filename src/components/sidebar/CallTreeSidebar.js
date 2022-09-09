@@ -16,6 +16,8 @@ import {
   selectedMethodTableNodeSelectors,
 } from 'firefox-profiler/selectors/per-thread';
 import { getSelectedThreadsKey } from 'firefox-profiler/selectors/url-state';
+import { toggleOpenCategoryInSidebar } from 'firefox-profiler/actions/app';
+import { getSidebarOpenCategories } from 'firefox-profiler/selectors/app';
 import { getCategories } from 'firefox-profiler/selectors/profile';
 import { getFunctionName } from 'firefox-profiler/profile-logic/function-info';
 import {
@@ -33,6 +35,7 @@ import type {
   TracedTiming,
   Milliseconds,
   WeightType,
+  IndexIntoCategoryList,
 } from 'firefox-profiler/types';
 
 import type {
@@ -145,47 +148,44 @@ class ImplementationBreakdown extends React.PureComponent<ImplementationBreakdow
   }
 }
 
-type CategoryBreakdownProps = {|
+type CategoryBreakdownOwnProps = {|
+  /** for total or self breakdown */
+  +kind: 'total' | 'self',
   +breakdown: BreakdownByCategory,
   +categoryList: CategoryList,
   +number: (number) => string,
 |};
 
-type CategoryBreakdownState = {|
-  +openCategories: Set<string>,
+type CategoryBreakdownStateProps = {|
+  +sidebarOpenCategories: Map<string, Set<IndexIntoCategoryList>>,
 |};
 
-class CategoryBreakdown extends React.PureComponent<
-  CategoryBreakdownProps,
-  CategoryBreakdownState
-> {
-  state = {
-    openCategories: new Set(),
-  };
+type CategoryBreakdownDispatchProps = {|
+  +toggleOpenCategoryInSidebar: typeof toggleOpenCategoryInSidebar,
+|};
 
+type CategoryBreakdownAllProps = ConnectedProps<
+  CategoryBreakdownOwnProps,
+  CategoryBreakdownStateProps,
+  CategoryBreakdownDispatchProps
+>;
+
+class CategoryBreakdownImpl extends React.PureComponent<CategoryBreakdownAllProps> {
   _toggleCategory = (event: SyntheticInputEvent<>) => {
-    const { category } = event.target.dataset;
-    if (typeof category !== 'string') {
-      throw new Error('Expected to find a category on the clicked element.');
-    }
-    this.setState(({ openCategories }) => {
-      const newCategories = new Set(openCategories);
-      if (openCategories.has(category)) {
-        newCategories.delete(category);
-      } else {
-        newCategories.add(category);
-      }
-      return { openCategories: newCategories };
-    });
+    const { toggleOpenCategoryInSidebar, kind } = this.props;
+    const { categoryIndex } = event.target.dataset;
+    toggleOpenCategoryInSidebar(kind, parseInt(categoryIndex, 10));
   };
 
   render() {
-    const { breakdown, categoryList, number } = this.props;
+    const { breakdown, categoryList, number, sidebarOpenCategories, kind } =
+      this.props;
 
     const data = breakdown
       .map((oneCategoryBreakdown, categoryIndex) => {
         const category = categoryList[categoryIndex];
         return {
+          categoryIndex,
           category,
           value: oneCategoryBreakdown.entireCategoryValue || 0,
           subcategories: category.subcategories
@@ -211,14 +211,14 @@ class CategoryBreakdown extends React.PureComponent<
       0
     );
 
-    const { openCategories } = this.state;
-
     return (
       <>
-        {data.map(({ category, value, subcategories }) => {
+        {data.map(({ category, value, subcategories, categoryIndex }) => {
           const hasSubcategory =
             shouldDisplaySubcategoryInfoForCategory(category);
-          const expanded = openCategories.has(category.name);
+          const openCats = sidebarOpenCategories.get(kind);
+          const expanded =
+            openCats !== undefined && openCats.has(categoryIndex);
           return (
             <React.Fragment key={category.name}>
               <SidebarDetail
@@ -226,7 +226,7 @@ class CategoryBreakdown extends React.PureComponent<
                   hasSubcategory ? (
                     <button
                       type="button"
-                      data-category={category.name}
+                      data-category-index={categoryIndex}
                       onClick={this._toggleCategory}
                       className={classNames({
                         'sidebar-toggle': true,
@@ -269,6 +269,20 @@ class CategoryBreakdown extends React.PureComponent<
     );
   }
 }
+
+export const CategoryBreakdown = explicitConnect<
+  CategoryBreakdownOwnProps,
+  CategoryBreakdownStateProps,
+  CategoryBreakdownDispatchProps
+>({
+  mapStateToProps: (state) => {
+    return {
+      sidebarOpenCategories: getSidebarOpenCategories(state),
+    };
+  },
+  mapDispatchToProps: { toggleOpenCategoryInSidebar },
+  component: CategoryBreakdownImpl,
+});
 
 type StateProps = {|
   +selectedNodeIndex: IndexIntoCallNodeTable | null,
@@ -433,6 +447,7 @@ class CallTreeSidebarImpl extends React.PureComponent<Props> {
                 </div>
               </h4>
               <CategoryBreakdown
+                kind="total"
                 breakdown={totalTimeBreakdownByCategory}
                 categoryList={categoryList}
                 number={number}
@@ -448,6 +463,7 @@ class CallTreeSidebarImpl extends React.PureComponent<Props> {
                 </div>
               </h4>
               <CategoryBreakdown
+                kind="self"
                 breakdown={selfTimeBreakdownByCategory}
                 categoryList={categoryList}
                 number={number}
