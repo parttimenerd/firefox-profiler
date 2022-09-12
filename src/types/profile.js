@@ -750,12 +750,12 @@ export type SampleUnits = {|
 export type ExtraProfileInfoSection = {|
   // section label
   label: string,
-  entries: {|
+  entries: Array<{|
     label: string,
     format: MarkerFormatType,
     // any value valid for the formatter
     value: any,
-  |}[],
+  |}>,
 |};
 
 /**

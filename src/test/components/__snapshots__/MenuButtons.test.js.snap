@@ -1357,7 +1357,6 @@ exports[`app/MenuButtons <Publish> can publish and revert 1`] = `
         Profile Info
       </button>
     </div>
-    <div />
     <div
       class="buttonWithPanel"
     >
@@ -1458,7 +1457,6 @@ exports[`app/MenuButtons <Publish> matches the snapshot for the closed state 1`]
       Profile Info
     </button>
   </div>
-  <div />
   <div
     class="buttonWithPanel"
   >
@@ -1497,7 +1495,6 @@ exports[`app/MenuButtons <Publish> matches the snapshot for the menu buttons and
       Profile Info
     </button>
   </div>
-  <div />
   <div
     class="buttonWithPanel"
   >
@@ -1897,7 +1894,6 @@ exports[`app/MenuButtons Full View Button is present when we are in the active t
       Profile Info
     </button>
   </div>
-  <div />
   <div
     class="buttonWithPanel"
   >

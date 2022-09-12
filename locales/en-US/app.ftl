@@ -424,11 +424,9 @@ MenuButtons--metaInfo--currently-symbolicating = Currently symbolicating profile
 MenuButtons--metaInfo--cpu = CPU:
 MenuButtons--metaInfo--main-memory = Main memory:
 MenuButtons--moreInfo-button = More
-
-## MoreInfo panel
-## These strings are used in the panel containing additional information
-## on the profile
 MenuButtons--moreInfo-title = Additional Profile Information
+MenuButtons--index--show-moreInfo-button = Show More
+MenuButtons--index--hide-moreInfo-button = Show Less
 
 # This string is used when we have the information about both physical and
 # logical CPU cores.

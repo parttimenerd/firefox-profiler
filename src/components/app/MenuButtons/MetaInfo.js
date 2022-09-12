@@ -11,8 +11,11 @@ import {
   getProfile,
   getSymbolicationStatus,
   hasProfileExtraInfo,
+  getMarkerSchemaByName,
+  getProfileExtraInfo,
 } from 'firefox-profiler/selectors/profile';
 import { resymbolicateProfile } from 'firefox-profiler/actions/receive-profile';
+import { formatFromMarkerSchema } from 'firefox-profiler/profile-logic/marker-schema';
 
 import {
   formatBytes,
@@ -26,28 +29,40 @@ import {
 import { assertExhaustiveCheck } from 'firefox-profiler/utils/flow';
 import explicitConnect from 'firefox-profiler/utils/connect';
 
-import type { Profile, SymbolicationStatus } from 'firefox-profiler/types';
+import type {
+  Profile,
+  SymbolicationStatus,
+  ExtraProfileInfoSection,
+  MarkerSchemaByName,
+} from 'firefox-profiler/types';
 import type { ConnectedProps } from 'firefox-profiler/utils/connect';
 
 import './MetaInfo.css';
 
-type StateProps = $ReadOnly<{|
+type State = {|
+  showsMoreInfo: boolean,
+|};
+
+type OwnProps = $ReadOnly<{|
   profile: Profile,
   symbolicationStatus: SymbolicationStatus,
   hasProfileExtraInfo: boolean,
-  onMoreInfoButtonClick: () => void,
+  +profileExtraInfo: ExtraProfileInfoSection[],
+  +markerSchemaByName: MarkerSchemaByName,
 |}>;
 
 type DispatchProps = $ReadOnly<{|
   resymbolicateProfile: typeof resymbolicateProfile,
 |}>;
 
-type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
+type Props = ConnectedProps<{||}, OwnProps, DispatchProps>;
 
 /**
  * This component formats the profile's meta information into a dropdown panel.
  */
-class MetaInfoPanelImpl extends React.PureComponent<Props> {
+class MetaInfoPanelImpl extends React.PureComponent<Props, State> {
+  state = { showsMoreInfo: false };
+
   /**
    * This method provides information about the symbolication status, and a button
    * to re-trigger symbolication.
@@ -121,6 +136,40 @@ class MetaInfoPanelImpl extends React.PureComponent<Props> {
           'Unhandled SymbolicationStatus.'
         );
     }
+  }
+
+  _handleMoreInfoButtonClick = () => {
+    this.setState((state) => ({ showsMoreInfo: !state.showsMoreInfo }));
+  };
+
+  _renderMoreInfoSection(section: ExtraProfileInfoSection) {
+    return (
+      <div key={section.label}>
+        <h2 className="metaInfoSubTitle" key={'title ' + section.label}>
+          {section.label}
+        </h2>
+        <div className="metaInfoSection" key={'section ' + section.label}>
+          {section.entries.map(({ label, format, value }) => {
+            return (
+              <div className="moreInfoRow" key={label}>
+                <span className="metaInfoWideLabel">{label}</span>
+                <div className="moreInfoValue">
+                  {formatFromMarkerSchema('moreInfo', format, value)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  _renderMoreInfo() {
+    return (
+      <div open={this.state.showsMoreInfo} className="moreInfoPart">
+        {this.props.profileExtraInfo.map(this._renderMoreInfoSection)}
+      </div>
+    );
   }
 
   render() {
@@ -411,14 +460,21 @@ class MetaInfoPanelImpl extends React.PureComponent<Props> {
             <button
               type="button"
               className="moreInfoButton photon-button photon-button-default photon-button-micro"
-              onClick={this.props.onMoreInfoButtonClick}
+              onClick={this._handleMoreInfoButtonClick}
             >
-              <Localized id="MenuButtons--index--moreInfo-button">
-                Additional Information
+              <Localized
+                id={`MenuButtons--index--${
+                  this.state.showsMoreInfo ? 'hide' : 'show'
+                }-moreInfo-button`}
+              >
+                {this.state.showsMoreInfo ? 'Show Less' : 'Show More'}
               </Localized>
             </button>
           </div>
         ) : null}
+        {this.props.hasProfileExtraInfo && this.state.showsMoreInfo
+          ? this._renderMoreInfo()
+          : null}
       </>
     );
   }
@@ -456,20 +512,13 @@ function _formatDate(timestamp: number): string {
   return timestampDate;
 }
 
-type ImplProps = {|
-  onMoreInfoButtonClick: () => void,
-|};
-
-export const MetaInfoPanel = explicitConnect<
-  ImplProps,
-  StateProps,
-  DispatchProps
->({
-  mapStateToProps: (state, props) => ({
+export const MetaInfoPanel = explicitConnect<{||}, OwnProps, DispatchProps>({
+  mapStateToProps: (state) => ({
     profile: getProfile(state),
     symbolicationStatus: getSymbolicationStatus(state),
     hasProfileExtraInfo: hasProfileExtraInfo(state),
-    onMoreInfoButtonClick: props.onMoreInfoButtonClick,
+    profileExtraInfo: getProfileExtraInfo(state),
+    markerSchemaByName: getMarkerSchemaByName(state),
   }),
   mapDispatchToProps: {
     resymbolicateProfile,

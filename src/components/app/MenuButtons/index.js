@@ -57,7 +57,6 @@ import type {
 } from 'firefox-profiler/types';
 
 import type { ConnectedProps } from 'firefox-profiler/utils/connect';
-import { MoreInfoPanel } from './MoreInfoPanel';
 
 type OwnProps = {|
   // This is for injecting a URL shortener for tests. Normally we would use a Jest mock
@@ -89,15 +88,12 @@ type DispatchProps = {|
 type Props = ConnectedProps<OwnProps, StateProps, DispatchProps>;
 type State = $ReadOnly<{|
   metaInfoPanelState: 'initial' | 'delete-confirmation' | 'profile-deleted',
-  isMoreInfoPanelOpen: boolean,
 |}>;
 
 class MenuButtonsImpl extends React.PureComponent<Props, State> {
   state = {
     metaInfoPanelState: 'initial',
-    isMoreInfoPanelOpen: false,
   };
-  _metaInfoButton: ButtonWithPanel | null = null;
 
   componentDidMount() {
     // Clear out the newly published notice from the URL.
@@ -140,23 +136,6 @@ class MenuButtonsImpl extends React.PureComponent<Props, State> {
   _resetMetaInfoState = () => {
     this.setState({
       metaInfoPanelState: 'initial',
-    });
-  };
-
-  _switchToMoreInfoPanel = () => {
-    if (this._metaInfoButton !== null) {
-      this._metaInfoButton.closePanel();
-    }
-    this.setState({
-      metaInfoPanelState: 'initial',
-      isMoreInfoPanelOpen: true,
-    });
-  };
-
-  _resetMoreInfoPanelState = () => {
-    this.setState({
-      metaInfoPanelState: 'initial',
-      isMoreInfoPanelOpen: false,
     });
   };
 
@@ -211,9 +190,7 @@ class MenuButtonsImpl extends React.PureComponent<Props, State> {
                   currentProfileUploadedInformation
                 )
               : null}
-            <MetaInfoPanel
-              onMoreInfoButtonClick={this._switchToMoreInfoPanel}
-            />
+            <MetaInfoPanel />
           </>
         );
       }
@@ -258,10 +235,6 @@ class MenuButtonsImpl extends React.PureComponent<Props, State> {
     }
   }
 
-  _takeMetaInfoButtonRef = (button: ButtonWithPanel | null) => {
-    this._metaInfoButton = button;
-  };
-
   _renderMetaInfoButton() {
     return (
       <>
@@ -276,13 +249,8 @@ class MenuButtonsImpl extends React.PureComponent<Props, State> {
             onPanelClose={this._resetMetaInfoState}
             panelClassName="metaInfoPanel"
             panelContent={this._renderMetaInfoPanel()}
-            ref={this._takeMetaInfoButtonRef}
           />
         </Localized>
-        <MoreInfoPanel
-          open={this.state.isMoreInfoPanelOpen}
-          onPanelClose={this._resetMoreInfoPanelState}
-        />
       </>
     );
   }
