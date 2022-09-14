@@ -22,8 +22,8 @@ import type { TabSlug } from '../../app-logic/tabs-handling';
 jest.mock('../../components/calltree/ProfileCallTreeView', () => ({
   ProfileCallTreeView: 'call-tree',
 }));
-jest.mock('../../components/calltree/ProfileMethodTableView', () => ({
-  ProfileMethodTableView: 'method-table',
+jest.mock('../../components/calltree/ProfileFunctionTableView', () => ({
+  ProfileFunctionTableView: 'method-table',
 }));
 jest.mock('../../components/flame-graph', () => ({
   FlameGraph: 'flame-graph',
@@ -74,7 +74,7 @@ describe('app/Details', function () {
       const { container, store } = setup();
       store.dispatch(changeSelectedTab(tabSlug));
       // The call tree has a special handling, see the comment above for more information.
-      const table = { calltree: 'call-tree', methodtable: 'method-table' };
+      const table = { calltree: 'call-tree', functionTable: 'method-table' };
       const expectedCustomName =
         tabSlug in table ? table[(tabSlug: string)] : tabSlug;
       expect(container.querySelector(expectedCustomName)).toBeTruthy();

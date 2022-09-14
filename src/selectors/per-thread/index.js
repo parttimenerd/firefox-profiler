@@ -304,9 +304,9 @@ export const selectedNodeSelectors: NodeSelectors = (() => {
   };
 })();
 
-export const selectedMethodTableNodeSelectors: NodeSelectors = (() => {
+export const selectedFunctionTableNodeSelectors: NodeSelectors = (() => {
   const getName: Selector<string> = createSelector(
-    selectedThreadSelectors.getSelectedMethodTableFunction,
+    selectedThreadSelectors.getSelectedFunctionTableFunction,
     selectedThreadSelectors.getFilteredThread,
     (selectedFunction, { stringTable, funcTable }) => {
       if (selectedFunction === null) {
@@ -318,7 +318,7 @@ export const selectedMethodTableNodeSelectors: NodeSelectors = (() => {
   );
 
   const getIsJS: Selector<boolean> = createSelector(
-    selectedThreadSelectors.getSelectedMethodTableFunction,
+    selectedThreadSelectors.getSelectedFunctionTableFunction,
     selectedThreadSelectors.getFilteredThread,
     (selectedFunction, { funcTable }) => {
       return selectedFunction !== null && funcTable.isJS[selectedFunction];
@@ -326,7 +326,7 @@ export const selectedMethodTableNodeSelectors: NodeSelectors = (() => {
   );
 
   const getLib: Selector<string> = createSelector(
-    selectedThreadSelectors.getSelectedMethodTableFunction,
+    selectedThreadSelectors.getSelectedFunctionTableFunction,
     selectedThreadSelectors.getFilteredThread,
     (selectedFunction, { stringTable, funcTable, resourceTable }) => {
       if (selectedFunction === null) {
@@ -343,8 +343,8 @@ export const selectedMethodTableNodeSelectors: NodeSelectors = (() => {
   );
 
   const getTimingsForSidebar: Selector<TimingsForPath> = createSelector(
-    selectedThreadSelectors.getSelectedMethodTableFunction,
-    selectedThreadSelectors.getMethodTableCallNodeInfo,
+    selectedThreadSelectors.getSelectedFunctionTableFunction,
+    selectedThreadSelectors.getFunctionTableCallNodeInfo,
     ProfileSelectors.getProfileInterval,
     selectedThreadSelectors.getPreviewFilteredThread,
     selectedThreadSelectors.getThread,

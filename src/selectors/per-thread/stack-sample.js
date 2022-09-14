@@ -89,7 +89,7 @@ export function getStackAndSampleSelectorsPerThread(
     }
   );
 
-  const getMethodTableCallNodeInfo: Selector<CallNodeInfoWithFuncMapping> =
+  const getFunctionTableCallNodeInfo: Selector<CallNodeInfoWithFuncMapping> =
     createSelector(
       threadSelectors.getFilteredThread,
       ProfileSelectors.getDefaultCategory,
@@ -97,7 +97,7 @@ export function getStackAndSampleSelectorsPerThread(
         { stackTable, frameTable, funcTable }: Thread,
         defaultCategory: IndexIntoCategoryList
       ): CallNodeInfoWithFuncMapping => {
-        return ProfileData.getMethodTableCallNodeInfo(
+        return ProfileData.getFunctionTableCallNodeInfo(
           stackTable,
           frameTable,
           funcTable,
@@ -134,11 +134,11 @@ export function getStackAndSampleSelectorsPerThread(
     (threadViewOptions): CallNodePath => threadViewOptions.selectedCallNodePath
   );
 
-  const getSelectedMethodTableFunction: Selector<IndexIntoFuncTable | null> =
+  const getSelectedFunctionTableFunction: Selector<IndexIntoFuncTable | null> =
     createSelector(
       threadSelectors.getViewOptions,
       (threadViewOptions): IndexIntoFuncTable | null => {
-        return threadViewOptions.selectedMethodTableFunction;
+        return threadViewOptions.selectedFunctionTableFunction;
       }
     );
 
@@ -154,10 +154,10 @@ export function getStackAndSampleSelectorsPerThread(
       }
     );
 
-  const getSelectedMethodTableCallNodeIndex: Selector<IndexIntoCallNodeTable | null> =
+  const getSelectedFunctionTableCallNodeIndex: Selector<IndexIntoCallNodeTable | null> =
     createSelector(
-      getMethodTableCallNodeInfo,
-      getSelectedMethodTableFunction,
+      getFunctionTableCallNodeInfo,
+      getSelectedFunctionTableFunction,
       (info, selectedFunction) => {
         return selectedFunction !== null
           ? info.funcToCallNodeIndex[selectedFunction]
@@ -189,15 +189,15 @@ export function getStackAndSampleSelectorsPerThread(
     threadSelectors.getTabFilteredThread,
     getCallNodeInfo,
     getSelectedCallNodeIndex,
-    getMethodTableCallNodeInfo,
-    getSelectedMethodTableCallNodeIndex,
+    getFunctionTableCallNodeInfo,
+    getSelectedFunctionTableCallNodeIndex,
     (
       thread,
       tabFilteredThread,
       callNodeInfo,
       selectedCallNode,
-      methodTableCallNodeInfo,
-      selectedMethodTableCallNodeIndex
+      functionTableCallNodeInfo,
+      selectedFunctionTableCallNodeIndex
     ) => {
       if (thread.isJsTracer) {
         // This is currently to slow to compute in JS Tracer threads.
@@ -207,8 +207,8 @@ export function getStackAndSampleSelectorsPerThread(
         selectedCallNode !== null
           ? { info: callNodeInfo, selected: selectedCallNode }
           : {
-              info: methodTableCallNodeInfo.callNodeInfo,
-              selected: selectedMethodTableCallNodeIndex,
+              info: functionTableCallNodeInfo.callNodeInfo,
+              selected: selectedFunctionTableCallNodeIndex,
             };
       const { callNodeTable, stackIndexToCallNodeIndex } = info;
       const sampleIndexToCallNodeIndex =
@@ -296,24 +296,24 @@ export function getStackAndSampleSelectorsPerThread(
     CallTree.getCallTree
   );
 
-  const getMethodTableCallTreeCountsAndSummary: Selector<CallTree.CallTreeCountsAndSummary> =
+  const getFunctionTableCallTreeCountsAndSummary: Selector<CallTree.CallTreeCountsAndSummary> =
     createSelector(
       threadSelectors.getPreviewFilteredThread,
       threadSelectors.getPreviewFilteredSamplesForCallTree,
-      getMethodTableCallNodeInfo,
-      CallTree.computeMethodTableCallTreeCountsAndSummary
+      getFunctionTableCallNodeInfo,
+      CallTree.computeFunctionTableCallTreeCountsAndSummary
     );
 
-  /** returns a flat call tree used for the MethodTable view */
-  const getMethodTableCallTree: Selector<CallTree.CallTree> = createSelector(
+  /** returns a flat call tree used for the FunctionTable view */
+  const getFunctionTableCallTree: Selector<CallTree.CallTree> = createSelector(
     threadSelectors.getPreviewFilteredThread,
     ProfileSelectors.getProfileInterval,
-    getMethodTableCallNodeInfo,
+    getFunctionTableCallNodeInfo,
     ProfileSelectors.getCategories,
     UrlState.getImplementationFilter,
-    getMethodTableCallTreeCountsAndSummary,
+    getFunctionTableCallTreeCountsAndSummary,
     getWeightTypeForCallTree,
-    CallTree.getMethodTableCallTree
+    CallTree.getFunctionTableCallTree
   );
 
   const getSourceViewLineTimings: Selector<LineTimings> = createSelector(
@@ -370,18 +370,18 @@ export function getStackAndSampleSelectorsPerThread(
     unfilteredSamplesRange,
     getWeightTypeForCallTree,
     getCallNodeInfo,
-    getMethodTableCallNodeInfo,
+    getFunctionTableCallNodeInfo,
     getSourceViewStackLineInfo,
     getSelectedCallNodePath,
     getSelectedCallNodeIndex,
     getExpandedCallNodePaths,
     getExpandedCallNodeIndexes,
-    getSelectedMethodTableCallNodeIndex,
-    getSelectedMethodTableFunction,
+    getSelectedFunctionTableCallNodeIndex,
+    getSelectedFunctionTableFunction,
     getSamplesSelectedStatesInFilteredThread,
     getTreeOrderComparatorInFilteredThread,
     getCallTree,
-    getMethodTableCallTree,
+    getFunctionTableCallTree,
     getSourceViewLineTimings,
     getTracedTiming,
     getStackTimingByDepth,

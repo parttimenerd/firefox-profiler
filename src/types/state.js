@@ -51,7 +51,7 @@ export type UploadedProfileInformation = ImportedUploadedProfileInformation;
 export type SymbolicationStatus = 'DONE' | 'SYMBOLICATING';
 export type ThreadViewOptions = {|
   +selectedCallNodePath: CallNodePath,
-  +selectedMethodTableFunction: IndexIntoFuncTable | null,
+  +selectedFunctionTableFunction: IndexIntoFuncTable | null,
   +expandedCallNodePaths: PathSet,
   +selectedMarker: MarkerIndex | null,
   +selectedNetworkMarker: MarkerIndex | null,

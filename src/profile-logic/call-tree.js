@@ -612,7 +612,7 @@ function _getSummaryPerFunction(
  * what type of weight is in the SamplesLikeTable. For instance, it could be
  * milliseconds, sample counts, or bytes.
  */
-export function computeMethodTableCallTreeCountsAndSummary(
+export function computeFunctionTableCallTreeCountsAndSummary(
   thread: Thread,
   samples: SamplesLikeTable,
   {
@@ -667,7 +667,7 @@ export function computeMethodTableCallTreeCountsAndSummary(
  * This handles computing timing information, and passing it all into
  * the CallTree constructor.
  */
-export function getMethodTableCallTree(
+export function getFunctionTableCallTree(
   thread: Thread,
   interval: Milliseconds,
   { callNodeInfo }: CallNodeInfoWithFuncMapping,
@@ -676,7 +676,7 @@ export function getMethodTableCallTree(
   callTreeCountsAndSummary: CallTreeCountsAndSummary,
   weightType: WeightType
 ): CallTree {
-  return timeCode('getMethodTableCallTree', () => {
+  return timeCode('getFunctionTableCallTree', () => {
     const { callNodeSummary, callNodeChildCount, rootTotalSummary, rootCount } =
       callTreeCountsAndSummary;
     const jsOnly = implementationFilter === 'js';

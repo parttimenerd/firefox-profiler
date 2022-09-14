@@ -12,7 +12,7 @@ import explicitConnect from 'firefox-profiler/utils/connect';
 import { TabBar } from './TabBar';
 import { ErrorBoundary } from './ErrorBoundary';
 import { ProfileCallTreeView } from 'firefox-profiler/components/calltree/ProfileCallTreeView';
-import { ProfileMethodTableView } from 'firefox-profiler/components/calltree/ProfileMethodTableView';
+import { ProfileFunctionTableView } from 'firefox-profiler/components/calltree/ProfileFunctionTableView';
 import { MarkerTable } from 'firefox-profiler/components/marker-table';
 import { StackChart } from 'firefox-profiler/components/stack-chart/';
 import { MarkerChart } from 'firefox-profiler/components/marker-chart/';
@@ -114,7 +114,7 @@ class ProfileViewerImpl extends PureComponent<Props> {
             {
               {
                 calltree: <ProfileCallTreeView />,
-                methodtable: <ProfileMethodTableView />,
+                functionTable: <ProfileFunctionTableView />,
                 'flame-graph': <FlameGraph />,
                 'stack-chart': <StackChart />,
                 'marker-chart': <MarkerChart />,

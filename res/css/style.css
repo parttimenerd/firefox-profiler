@@ -47,7 +47,7 @@ body {
   flex-flow: column nowrap;
 }
 
-.methodtableAndSidebarWrapper {
+.functionTableAndSidebarWrapper {
   display: flex;
   flex: 1;
   flex-flow: column nowrap;

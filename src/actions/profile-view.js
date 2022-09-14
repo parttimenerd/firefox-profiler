@@ -129,7 +129,7 @@ export function changeSelectedCallNode(
  * Uses the last function index in selectedCallNodePath as the selected function.
  * Ignores the third argument (it's just for compatibility with changeSelectedCallNode)
  */
-export function changeSelectedMethodTableCallNode(
+export function changeSelectedFunctionTableCallNode(
   threadsKey: ThreadsKey,
   selectedCallNodePath: CallNodePath,
   _?: CallNodePath

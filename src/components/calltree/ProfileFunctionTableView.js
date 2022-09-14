@@ -14,7 +14,7 @@ import type { CallTree as CallTreeType } from 'firefox-profiler/profile-logic/ca
 import { CallTree } from './CallTree';
 import explicitConnect from 'firefox-profiler/utils/connect';
 import {
-  changeSelectedMethodTableCallNode,
+  changeSelectedFunctionTableCallNode,
   changeSelectedCallNode,
 } from 'firefox-profiler/actions/profile-view';
 import type { TabSlug } from 'firefox-profiler/app-logic/tabs-handling';
@@ -35,14 +35,14 @@ type DispatchProps = {|
 
 type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
 
-class ProfileMethodTableViewImpl extends PureComponent<Props> {
+class ProfileFunctionTableViewImpl extends PureComponent<Props> {
   render() {
     return (
       <div
-        className="methodtableAndSidebarWrapper"
+        className="functionTableAndSidebarWrapper"
         id="calltree-tab"
         role="tabpanel"
-        aria-labelledby="methodtable-tab-button"
+        aria-labelledby="functionTable-tab-button"
       >
         <StackSettings hideInvertCallstack={true} />
         <TransformNavigator />
@@ -52,18 +52,18 @@ class ProfileMethodTableViewImpl extends PureComponent<Props> {
   }
 }
 
-export const ProfileMethodTableView = explicitConnect<
+export const ProfileFunctionTableView = explicitConnect<
   {||},
   StateProps,
   DispatchProps
 >({
   mapStateToProps: (state) => ({
-    tabslug: 'methodtable',
-    tree: selectedThreadSelectors.getMethodTableCallTree(state),
+    tabslug: 'functionTable',
+    tree: selectedThreadSelectors.getFunctionTableCallTree(state),
     callNodeInfo:
-      selectedThreadSelectors.getMethodTableCallNodeInfo(state).callNodeInfo,
+      selectedThreadSelectors.getFunctionTableCallNodeInfo(state).callNodeInfo,
     selectedCallNodeIndex:
-      selectedThreadSelectors.getSelectedMethodTableCallNodeIndex(state),
+      selectedThreadSelectors.getSelectedFunctionTableCallNodeIndex(state),
     // right clicking is not supported for now
     // as most of the transformations do not make sense in this context
     rightClickedCallNodeIndex: null,
@@ -72,7 +72,7 @@ export const ProfileMethodTableView = explicitConnect<
     callNodeMaxDepth: 0,
   }),
   mapDispatchToProps: {
-    changeSelectedCallNode: changeSelectedMethodTableCallNode,
+    changeSelectedCallNode: changeSelectedFunctionTableCallNode,
   },
-  component: ProfileMethodTableViewImpl,
+  component: ProfileFunctionTableViewImpl,
 });

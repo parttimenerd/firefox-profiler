@@ -231,7 +231,7 @@ export type CallNodeInfoWithFuncMapping = {|
 /**
  * Generate the CallNodeInfo which contains the CallNodeTable, and a map to convert
  * an IndexIntoStackTable to a IndexIntoCallNodeTable. This function runs
- * produces infos with one call node per function for the MethodTable view.
+ * produces infos with one call node per function for the FunctionTable view.
  *
  * It removes all functions without any samples and uses the category (and subcategory) of the last
  * frame for each function.
@@ -239,13 +239,13 @@ export type CallNodeInfoWithFuncMapping = {|
  * See `src/types/profile-derived.js` for the type definitions.
  * See `docs-developer/call-trees.md` for a detailed explanation of CallNodes.
  */
-export function getMethodTableCallNodeInfo(
+export function getFunctionTableCallNodeInfo(
   stackTable: StackTable,
   frameTable: FrameTable,
   funcTable: FuncTable,
   defaultCategory: IndexIntoCategoryList
 ): CallNodeInfoWithFuncMapping {
-  return timeCode('getMethodTableCallNodeInfo', () => {
+  return timeCode('getFunctionTableCallNodeInfo', () => {
     const funcToCallNodeIndex = new Int32Array(funcTable.length).fill(-1);
     const stackIndexToCallNodeIndex = new Uint32Array(stackTable.length);
 
@@ -2066,8 +2066,8 @@ export function getCallNodeIndexFromPath(
 }
 
 // This function returns a CallNodeIndex from a CallNodePath, using the
-// specified `callNodeTable` for the MethodTable
-export function getMethodTableCallNodeIndexFromPath(
+// specified `callNodeTable` for the FunctionTable
+export function getFunctionTableCallNodeIndexFromPath(
   callNodePath: CallNodePath,
   { funcToCallNodeIndex }: CallNodeInfoWithFuncMapping
 ): IndexIntoCallNodeTable | null {

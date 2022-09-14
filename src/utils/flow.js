@@ -43,7 +43,7 @@ export function toValidTabSlug(tabSlug: any): TabSlug | null {
   const coercedTabSlug = (tabSlug: TabSlug);
   switch (coercedTabSlug) {
     case 'calltree':
-    case 'methodtable':
+    case 'functionTable':
     case 'stack-chart':
     case 'marker-chart':
     case 'network-chart':

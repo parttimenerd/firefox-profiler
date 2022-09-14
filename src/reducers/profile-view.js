@@ -140,7 +140,7 @@ const symbolicationStatus: Reducer<SymbolicationStatus> = (
 export const defaultThreadViewOptions = {
   selectedCallNodePath: [],
   expandedCallNodePaths: new PathSet(),
-  selectedMethodTableFunction: null,
+  selectedFunctionTableFunction: null,
   selectedMarker: null,
   selectedNetworkMarker: null,
 };
@@ -261,7 +261,7 @@ const viewOptionsPerThread: Reducer<ThreadViewOptionsPerThreads> = (
       return _updateThreadViewOptions(state, threadsKey, {
         selectedCallNodePath,
         expandedCallNodePaths,
-        selectedMethodTableFunction: null,
+        selectedFunctionTableFunction: null,
       });
     }
     case 'CHANGE_SELECTED_METHODTABLE_CALL_NODE': {
@@ -269,7 +269,8 @@ const viewOptionsPerThread: Reducer<ThreadViewOptionsPerThreads> = (
 
       const threadState = _getThreadViewOptions(state, threadsKey);
 
-      const previousSelectedFunction = threadState.selectedMethodTableFunction;
+      const previousSelectedFunction =
+        threadState.selectedFunctionTableFunction;
 
       // If the selected function doesn't actually change, let's return the previous
       // state to avoid rerenders.
@@ -278,7 +279,7 @@ const viewOptionsPerThread: Reducer<ThreadViewOptionsPerThreads> = (
       }
 
       return _updateThreadViewOptions(state, threadsKey, {
-        selectedMethodTableFunction: selectedFunction,
+        selectedFunctionTableFunction: selectedFunction,
         selectedCallNodePath: [],
       });
     }
