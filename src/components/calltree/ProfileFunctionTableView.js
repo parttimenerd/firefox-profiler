@@ -42,7 +42,7 @@ class ProfileFunctionTableViewImpl extends PureComponent<Props> {
         className="functionTableAndSidebarWrapper"
         id="calltree-tab"
         role="tabpanel"
-        aria-labelledby="functionTable-tab-button"
+        aria-labelledby="function-table-tab-button"
       >
         <StackSettings hideInvertCallstack={true} />
         <TransformNavigator />
@@ -58,7 +58,7 @@ export const ProfileFunctionTableView = explicitConnect<
   DispatchProps
 >({
   mapStateToProps: (state) => ({
-    tabslug: 'functionTable',
+    tabslug: 'function-table',
     tree: selectedThreadSelectors.getFunctionTableCallTree(state),
     callNodeInfo:
       selectedThreadSelectors.getFunctionTableCallNodeInfo(state).callNodeInfo,

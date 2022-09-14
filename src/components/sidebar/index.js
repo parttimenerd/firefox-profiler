@@ -20,7 +20,7 @@ export function selectSidebar(
 ): React.ComponentType<{||}> | null {
   return {
     calltree: CallTreeSidebar,
-    functionTable: FunctionTableCallTreeSidebar,
+    'function-table': FunctionTableCallTreeSidebar,
     'flame-graph': CallTreeSidebar,
     'stack-chart': null,
     'marker-chart': null,

@@ -23,7 +23,7 @@ describe('getUsefulTabs', function () {
     const { getState } = storeWithProfile(profile);
     expect(selectedThreadSelectors.getUsefulTabs(getState())).toEqual([
       'calltree',
-      'functionTable',
+      'function-table',
       'flame-graph',
       'stack-chart',
       'marker-chart',
@@ -56,7 +56,7 @@ describe('getUsefulTabs', function () {
     const { getState, dispatch } = storeWithProfile(profile);
     expect(selectedThreadSelectors.getUsefulTabs(getState())).toEqual([
       'calltree',
-      'functionTable',
+      'function-table',
       'flame-graph',
       'stack-chart',
       'marker-chart',

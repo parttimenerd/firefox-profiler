@@ -39,7 +39,7 @@ describe('app/DetailsContainer', function () {
 
   const expectedSidebar: { [TabSlug]: boolean } = {
     calltree: true,
-    functionTable: true,
+    'function-table': true,
     'flame-graph': true,
     'stack-chart': false,
     'marker-chart': false,

@@ -114,7 +114,7 @@ class ProfileViewerImpl extends PureComponent<Props> {
             {
               {
                 calltree: <ProfileCallTreeView />,
-                functionTable: <ProfileFunctionTableView />,
+                'function-table': <ProfileFunctionTableView />,
                 'flame-graph': <FlameGraph />,
                 'stack-chart': <StackChart />,
                 'marker-chart': <MarkerChart />,
