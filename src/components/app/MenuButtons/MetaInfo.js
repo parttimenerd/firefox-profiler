@@ -15,7 +15,7 @@ import {
   getProfileExtraInfo,
 } from 'firefox-profiler/selectors/profile';
 import { resymbolicateProfile } from 'firefox-profiler/actions/receive-profile';
-import { formatFromMarkerSchema } from 'firefox-profiler/profile-logic/marker-schema';
+import { formatDOMFromMarkerSchema } from 'firefox-profiler/profile-logic/marker-schema';
 
 import {
   formatBytes,
@@ -154,7 +154,7 @@ class MetaInfoPanelImpl extends React.PureComponent<Props, State> {
               <div className="moreInfoRow" key={label}>
                 <span className="metaInfoWideLabel">{label}</span>
                 <div className="moreInfoValue">
-                  {formatFromMarkerSchema('moreInfo', format, value)}
+                  {formatDOMFromMarkerSchema('moreInfo', format, value, true)}
                 </div>
               </div>
             );
