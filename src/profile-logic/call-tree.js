@@ -541,7 +541,7 @@ export function computeCallTreeCountsAndSummary(
  * This handles computing timing information, and passing it all into
  * the CallTree constructor.
  */
- export function getCallTree(
+export function getCallTree(
   thread: Thread,
   interval: Milliseconds,
   callNodeInfo: CallNodeInfo,

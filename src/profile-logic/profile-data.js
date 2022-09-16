@@ -3787,7 +3787,7 @@ function applyAdditionalStrategyOnMarkers(
       if (config.additionalPropField === undefined) {
         throw new Error('additionalPropField is undefined');
       }
-      // we add a pseudo stack, so we don't have to change all 
+      // we add a pseudo stack, so we don't have to change all
       // the other code
       stack[length] = stackTable.length;
       stackTable.frame.push(frameTable.length);

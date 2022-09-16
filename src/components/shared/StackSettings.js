@@ -144,7 +144,9 @@ class StackSettingsImpl extends PureComponent<Props> {
       allowSwitchingStackType,
     } = this.props;
     const hasAllocations =
-      hasJsAllocations || hasNativeAllocations || additionalStrategies.length > 0;
+      hasJsAllocations ||
+      hasNativeAllocations ||
+      additionalStrategies.length > 0;
 
     return (
       <div className="stackSettings">
