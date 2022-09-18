@@ -277,10 +277,8 @@ export function getThreadSelectorsPerThread(
             }
             break;
           default:
-            assertExhaustiveCheck(
-              lastSelectedCallTreeSummaryStrategy,
-              'Unhandled call tree sumary strategy.'
-            );
+            // TODO: error checking
+            return lastSelectedCallTreeSummaryStrategy;
         }
         return lastSelectedCallTreeSummaryStrategy;
       }

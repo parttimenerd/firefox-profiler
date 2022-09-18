@@ -769,7 +769,8 @@ export function extractSamplesLikeTable(
       if (getAdditionalStrategiesForThread(thread).includes(strategy)) {
         return ProfileData.applyAdditionalStrategy(thread, strategy);
       }
-      throw assertExhaustiveCheck(strategy);
+      console.warn('unsupported strategy', strategy);
+      return thread.samples;
   }
 }
 

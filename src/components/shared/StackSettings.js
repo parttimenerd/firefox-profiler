@@ -211,7 +211,9 @@ class StackSettingsImpl extends PureComponent<Props> {
                       )
                     : null}
                   {additionalStrategies.map((strategy) => (
-                    <option key={strategy} value={strategy}></option>
+                    <option key={strategy} value={strategy}>
+                      {strategy}
+                    </option>
                   ))}
                 </select>
               </label>

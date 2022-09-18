@@ -1206,22 +1206,11 @@ export function toValidImplementationFilter(
 export function toValidCallTreeSummaryStrategy(
   strategy: mixed
 ): CallTreeSummaryStrategy {
-  switch (strategy) {
-    case 'timing':
-    case 'js-allocations':
-    case 'native-retained-allocations':
-    case 'native-allocations':
-    case 'native-deallocations-sites':
-    case 'native-deallocations-memory':
-      return strategy;
-    default:
-      // Default to "timing" if the strategy is not recognized. This value can come
-      // from a user-generated URL.
-      // e.g. `profiler.firefox.com/public/hash/ctSummary=tiiming` (note the typo.)
-      // This default branch will ensure we don't send values we don't understand to
-      // the store.
-      return 'timing';
+  // TODO: improve in cases where a profile is present
+  if (typeof strategy !== 'string') {
+    return 'timing';
   }
+  return strategy;
 }
 
 export function filterThreadByImplementation(
@@ -3723,9 +3712,9 @@ export function determineTimelineType(profile: Profile): TimelineType {
 export const getAdditionalStrategiesForThread = memoize((thread: Thread) => {
   const ret = [];
   (thread.sampleLikeMarkersConfig || []).forEach((config) => {
-    ret.push(config.name);
+    ret.push(config.label);
     if (config.additionalPropField) {
-      ret.push(`${config.name} ${config.additionalPropField}`);
+      ret.push(`${config.label} ${config.additionalPropField}`);
     }
   });
   return ret;
@@ -3741,8 +3730,8 @@ export const applyAdditionalStrategy: (
     }
     const config = thread.sampleLikeMarkersConfig.find(
       (config) =>
-        config.name === additionalStrategy ||
-        `${config.name} ${config.additionalPropField || 'null'}` ===
+        config.label === additionalStrategy ||
+        `${config.label} ${config.additionalPropField || 'null'}` ===
           additionalStrategy
     );
 
@@ -3755,7 +3744,7 @@ export const applyAdditionalStrategy: (
     return applyAdditionalStrategyOnMarkers(
       thread.markers,
       config,
-      additionalStrategy !== config.name,
+      additionalStrategy !== config.label,
       thread
     );
   }
@@ -3771,18 +3760,23 @@ function applyAdditionalStrategyOnMarkers(
   const stack: (IndexIntoStackTable | null)[] = [];
   const time: Milliseconds[] = [];
   const weight: number[] = [];
-  const weightType: WeightType = config.weightType;
+  const weightType: WeightType = config.weightType || 'samples';
   let length = 0;
+  const configNameId = stringTable.indexForString(config.name);
   rawTable.data.forEach((data, i) => {
-    if (rawTable.name[i] !== config.name) {
+    if (rawTable.name[i] !== configNameId) {
       return;
     }
     time[length] = rawTable.startTime[i] || rawTable.endTime[i] || -1;
     const rawData = rawTable.data[i] || {};
-    weight[length] = rawData[config.weightField] || -1;
+    if (config.weightField !== undefined) {
+      const rawVal = rawData[config.weightField];
+      weight[length] = rawVal !== undefined ? rawVal || 0.000001 : -1;
+    } else {
+      weight[length] = 1;
+    }
     if (!useAdditionalPropField) {
-      // $FlowExpectError
-      stack[length] = rawData.cause || null;
+      stack[length] = rawData.cause ? rawData.cause.stack : null;
     } else {
       if (config.additionalPropField === undefined) {
         throw new Error('additionalPropField is undefined');
