@@ -766,7 +766,9 @@ export function extractSamplesLikeTable(
     }
     /* istanbul ignore next */
     default:
-      if (getAdditionalStrategiesForThread(thread).includes(strategy)) {
+      if (
+        getAdditionalStrategiesForThread(thread).find((s) => s.key === strategy)
+      ) {
         return ProfileData.applyAdditionalStrategy(thread, strategy);
       }
       console.warn('unsupported strategy', strategy);

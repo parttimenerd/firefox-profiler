@@ -39,6 +39,7 @@ import './StackSettings.css';
 import type {
   ImplementationFilter,
   CallTreeSummaryStrategy,
+  SampleLikeMarkerConfig,
 } from 'firefox-profiler/types';
 
 type OwnProps = {|
@@ -56,7 +57,7 @@ type StateProps = {|
   +hasNativeAllocations: boolean,
   +canShowRetainedMemory: boolean,
   +allowSwitchingStackType: boolean,
-  +additionalStrategies: string[],
+  +additionalStrategies: SampleLikeMarkerConfig[],
 |};
 
 type DispatchProps = {|
@@ -211,8 +212,8 @@ class StackSettingsImpl extends PureComponent<Props> {
                       )
                     : null}
                   {additionalStrategies.map((strategy) => (
-                    <option key={strategy} value={strategy}>
-                      {strategy}
+                    <option key={strategy.key} value={strategy.key}>
+                      {strategy.label}
                     </option>
                   ))}
                 </select>

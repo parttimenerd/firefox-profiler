@@ -1087,9 +1087,9 @@ export function mergeThreads(threads: Thread[]): Thread {
       unregisterTime
     );
     for (const marker of thread.sampleLikeMarkersConfig || []) {
-      if (!sampleLikeMarkersConfigNameSet.has(marker.name)) {
+      if (!sampleLikeMarkersConfigNameSet.has(marker.key)) {
         sampleLikeMarkersConfig.push(marker);
-        sampleLikeMarkersConfigNameSet.add(marker.name);
+        sampleLikeMarkersConfigNameSet.add(marker.key);
       }
     }
   }

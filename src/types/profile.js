@@ -671,18 +671,17 @@ export type Thread = {|
 
 /**
  * configute markers for which a SamplesLikeTable can be generated
- * (using the cause property for the stacktrace) */
+ * (using the cause property for the stacktrace)
+ */
 export type SampleLikeMarkerConfig = {|
-  // name of the marker
-  name: string,
-  // label of the strategy
+  marker: string,
   label: string,
+  key: string,
   // defaults to samples
   weightType?: WeightType,
   // defaults to 1 per marker
   weightField?: string,
-  /** name of the property like 'allocatedClass' */
-  additionalPropField?: string,
+  stackTraceField?: string,
 |};
 
 export type ExtensionTable = {|

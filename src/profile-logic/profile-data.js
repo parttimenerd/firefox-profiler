@@ -3748,14 +3748,7 @@ export function determineTimelineType(profile: Profile): TimelineType {
 }
 
 export const getAdditionalStrategiesForThread = memoize((thread: Thread) => {
-  const ret = [];
-  (thread.sampleLikeMarkersConfig || []).forEach((config) => {
-    ret.push(config.label);
-    if (config.additionalPropField) {
-      ret.push(`${config.label} ${config.additionalPropField}`);
-    }
-  });
-  return ret;
+  return thread.sampleLikeMarkersConfig || [];
 });
 
 export const applyAdditionalStrategy: (
@@ -3767,10 +3760,7 @@ export const applyAdditionalStrategy: (
       throw new Error("Thread doesn't have sampleLikeMarkersConfig");
     }
     const config = thread.sampleLikeMarkersConfig.find(
-      (config) =>
-        config.label === additionalStrategy ||
-        `${config.label} ${config.additionalPropField || 'null'}` ===
-          additionalStrategy
+      (config) => config.key === additionalStrategy
     );
 
     if (config === undefined) {
@@ -3779,20 +3769,13 @@ export const applyAdditionalStrategy: (
       );
     }
 
-    return applyAdditionalStrategyOnMarkers(
-      thread.markers,
-      config,
-      additionalStrategy !== config.label,
-      thread
-    );
+    return applyAdditionalStrategyOnMarkers(thread.markers, config, thread);
   }
 );
 
 function applyAdditionalStrategyOnMarkers(
   rawTable: RawMarkerTable,
   config: SampleLikeMarkerConfig,
-  useAdditionalPropField: boolean,
-  // required solely for the additional props
   { stringTable }: Thread
 ): SamplesLikeTable {
   const stack: (IndexIntoStackTable | null)[] = [];
@@ -3800,9 +3783,9 @@ function applyAdditionalStrategyOnMarkers(
   const weight: number[] = [];
   const weightType: WeightType = config.weightType || 'samples';
   let length = 0;
-  const configNameId = stringTable.indexForString(config.name);
+  const markerNameId = stringTable.indexForString(config.marker);
   rawTable.data.forEach((data, i) => {
-    if (rawTable.name[i] !== configNameId) {
+    if (rawTable.name[i] !== markerNameId) {
       return;
     }
     time[length] = rawTable.startTime[i] || rawTable.endTime[i] || -1;
@@ -3813,11 +3796,10 @@ function applyAdditionalStrategyOnMarkers(
     } else {
       weight[length] = 1;
     }
-    if (!useAdditionalPropField) {
-      stack[length] = rawData.cause ? rawData.cause.stack : null;
-      //console.log("Marker " + stringTable.getString(funcTable.name[frameTable.func[stackTable.frame[rawData.cause.stack]]]))
+    if (config.stackTraceField) {
+      stack[length] = rawData[config.stackTraceField];
     } else {
-      throw new Error('additionalPropField is undefined');
+      stack[length] = rawData.cause ? rawData.cause.stack : null;
     }
     length++;
   });

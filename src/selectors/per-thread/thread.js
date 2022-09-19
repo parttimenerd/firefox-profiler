@@ -17,7 +17,6 @@ import * as ProfileSelectors from '../profile';
 import * as JsTracer from '../../profile-logic/js-tracer';
 import * as Cpu from '../../profile-logic/cpu';
 import {
-  assertExhaustiveCheck,
   ensureExists,
   getFirstItemFromSet,
 } from '../../utils/flow';
@@ -39,6 +38,7 @@ import type {
   EventDelayInfo,
   ThreadsKey,
   CallTreeSummaryStrategy,
+  SampleLikeMarkerConfig,
 } from 'firefox-profiler/types';
 
 import type { UniqueStringArray } from '../../utils/unique-string-array';
@@ -462,7 +462,9 @@ export function getThreadSelectorsPerThread(
       'Could not get the processed event delays'
     );
 
-  const getAdditionalStrategies: Selector<string[]> = (state) => {
+  const getAdditionalStrategies: Selector<SampleLikeMarkerConfig[]> = (
+    state
+  ) => {
     return ProfileData.getAdditionalStrategiesForThread(getThread(state));
   };
 
