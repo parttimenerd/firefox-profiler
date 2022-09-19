@@ -1638,7 +1638,45 @@ export function filterThreadSamplesToRange(
       };
     }
   }
-
+  if (thread.markers) {
+    let startIndex = 0;
+    const startTime = thread.markers.startTime;
+    const endTime = thread.markers.endTime;
+    for (; startIndex < startTime.length; startIndex++) {
+      if (startTime[startIndex] !== null) {
+        if (startTime[startIndex] >= rangeStart) {
+          break;
+        }
+      } else if (
+        endTime[startIndex] !== null &&
+        endTime[startIndex] >= rangeStart
+      ) {
+        break;
+      }
+    }
+    let endIndex = 0;
+    for (; endIndex < startTime.length; endIndex++) {
+      if (endTime[endIndex] !== null) {
+        if (endTime[endIndex] > rangeEnd) {
+          break;
+        }
+      } else if (
+        startTime[endIndex] !== null &&
+        startTime[endIndex] > rangeEnd
+      ) {
+        break;
+      }
+    }
+    newThread.markers = {
+      ...thread.markers,
+      startTime: thread.markers.startTime.slice(startIndex, endIndex),
+      endTime: thread.markers.endTime.slice(startIndex, endIndex),
+      phase: thread.markers.phase.slice(startIndex, endIndex),
+      name: thread.markers.name.slice(startIndex, endIndex),
+      data: thread.markers.data.slice(startIndex, endIndex),
+      length: endIndex - startIndex,
+    };
+  }
   return newThread;
 }
 
@@ -3755,7 +3793,7 @@ function applyAdditionalStrategyOnMarkers(
   config: SampleLikeMarkerConfig,
   useAdditionalPropField: boolean,
   // required solely for the additional props
-  { stackTable, frameTable, funcTable, stringTable, ..._ }: Thread
+  { stringTable }: Thread
 ): SamplesLikeTable {
   const stack: (IndexIntoStackTable | null)[] = [];
   const time: Milliseconds[] = [];
@@ -3777,41 +3815,9 @@ function applyAdditionalStrategyOnMarkers(
     }
     if (!useAdditionalPropField) {
       stack[length] = rawData.cause ? rawData.cause.stack : null;
+      //console.log("Marker " + stringTable.getString(funcTable.name[frameTable.func[stackTable.frame[rawData.cause.stack]]]))
     } else {
-      if (config.additionalPropField === undefined) {
-        throw new Error('additionalPropField is undefined');
-      }
-      // we add a pseudo stack, so we don't have to change all
-      // the other code
-      stack[length] = stackTable.length;
-      stackTable.frame.push(frameTable.length);
-      stackTable.category.push(0);
-      stackTable.subcategory.push(0);
-      stackTable.prefix.push(null);
-      stackTable.length++;
-      frameTable.address.push(-1);
-      frameTable.category.push(0);
-      frameTable.subcategory.push(0);
-      frameTable.inlineDepth.push(0);
-      frameTable.nativeSymbol.push(null);
-      frameTable.innerWindowID.push(null);
-      frameTable.implementation.push(null);
-      frameTable.line.push(null);
-      frameTable.column.push(null);
-      frameTable.optimizations.push(null);
-      frameTable.func.push(funcTable.length);
-      frameTable.length++;
-      funcTable.name.push(
-        // $FlowExpectError
-        stringTable.indexForString(rawData[config.additionalPropField] || '')
-      );
-      funcTable.isJS.push(true);
-      funcTable.relevantForJS.push(true);
-      funcTable.resource.push(-1);
-      funcTable.fileName.push(null);
-      funcTable.lineNumber.push(null);
-      funcTable.columnNumber.push(null);
-      funcTable.length++;
+      throw new Error('additionalPropField is undefined');
     }
     length++;
   });
