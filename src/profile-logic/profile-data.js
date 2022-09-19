@@ -836,11 +836,13 @@ export function getTimingsForCallNodeIndex(
           subcategoryBreakdown: Array(category.subcategories.length).fill(0),
         }));
       }
-      timings.breakdownByCategory[categoryIndex].entireCategoryValue +=
-        duration;
-      timings.breakdownByCategory[categoryIndex].subcategoryBreakdown[
-        subcategoryIndex
-      ] += duration;
+      if (timings.breakdownByCategory[categoryIndex]) {
+        timings.breakdownByCategory[categoryIndex].entireCategoryValue +=
+          duration;
+        timings.breakdownByCategory[categoryIndex].subcategoryBreakdown[
+          subcategoryIndex
+        ] += duration;
+      }
     }
   }
   /* ------------- End of function definitions ------------- */
@@ -1528,7 +1530,8 @@ export function getInclusiveSampleIndexRangeForSelection(
 export function filterThreadSamplesToRange(
   thread: Thread,
   rangeStart: number,
-  rangeEnd: number
+  rangeEnd: number,
+  filterMarkers: boolean
 ): Thread {
   const { samples, jsAllocations, nativeAllocations } = thread;
   const [beginSampleIndex, endSampleIndex] = getSampleIndexRangeForSelection(
@@ -1638,7 +1641,7 @@ export function filterThreadSamplesToRange(
       };
     }
   }
-  if (thread.markers) {
+  if (filterMarkers) {
     let startIndex = 0;
     const startTime = thread.markers.startTime;
     const endTime = thread.markers.endTime;
@@ -1654,28 +1657,30 @@ export function filterThreadSamplesToRange(
         break;
       }
     }
-    let endIndex = 0;
+    let endIndex = startIndex;
     for (; endIndex < startTime.length; endIndex++) {
       if (endTime[endIndex] !== null) {
-        if (endTime[endIndex] > rangeEnd) {
+        if (endTime[endIndex] >= rangeEnd) {
           break;
         }
       } else if (
         startTime[endIndex] !== null &&
-        startTime[endIndex] > rangeEnd
+        startTime[endIndex] >= rangeEnd
       ) {
         break;
       }
     }
-    newThread.markers = {
-      ...thread.markers,
-      startTime: thread.markers.startTime.slice(startIndex, endIndex),
-      endTime: thread.markers.endTime.slice(startIndex, endIndex),
-      phase: thread.markers.phase.slice(startIndex, endIndex),
-      name: thread.markers.name.slice(startIndex, endIndex),
-      data: thread.markers.data.slice(startIndex, endIndex),
-      length: endIndex - startIndex,
-    };
+    if (endIndex !== startIndex) {
+      newThread.markers = {
+        ...thread.markers,
+        startTime: thread.markers.startTime.slice(startIndex, endIndex),
+        endTime: thread.markers.endTime.slice(startIndex, endIndex),
+        phase: thread.markers.phase.slice(startIndex, endIndex),
+        name: thread.markers.name.slice(startIndex, endIndex),
+        data: thread.markers.data.slice(startIndex, endIndex),
+        length: endIndex - startIndex,
+      };
+    }
   }
   return newThread;
 }
@@ -3769,14 +3774,13 @@ export const applyAdditionalStrategy: (
       );
     }
 
-    return applyAdditionalStrategyOnMarkers(thread.markers, config, thread);
+    return applyAdditionalStrategyOnMarkers(config, thread);
   }
 );
 
 function applyAdditionalStrategyOnMarkers(
-  rawTable: RawMarkerTable,
   config: SampleLikeMarkerConfig,
-  { stringTable }: Thread
+  { stringTable, markers }: Thread
 ): SamplesLikeTable {
   const stack: (IndexIntoStackTable | null)[] = [];
   const time: Milliseconds[] = [];
@@ -3784,12 +3788,12 @@ function applyAdditionalStrategyOnMarkers(
   const weightType: WeightType = config.weightType || 'samples';
   let length = 0;
   const markerNameId = stringTable.indexForString(config.marker);
-  rawTable.data.forEach((data, i) => {
-    if (rawTable.name[i] !== markerNameId) {
+  markers.data.forEach((data, i) => {
+    if (markers.name[i] !== markerNameId) {
       return;
     }
-    time[length] = rawTable.startTime[i] || rawTable.endTime[i] || -1;
-    const rawData = rawTable.data[i] || {};
+    time[length] = markers.startTime[i] || markers.endTime[i] || -1;
+    const rawData = markers.data[i] || {};
     if (config.weightField !== undefined) {
       const rawVal = rawData[config.weightField];
       weight[length] = rawVal !== undefined ? rawVal || 0.000001 : -1;

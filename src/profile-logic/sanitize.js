@@ -398,7 +398,7 @@ function sanitizeThreadPII(
     // to range.
     if (PIIToBeRemoved.shouldFilterToCommittedRange !== null) {
       const { start, end } = PIIToBeRemoved.shouldFilterToCommittedRange;
-      newThread = filterThreadSamplesToRange(thread, start, end);
+      newThread = filterThreadSamplesToRange(thread, start, end, true);
     } else {
       // Copying the thread even if we don't filter samples because we are gonna
       // change some fields later.

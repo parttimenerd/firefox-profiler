@@ -633,18 +633,6 @@ export function computeFunctionTableCallTreeCountsAndSummary(
     stackIndexToCallNodeIndex,
     funcToCallNodeIndex,
   });
-  funcToCallNodeIndex.forEach((callNodeIndex, funcIndex) => {
-    if (callNodeIndex === -1) {
-      return;
-    }
-    console.log(
-      `funcIndex: ${funcIndex}, callNodeIndex: ${callNodeIndex}, func: ${thread.stringTable.getString(
-        thread.funcTable.name[funcIndex]
-      )}, callNodeSelf: ${callNodeSelf[callNodeIndex]}, callNodeTotal: ${
-        callNodeTotal[callNodeIndex]
-      }`
-    );
-  });
 
   // one call node for each function
 

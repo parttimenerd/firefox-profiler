@@ -279,7 +279,7 @@ function filterThreadToRange(
   rangeStart: number,
   rangeEnd: number
 ): Thread {
-  thread = filterThreadSamplesToRange(thread, rangeStart, rangeEnd);
+  thread = filterThreadSamplesToRange(thread, rangeStart, rangeEnd, false);
   thread.markers = filterRawMarkerTableToRange(
     thread.markers,
     derivedMarkerInfo,

@@ -606,7 +606,7 @@ describe('diffing trees', function () {
     const rangeStart = 1;
     const rangeEnd = 3;
     profile.threads = profile.threads.map((thread) =>
-      filterThreadSamplesToRange(thread, rangeStart, rangeEnd)
+      filterThreadSamplesToRange(thread, rangeStart, rangeEnd, true)
     );
     const callTree = callTreeFromProfile(profile, /* threadIndex */ 2);
     const formattedTree = formatTree(callTree);

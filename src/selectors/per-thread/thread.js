@@ -16,10 +16,7 @@ import * as CallTree from '../../profile-logic/call-tree';
 import * as ProfileSelectors from '../profile';
 import * as JsTracer from '../../profile-logic/js-tracer';
 import * as Cpu from '../../profile-logic/cpu';
-import {
-  ensureExists,
-  getFirstItemFromSet,
-} from '../../utils/flow';
+import { ensureExists, getFirstItemFromSet } from '../../utils/flow';
 
 import type {
   Thread,
@@ -106,6 +103,69 @@ export function getThreadSelectorsPerThread(
     getSamplesTable(state).weightType || 'samples';
 
   /**
+   * The CallTreeSummaryStrategy determines how the call tree summarizes the
+   * the current thread. By default, this is done by timing, but other
+   * methods are also available. This selectors also ensures that the current
+   * thread supports the last selected call tree summary strategy.
+   */
+  const getCallTreeSummaryStrategy: Selector<CallTreeSummaryStrategy> =
+    createSelector(
+      getThread,
+      UrlState.getLastSelectedCallTreeSummaryStrategy,
+      (thread, lastSelectedCallTreeSummaryStrategy) => {
+        switch (lastSelectedCallTreeSummaryStrategy) {
+          case 'timing':
+            if (
+              thread.samples.length === 0 &&
+              thread.nativeAllocations &&
+              thread.nativeAllocations.length > 0
+            ) {
+              // This is a profile with no samples, but with native allocations available.
+              return 'native-allocations';
+            }
+            break;
+          case 'js-allocations':
+            if (!thread.jsAllocations) {
+              // Attempting to view a thread with no JS allocations, switch back to timing.
+              return 'timing';
+            }
+            break;
+          case 'native-allocations':
+          case 'native-retained-allocations':
+          case 'native-deallocations-sites':
+          case 'native-deallocations-memory':
+            if (!thread.nativeAllocations) {
+              // Attempting to view a thread with no native allocations, switch back
+              // to timing.
+              return 'timing';
+            }
+            break;
+          default:
+            // TODO: error checking
+            return lastSelectedCallTreeSummaryStrategy;
+        }
+        return lastSelectedCallTreeSummaryStrategy;
+      }
+    );
+
+  const isMarkerBasedStrategy: Selector<boolean> = createSelector(
+    getCallTreeSummaryStrategy,
+    (strategy) => {
+      switch (strategy) {
+        case 'timing':
+        case 'js-allocations':
+        case 'native-allocations':
+        case 'native-retained-allocations':
+        case 'native-deallocations-sites':
+        case 'native-deallocations-memory':
+          return false;
+        default:
+          return true;
+      }
+    }
+  );
+
+  /**
    * The first per-thread selectors filter out and transform a thread based on user's
    * interactions. The transforms are order dependendent.
    *
@@ -164,9 +224,15 @@ export function getThreadSelectorsPerThread(
   const getRangeFilteredThread: Selector<Thread> = createSelector(
     getTabFilteredThread,
     ProfileSelectors.getCommittedRange,
-    (thread, range) => {
+    isMarkerBasedStrategy,
+    (thread, range, filterMarkers) => {
       const { start, end } = range;
-      return ProfileData.filterThreadSamplesToRange(thread, start, end);
+      return ProfileData.filterThreadSamplesToRange(
+        thread,
+        start,
+        end,
+        filterMarkers
+      );
     }
   );
 
@@ -225,7 +291,8 @@ export function getThreadSelectorsPerThread(
   const getPreviewFilteredThread: Selector<Thread> = createSelector(
     getFilteredThread,
     ProfileSelectors.getPreviewSelection,
-    (thread, previewSelection): Thread => {
+    isMarkerBasedStrategy,
+    (thread, previewSelection, filterMarkers): Thread => {
       if (!previewSelection.hasSelection) {
         return thread;
       }
@@ -233,56 +300,11 @@ export function getThreadSelectorsPerThread(
       return ProfileData.filterThreadSamplesToRange(
         thread,
         selectionStart,
-        selectionEnd
+        selectionEnd,
+        filterMarkers
       );
     }
   );
-
-  /**
-   * The CallTreeSummaryStrategy determines how the call tree summarizes the
-   * the current thread. By default, this is done by timing, but other
-   * methods are also available. This selectors also ensures that the current
-   * thread supports the last selected call tree summary strategy.
-   */
-  const getCallTreeSummaryStrategy: Selector<CallTreeSummaryStrategy> =
-    createSelector(
-      getThread,
-      UrlState.getLastSelectedCallTreeSummaryStrategy,
-      (thread, lastSelectedCallTreeSummaryStrategy) => {
-        switch (lastSelectedCallTreeSummaryStrategy) {
-          case 'timing':
-            if (
-              thread.samples.length === 0 &&
-              thread.nativeAllocations &&
-              thread.nativeAllocations.length > 0
-            ) {
-              // This is a profile with no samples, but with native allocations available.
-              return 'native-allocations';
-            }
-            break;
-          case 'js-allocations':
-            if (!thread.jsAllocations) {
-              // Attempting to view a thread with no JS allocations, switch back to timing.
-              return 'timing';
-            }
-            break;
-          case 'native-allocations':
-          case 'native-retained-allocations':
-          case 'native-deallocations-sites':
-          case 'native-deallocations-memory':
-            if (!thread.nativeAllocations) {
-              // Attempting to view a thread with no native allocations, switch back
-              // to timing.
-              return 'timing';
-            }
-            break;
-          default:
-            // TODO: error checking
-            return lastSelectedCallTreeSummaryStrategy;
-        }
-        return lastSelectedCallTreeSummaryStrategy;
-      }
-    );
 
   const getUnfilteredSamplesForCallTree: Selector<SamplesLikeTable> =
     createSelector(
