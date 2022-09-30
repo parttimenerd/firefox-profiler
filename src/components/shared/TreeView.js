@@ -467,10 +467,12 @@ type TreeViewProps<DisplayData> = {|
   +onKeyDown?: (SyntheticKeyboardEvent<>) => void,
   +viewOptions: TableViewOptions,
   +onViewOptionsChange?: (TableViewOptions) => void,
+  +onKeyUp?: (SyntheticKeyboardEvent<>) => void,
 |};
 
 type TreeViewState = {|
   +fixedColumnWidths: Array<CssPixels> | null,
+  +onKeyUp?: (SyntheticKeyboardEvent<>) => void,
 |};
 
 export class TreeView<DisplayData: Object> extends React.PureComponent<
@@ -923,6 +925,12 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     }
   };
 
+  _onKeyUp = (event: SyntheticKeyboardEvent<>) => {
+    if (this.props.onKeyUp) {
+      this.props.onKeyUp(event);
+    }
+  };
+
   /* This method is used by users of this component. */
   /* eslint-disable-next-line react/no-unused-class-component-methods */
   focus() {
@@ -943,7 +951,7 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
       selectedNodeId,
     } = this.props;
     return (
-      <div className="treeView">
+      <div className="treeView" onKeyUp={this._onKeyUp}>
         <TreeViewHeader
           fixedColumns={fixedColumns}
           mainColumn={mainColumn}
