@@ -107,7 +107,6 @@ class CallTreeImpl extends PureComponent<AllProps> {
   };
   _treeView: TreeView<CallNodeDisplayData> | null = null;
   _takeTreeViewRef = (treeView) => (this._treeView = treeView);
-  _isShiftKeyPressed: boolean = false;
 
   /**
    * Call Trees can have different types of "weights" for the data. Choose the
@@ -281,11 +280,6 @@ class CallTreeImpl extends PureComponent<AllProps> {
       threadsKey,
     } = this.props;
 
-    this._isShiftKeyPressed = false;
-    if (event.key === 'Shift') {
-      this._isShiftKeyPressed = true;
-    }
-
     const nodeIndex =
       rightClickedCallNodeIndex !== null
         ? rightClickedCallNodeIndex
@@ -296,16 +290,27 @@ class CallTreeImpl extends PureComponent<AllProps> {
     handleCallNodeTransformShortcut(event, threadsKey, nodeIndex);
   };
 
-  _onKeyUp = (_) => {
-    this._isShiftKeyPressed = false;
-  };
-
-  _onEnterOrDoubleClick = (nodeId: IndexIntoCallNodeTable) => {
+  _onEnter = (
+    nodeId: IndexIntoCallNodeTable,
+    event: SyntheticKeyboardEvent<>
+  ) => {
     const { tree, openSourceView, tabslug } = this.props;
     tree.handleOpenSourceView(
       nodeId,
       (file) => openSourceView(file, tabslug),
-      this._isShiftKeyPressed
+      event.shiftKey
+    );
+  };
+
+  _onDoubleClick = (
+    nodeId: IndexIntoCallNodeTable,
+    event: SyntheticMouseEvent<>
+  ) => {
+    const { tree, openSourceView, tabslug } = this.props;
+    tree.handleOpenSourceView(
+      nodeId,
+      (file) => openSourceView(file, tabslug),
+      event.shiftKey
     );
   };
 
@@ -402,9 +407,8 @@ class CallTreeImpl extends PureComponent<AllProps> {
         rowHeight={16}
         indentWidth={10}
         onKeyDown={this._onKeyDown}
-        onKeyUp={this._onKeyUp}
-        onEnterKey={this._onEnterOrDoubleClick}
-        onDoubleClick={this._onEnterOrDoubleClick}
+        onEnterKey={this._onEnter}
+        onDoubleClick={this._onDoubleClick}
         viewOptions={tableViewOptions}
         onViewOptionsChange={onTableViewOptionsChange}
       />
