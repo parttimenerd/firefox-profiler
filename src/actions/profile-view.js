@@ -1944,6 +1944,7 @@ export function changeMouseTimePosition(
   };
 }
 
+
 export function changeTableViewOptions(
   tab: TabSlug,
   tableViewOptions: TableViewOptions
@@ -1955,10 +1956,15 @@ export function changeTableViewOptions(
   };
 }
 
-export function openSourceView(file: string, currentTab: TabSlug): Action {
+export function openSourceView(
+  file: string,
+  name: string | null,
+  currentTab: TabSlug
+): Action {
   return {
     type: 'OPEN_SOURCE_VIEW',
     file,
+    name,
     currentTab,
   };
 }
