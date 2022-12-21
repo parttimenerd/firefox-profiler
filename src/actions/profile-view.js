@@ -134,7 +134,7 @@ export function changeSelectedFunctionTableCallNode(
   _?: CallNodePath
 ): Action {
   return {
-    type: 'CHANGE_SELECTED_FUNCTIONTABLE_CALL_NODE,',
+    type: 'CHANGE_SELECTED_FUNCTIONTABLE_CALL_NODE',
     selectedFunction: selectedCallNodePath[selectedCallNodePath.length - 1],
     threadsKey,
   };
