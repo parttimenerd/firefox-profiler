@@ -49,7 +49,10 @@ import type {
 import type { TabSlug } from 'firefox-profiler/app-logic/tabs-handling';
 import type { CallTree as CallTreeType } from 'firefox-profiler/profile-logic/call-tree';
 
-import type { Column } from 'firefox-profiler/components/shared/TreeView';
+import type {
+  Column,
+  MaybeResizableColumn,
+} from 'firefox-profiler/components/shared/TreeView';
 import type { ConnectedProps } from 'firefox-profiler/utils/connect';
 
 import './CallTree.css';
@@ -113,7 +116,7 @@ class CallTreeImpl extends PureComponent<AllProps> {
    * appropriate labels for the call tree based on this weight.
    */
   _weightTypeToColumns = memoize(
-    (weightType: WeightType): Column<CallNodeDisplayData>[] => {
+    (weightType: WeightType): MaybeResizableColumn<CallNodeDisplayData>[] => {
       switch (weightType) {
         case 'tracing-ms':
           return [
@@ -138,7 +141,12 @@ class CallTreeImpl extends PureComponent<AllProps> {
               initialWidth: 70,
               resizable: true,
             },
-            { propName: 'icon', titleL10nId: '', component: Icon },
+            {
+              propName: 'icon',
+              titleL10nId: '',
+              component: Icon,
+              initialWidth: 10,
+            },
           ];
         case 'samples':
           return [
@@ -193,7 +201,12 @@ class CallTreeImpl extends PureComponent<AllProps> {
               initialWidth: 90,
               resizable: true,
             },
-            { propName: 'icon', titleL10nId: '', component: Icon },
+            {
+              propName: 'icon',
+              titleL10nId: '',
+              component: Icon,
+              initialWidth: 10,
+            },
           ];
         default:
           throw assertExhaustiveCheck(weightType, 'Unhandled WeightType.');
