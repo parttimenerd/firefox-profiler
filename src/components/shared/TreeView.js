@@ -476,6 +476,7 @@ type TreeViewProps<DisplayData> = {|
 
 type TreeViewState = {|
   +fixedColumnWidths: Array<CssPixels> | null,
+  +isResizingColumns: boolean,
 |};
 
 export class TreeView<DisplayData: Object> extends React.PureComponent<
@@ -491,6 +492,7 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
   |} | null = null;
   state = {
     fixedColumnWidths: null,
+    isResizingColumns: false,
   };
   _stateCounter: number = 0;
 
@@ -533,26 +535,15 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     };
   };
 
-  _getTreeTabChildren = () => {
-    const treeTab = document.getElementById('calltree-tab');
-    if (treeTab) {
-      return treeTab.childNodes;
-    }
-    return [];
-  };
-
   _onColumnWidthChangeStart = (columnIndex: number, startX: CssPixels) => {
     this._currentMovedColumnState = {
       columnIndex,
       lastX: startX,
       initialWidth: this._getCurrentFixedColumnWidths()[columnIndex],
     };
+    this.setState({ isResizingColumns: true });
     window.addEventListener('mousemove', this._onColumnWidthChangeMouseMove);
     window.addEventListener('mouseup', this._onColumnWidthChangeMouseUp);
-    for (const elem of this._getTreeTabChildren()) {
-      // $FlowExpectError - we know that these are HTML nodes
-      elem.style.setProperty('cursor', 'col-resize');
-    }
   };
 
   _onColumnWidthChangeMouseMove = (event: MouseEvent) => {
@@ -579,23 +570,20 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     }
   };
 
-  _cleanUpMouseHandlersAndResetCursor = () => {
+  _cleanUpMouseHandlers = () => {
     window.removeEventListener('mousemove', this._onColumnWidthChangeMouseMove);
     window.removeEventListener('mouseup', this._onColumnWidthChangeMouseUp);
-    for (const elem of this._getTreeTabChildren()) {
-      // $FlowExpectError - we know that these are HTML nodes
-      elem.style.removeProperty('cursor');
-    }
   };
 
   _onColumnWidthChangeMouseUp = () => {
-    this._cleanUpMouseHandlersAndResetCursor();
+    this.setState({ isResizingColumns: false });
+    this._cleanUpMouseHandlers();
     this._currentMovedColumnState = null;
     this._propagateColumnWidthChange(this._getCurrentFixedColumnWidths());
   };
 
   componentWillUnmount = () => {
-    this._cleanUpMouseHandlersAndResetCursor();
+    this._cleanUpMouseHandlers();
   };
 
   _onColumnWidthReset = (columnIndex: number) => {
@@ -952,8 +940,9 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
       rowHeight,
       selectedNodeId,
     } = this.props;
+    const { isResizingColumns } = this.state;
     return (
-      <div className="treeView" onKeyUp={this._onKeyUp}>
+      <div className="treeView">
         <TreeViewHeader
           fixedColumns={fixedColumns}
           mainColumn={mainColumn}
