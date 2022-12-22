@@ -12,16 +12,10 @@ import { ProfileViewer } from 'firefox-profiler/components/app/ProfileViewer';
 import { updateUrlState } from 'firefox-profiler/actions/app';
 import { viewProfile } from 'firefox-profiler/actions/receive-profile';
 import { stateFromLocation } from 'firefox-profiler/app-logic/url-handling';
-import { ensureExists } from 'firefox-profiler/utils/flow';
 
-import {
-  render,
-  screen,
-  within,
-} from 'firefox-profiler/test/fixtures/testing-library';
+import { render } from 'firefox-profiler/test/fixtures/testing-library';
 import { blankStore } from 'firefox-profiler/test/fixtures/stores';
 import { getProfileFromTextSamples } from 'firefox-profiler/test/fixtures/profiles/processed-profile';
-import { fireFullClick } from 'firefox-profiler/test/fixtures/utils';
 import { autoMockDomRect } from 'firefox-profiler/test/fixtures/mocks/domrect.js';
 
 // We're not interested in the timeline in this test
@@ -95,26 +89,5 @@ describe('SourceView', () => {
   it('does not show the source view at loadtime', () => {
     const { sourceView } = setup();
     expect(sourceView()).not.toBeInTheDocument();
-  });
-
-  it('should show the source view when double clicking on a line in the tree view', async () => {
-    const { sourceView } = setup();
-
-    /*const frameElement = screen.getByRole('treeitem', { name: /^A/ });
-
-    fireFullClick(frameElement);
-    fireFullClick(frameElement, { detail: 2 });
-    expect(sourceView()).toBeInTheDocument();
-
-    const sourceViewElement = ensureExists(sourceView());
-    const sourceViewContent = await within(sourceViewElement).findByRole(
-      'textbox'
-    );
-
-    // Because numbers and strings are split in several element, we're matching
-    // on the string "line" only.
-    await within(sourceViewContent).findAllByText('line');
-
-    expect(sourceViewContent).toMatchSnapshot();*/
   });
 });

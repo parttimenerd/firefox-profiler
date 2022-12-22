@@ -460,7 +460,7 @@ type TreeViewProps<DisplayData> = {|
   +maxNodeDepth: number,
   +onSelectionChange: (NodeIndex) => mixed,
   +onRightClickSelection?: (NodeIndex) => mixed,
-  +onEnterKey?: (NodeIndex) => mixed,
+  +onEnterKey?: (NodeIndex, SyntheticKeyboardEvent<>) => mixed,
   +onDoubleClick?: (NodeIndex, SyntheticMouseEvent<>) => mixed,
   +rowHeight: CssPixels,
   +indentWidth: CssPixels,
@@ -472,7 +472,6 @@ type TreeViewProps<DisplayData> = {|
 
 type TreeViewState = {|
   +fixedColumnWidths: Array<CssPixels> | null,
-  +onKeyUp?: (SyntheticKeyboardEvent<>) => void,
 |};
 
 export class TreeView<DisplayData: Object> extends React.PureComponent<
@@ -920,7 +919,7 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     if (isEnterKey) {
       const { onEnterKey, selectedNodeId } = this.props;
       if (onEnterKey && selectedNodeId !== null) {
-        onEnterKey(selectedNodeId);
+        onEnterKey(selectedNodeId, event);
       }
     }
   };
