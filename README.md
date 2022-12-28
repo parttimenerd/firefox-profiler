@@ -1,3 +1,9 @@
+# Fork
+
+Combines all my open PRs (https://github.com/firefox-devtools/profiler/pulls/@me) and is used
+in my [jfrtofp-server](https://github.com/parttimenerd/jfrtofp-server) and related projects.
+It is less stable than the upstream Firefox Profiler, but has more features that are important to me.
+
 # Firefox Profiler
 [![Matrix][matrix-badge]][matrix]
 
