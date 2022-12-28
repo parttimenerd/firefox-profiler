@@ -230,7 +230,7 @@ class TreeViewRowFixedColumns<DisplayData: Object> extends React.PureComponent<
               <span
                 className={`treeViewRowColumn treeViewFixedColumn ${col.propName}`}
                 title={text}
-                style={style}
+                style={{ width: columnWidths[i] }}
               >
                 {RenderComponent ? (
                   <RenderComponent displayData={displayData} />
