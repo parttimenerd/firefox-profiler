@@ -8,7 +8,7 @@ import React, { PureComponent } from 'react';
 import memoize from 'memoize-immutable';
 
 import explicitConnect from '../../utils/connect';
-import { TreeView } from '../shared/TreeView';
+import { TreeView, ColumnSortState } from '../shared/TreeView';
 import { MarkerTableEmptyReasons } from './MarkerTableEmptyReasons';
 import {
   getZeroAt,
@@ -45,7 +45,9 @@ const MAX_DESCRIPTION_CHARACTERS = 500;
 
 type MarkerDisplayData = {|
   start: string,
+  rawStart: Milliseconds,
   duration: string | null,
+  rawDuration: Milliseconds | null,
   name: string,
   type: string,
 |};
@@ -73,12 +75,40 @@ class MarkerTree {
     this._getMarkerLabel = getMarkerLabel;
   }
 
-  getRoots(): MarkerIndex[] {
+  getRoots(sort: ColumnSortState | null = null): MarkerIndex[] {
+    if (sort !== null) {
+      return sort.sortItemsHelper(
+        this._markerIndexes,
+        (first: MarkerIndex, second: MarkerIndex, column: string) => {
+          const firstData = this.getDisplayData(first);
+          const secondData = this.getDisplayData(second);
+          switch (column) {
+            case 'start':
+              return secondData.rawStart - firstData.rawStart;
+            case 'duration':
+              if (firstData.rawDuration === null) {
+                return -1;
+              }
+              if (secondData.rawDuration === null) {
+                return 1;
+              }
+              return secondData.rawDuration - firstData.rawDuration;
+            case 'type':
+              return firstData.type.localeCompare(secondData.type);
+            default:
+              throw new Error('Invalid column ' + column);
+          }
+        }
+      );
+    }
     return this._markerIndexes;
   }
 
-  getChildren(markerIndex: MarkerIndex): MarkerIndex[] {
-    return markerIndex === -1 ? this.getRoots() : [];
+  getChildren(
+    markerIndex: MarkerIndex,
+    sort: ColumnSortState | null = null
+  ): MarkerIndex[] {
+    return markerIndex === -1 ? this.getRoots(sort) : [];
   }
 
   hasChildren(_markerIndex: MarkerIndex): boolean {
@@ -116,10 +146,13 @@ class MarkerTree {
       }
 
       let duration = null;
+      let rawDuration: number | null = null;
+      const markerEnd = marker.end;
       if (marker.incomplete) {
         duration = 'unknown';
-      } else if (marker.end !== null) {
-        duration = formatTimestamp(marker.end - marker.start);
+      } else if (markerEnd !== null) {
+        duration = formatTimestamp(markerEnd - marker.start);
+        rawDuration = markerEnd - marker.start;
       }
 
       displayData = {
@@ -131,6 +164,8 @@ class MarkerTree {
           marker.name,
           marker.data
         ),
+        rawDuration: rawDuration,
+        rawStart: marker.start,
       };
       this._displayDataByIndex.set(markerIndex, displayData);
     }
@@ -187,11 +222,13 @@ class MarkerTableImpl extends PureComponent<Props> {
       resizable: true,
     },
   ];
+  _sortableColumns = new Set(['start', 'duration', 'type', 'name']);
   _mainColumn = { propName: 'name', titleL10nId: 'MarkerTable--description' };
   _expandedNodeIds: Array<MarkerIndex | null> = [];
   _onExpandedNodeIdsChange = () => {};
   _treeView: ?TreeView<MarkerDisplayData>;
   _takeTreeViewRef = (treeView) => (this._treeView = treeView);
+  _sortedColumns = new ColumnSortState([{ column: 'start', ascending: true }]);
 
   getMarkerTree = memoize((...args) => new MarkerTree(...args), { limit: 1 });
 
@@ -227,6 +264,10 @@ class MarkerTableImpl extends PureComponent<Props> {
     changeRightClickedMarker(threadsKey, selectedMarker);
   };
 
+  _onSort = (sortedColumns: ColumnSortState) => {
+    this._sortedColumns = sortedColumns;
+  };
+
   render() {
     const {
       getMarker,
@@ -237,7 +278,7 @@ class MarkerTableImpl extends PureComponent<Props> {
       markerSchemaByName,
       getMarkerLabel,
     } = this.props;
-    const tree = this.getMarkerTree(
+    const tree: MarkerTree = this.getMarkerTree(
       getMarker,
       markerIndexes,
       zeroAt,
@@ -272,6 +313,9 @@ class MarkerTableImpl extends PureComponent<Props> {
             indentWidth={10}
             viewOptions={this.props.tableViewOptions}
             onViewOptionsChange={this.props.onTableViewOptionsChange}
+            initialSortedColumns={this._sortedColumns}
+            onSort={this._onSort}
+            sortableColumns={this._sortableColumns}
           />
         )}
       </div>

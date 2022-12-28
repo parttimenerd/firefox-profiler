@@ -6,7 +6,10 @@
 import React, { PureComponent } from 'react';
 import memoize from 'memoize-immutable';
 import explicitConnect from 'firefox-profiler/utils/connect';
-import { TreeView } from 'firefox-profiler/components/shared/TreeView';
+import {
+  TreeView,
+  ColumnSortState,
+} from 'firefox-profiler/components/shared/TreeView';
 import { CallTreeEmptyReasons } from './CallTreeEmptyReasons';
 import { Icon } from 'firefox-profiler/components/shared/Icon';
 import { getCallNodePathFromIndex } from 'firefox-profiler/profile-logic/profile-data';
@@ -110,6 +113,8 @@ class CallTreeImpl extends PureComponent<AllProps> {
   };
   _treeView: TreeView<CallNodeDisplayData> | null = null;
   _takeTreeViewRef = (treeView) => (this._treeView = treeView);
+  _sortableColumns = new Set(['self', 'total']);
+  _sortedColumns = new ColumnSortState([{ column: 'total', ascending: false }]);
 
   /**
    * Call Trees can have different types of "weights" for the data. Choose the
@@ -384,6 +389,10 @@ class CallTreeImpl extends PureComponent<AllProps> {
     }
   }
 
+  _onSort = (sortedColumns: ColumnSortState) => {
+    this._sortedColumns = sortedColumns;
+  };
+
   render() {
     const {
       tree,
@@ -424,6 +433,9 @@ class CallTreeImpl extends PureComponent<AllProps> {
         onDoubleClick={this._onDoubleClick}
         viewOptions={tableViewOptions}
         onViewOptionsChange={onTableViewOptionsChange}
+        initialSortedColumns={this._sortedColumns}
+        onSort={this._onSort}
+        sortableColumns={this._sortableColumns}
       />
     );
   }
