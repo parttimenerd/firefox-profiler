@@ -942,7 +942,7 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
     } = this.props;
     const { isResizingColumns } = this.state;
     return (
-      <div className="treeView">
+      <div className={classNames('treeView', { isResizingColumns })}>
         <TreeViewHeader
           fixedColumns={fixedColumns}
           mainColumn={mainColumn}
