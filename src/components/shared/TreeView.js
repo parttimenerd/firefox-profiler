@@ -84,6 +84,7 @@ type TreeViewHeaderProps<DisplayData: Object> = {|
   +onColumnWidthChangeStart: (number, CssPixels) => void,
   +onColumnWidthReset: (number) => void,
   +onSort: (string) => void,
+  currentSortedColumn: SingleColumnSortState | null,
 |};
 
 export class ColumnSortState {
@@ -167,7 +168,7 @@ class TreeViewHeader<DisplayData: Object> extends React.PureComponent<
     const { onSort } = this.props;
     const target = e.currentTarget;
     if (target instanceof HTMLElement) {
-      onSort(Number(target.dataset.column));
+      onSort(target.dataset.column);
     }
   };
 
@@ -206,6 +207,7 @@ class TreeViewHeader<DisplayData: Object> extends React.PureComponent<
                   className={`treeViewHeaderColumn treeViewFixedColumn ${col.propName} ${sortClass}`}
                   data-column={col.propName}
                   onClick={this._onSort}
+                  style={{ width: width + 'px' }}
                 ></span>
               </PermissiveLocalized>
               {col.hideDividerAfter !== true ? (
@@ -553,6 +555,8 @@ type TreeViewProps<DisplayData> = {|
 
 type TreeViewState = {|
   sortedColumns: ColumnSortState,
+  isResizingColumns: boolean,
+  fixedColumnWidths: null | Array<CssPixels>,
 |};
 
 export class TreeView<DisplayData: Object> extends React.PureComponent<
@@ -561,7 +565,12 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
 > {
   _list: VirtualList<NodeIndex> | null = null;
   _takeListRef = (list: VirtualList<NodeIndex> | null) => (this._list = list);
-  state = { sortedColumns: new ColumnSortState([]) };
+  state = { sortedColumns: new ColumnSortState([]),
+      // This contains the current widths, while or after the user resizes them.
+      fixedColumnWidths: null,
+
+      // This is true when the user is currently resizing a column.
+      isResizingColumns: false, };
 
   constructor(props: TreeViewProps<DisplayData>) {
     super(props);
@@ -573,17 +582,9 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
   // This contains the information about the current column resizing happening currently.
   _currentMovedColumnState: {|
     columnIndex: number,
-    startX: CssPixels,
+    lastX: CssPixels,
     initialWidth: CssPixels,
   |} | null = null;
-
-  state = {
-    // This contains the current widths, while or after the user resizes them.
-    fixedColumnWidths: null,
-
-    // This is true when the user is currently resizing a column.
-    isResizingColumns: false,
-  };
 
   // This is incremented when a column changed its size. We use this to force a
   // rerender of the VirtualList component.
@@ -632,7 +633,7 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
   _onColumnWidthChangeStart = (columnIndex: number, startX: CssPixels) => {
     this._currentMovedColumnState = {
       columnIndex,
-      startX,
+      lastX: startX,
       initialWidth: this._getCurrentFixedColumnWidths()[columnIndex],
     };
     this.setState({ isResizingColumns: true });
@@ -648,7 +649,7 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
   _onColumnWidthChangeMouseMove = (event: MouseEvent) => {
     const columnState = this._currentMovedColumnState;
     if (columnState !== null) {
-      const { columnIndex, startX, initialWidth } = columnState;
+      const { columnIndex, lastX, initialWidth } = columnState;
       const column = this.props.fixedColumns[columnIndex];
       const fixedColumnWidths = this._getCurrentFixedColumnWidths();
       const diff = event.clientX - lastX;
