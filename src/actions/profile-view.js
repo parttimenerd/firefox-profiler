@@ -1944,7 +1944,6 @@ export function changeMouseTimePosition(
   };
 }
 
-
 export function changeTableViewOptions(
   tab: TabSlug,
   tableViewOptions: TableViewOptions

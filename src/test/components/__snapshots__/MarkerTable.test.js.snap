@@ -89,6 +89,7 @@ exports[`MarkerTable renders some basic markers and updates when needed 1`] = `
       <span
         class="treeViewHeaderColumn treeViewFixedColumn start sortDescending"
         data-column="start"
+        style="width: 90px;"
       >
         Start
       </span>
@@ -99,6 +100,7 @@ exports[`MarkerTable renders some basic markers and updates when needed 1`] = `
       <span
         class="treeViewHeaderColumn treeViewFixedColumn duration sortInactive"
         data-column="duration"
+        style="width: 80px;"
       >
         Duration
       </span>
@@ -109,6 +111,7 @@ exports[`MarkerTable renders some basic markers and updates when needed 1`] = `
       <span
         class="treeViewHeaderColumn treeViewFixedColumn type sortInactive"
         data-column="type"
+        style="width: 150px;"
       >
         Type
       </span>
@@ -605,8 +608,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         class="treeViewHeader"
       >
         <span
-          class="treeViewHeaderColumn treeViewFixedColumn start sortDescending"
+          class="treeViewHeaderColumn treeViewFixedColumn start sortAscending"
           data-column="start"
+          style="width: 90px;"
         >
           Start
         </span>
@@ -617,6 +621,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         <span
           class="treeViewHeaderColumn treeViewFixedColumn duration sortInactive"
           data-column="duration"
+          style="width: 80px;"
         >
           Duration
         </span>
@@ -627,6 +632,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         <span
           class="treeViewHeaderColumn treeViewFixedColumn type sortInactive"
           data-column="type"
+          style="width: 150px;"
         >
           Type
         </span>
@@ -665,9 +671,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn start"
                     style="width: 90px;"
-                    title="0.000s"
+                    title="0.162s"
                   >
-                    0.000s
+                    0.162s
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -675,9 +681,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn duration"
                     style="width: 80px;"
-                    title="0s"
+                    title="1ms"
                   >
-                    0s
+                    1ms
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -685,9 +691,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn type"
                     style="width: 150px;"
-                    title="UserTiming"
+                    title="FileIO"
                   >
-                    UserTiming
+                    FileIO
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -700,9 +706,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn start"
                     style="width: 90px;"
-                    title="0.002s"
+                    title="0.158s"
                   >
-                    0.002s
+                    0.158s
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -718,9 +724,79 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn type"
                     style="width: 150px;"
-                    title="Paint"
+                    title="Log"
                   >
-                    Paint
+                    Log
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                </div>
+                <div
+                  class="treeViewRow treeViewRowFixedColumns even"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn start"
+                    style="width: 90px;"
+                    title="0.153s"
+                  >
+                    0.153s
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn duration"
+                    style="width: 80px;"
+                    title="584.00ns"
+                  >
+                    584.00ns
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn type"
+                    style="width: 150px;"
+                    title="Text"
+                  >
+                    Text
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                </div>
+                <div
+                  class="treeViewRow treeViewRowFixedColumns odd"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn start"
+                    style="width: 90px;"
+                    title="0.153s"
+                  >
+                    0.153s
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn duration"
+                    style="width: 80px;"
+                    title="584.00ns"
+                  >
+                    584.00ns
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn type"
+                    style="width: 150px;"
+                    title="Text"
+                  >
+                    Text
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -768,79 +844,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn start"
                     style="width: 90px;"
-                    title="0.153s"
+                    title="0.002s"
                   >
-                    0.153s
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn duration"
-                    style="width: 80px;"
-                    title="584.00ns"
-                  >
-                    584.00ns
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn type"
-                    style="width: 150px;"
-                    title="Text"
-                  >
-                    Text
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                </div>
-                <div
-                  class="treeViewRow treeViewRowFixedColumns even"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn start"
-                    style="width: 90px;"
-                    title="0.153s"
-                  >
-                    0.153s
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn duration"
-                    style="width: 80px;"
-                    title="584.00ns"
-                  >
-                    584.00ns
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn type"
-                    style="width: 150px;"
-                    title="Text"
-                  >
-                    Text
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                </div>
-                <div
-                  class="treeViewRow treeViewRowFixedColumns odd"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn start"
-                    style="width: 90px;"
-                    title="0.158s"
-                  >
-                    0.158s
+                    0.002s
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -856,9 +862,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn type"
                     style="width: 150px;"
-                    title="Log"
+                    title="Paint"
                   >
-                    Log
+                    Paint
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -871,9 +877,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn start"
                     style="width: 90px;"
-                    title="0.162s"
+                    title="0.000s"
                   >
-                    0.162s
+                    0.000s
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -881,9 +887,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn duration"
                     style="width: 80px;"
-                    title="1ms"
+                    title="0s"
                   >
-                    1ms
+                    0s
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -891,9 +897,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn type"
                     style="width: 150px;"
-                    title="FileIO"
+                    title="UserTiming"
                   >
-                    FileIO
+                    UserTiming
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -916,7 +922,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   aria-level="1"
                   aria-selected="false"
                   class="treeViewRow treeViewRowScrolledColumns even"
-                  id="treeViewRow-0"
+                  id="treeViewRow-6"
                   role="treeitem"
                   style="height: 16px; line-height: 16px;"
                 >
@@ -930,91 +936,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewMainColumn name"
                   >
-                    foobar
-                  </span>
-                </div>
-                <div
-                  aria-level="1"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns odd"
-                  id="treeViewRow-1"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 0px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name"
-                  >
-                    NotifyDidPaint
-                  </span>
-                </div>
-                <div
-                  aria-level="1"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns even"
-                  id="treeViewRow-2"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 0px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name"
-                  >
-                    IPCOut — PContent::Msg_PreferenceUpdate — sent to 2222
-                  </span>
-                </div>
-                <div
-                  aria-level="1"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns odd"
-                  id="treeViewRow-3"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 0px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name"
-                  >
-                    setTimeout — 5.5
-                  </span>
-                </div>
-                <div
-                  aria-level="1"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns even"
-                  id="treeViewRow-4"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 0px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name"
-                  >
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget magna sed magna vehicula congue id id nulla. Ut convallis, neque consequat aliquam egestas, dui urna interdum quam, id semper magna erat et nisi. Vivamus molestie quis ligula eget aliquam. Sed facilisis, turpis sed facilisis posuere, risus odio convallis velit, vitae vehicula justo risus at ipsum. Proin non porttitor neque. Vivamus fringilla ex nec iaculis cursus. Vestibulum suscipit mauris sem, vitae gravida ipsum fermentum id. Q…
+                    (PoisonIOInterposer) create/open — /foo/bar
                   </span>
                 </div>
                 <div
@@ -1043,7 +965,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   aria-level="1"
                   aria-selected="false"
                   class="treeViewRow treeViewRowScrolledColumns even"
-                  id="treeViewRow-6"
+                  id="treeViewRow-3"
                   role="treeitem"
                   style="height: 16px; line-height: 16px;"
                 >
@@ -1057,7 +979,91 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewMainColumn name"
                   >
-                    (PoisonIOInterposer) create/open — /foo/bar
+                    setTimeout — 5.5
+                  </span>
+                </div>
+                <div
+                  aria-level="1"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns odd"
+                  id="treeViewRow-4"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 0px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name"
+                  >
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget magna sed magna vehicula congue id id nulla. Ut convallis, neque consequat aliquam egestas, dui urna interdum quam, id semper magna erat et nisi. Vivamus molestie quis ligula eget aliquam. Sed facilisis, turpis sed facilisis posuere, risus odio convallis velit, vitae vehicula justo risus at ipsum. Proin non porttitor neque. Vivamus fringilla ex nec iaculis cursus. Vestibulum suscipit mauris sem, vitae gravida ipsum fermentum id. Q…
+                  </span>
+                </div>
+                <div
+                  aria-level="1"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns even"
+                  id="treeViewRow-2"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 0px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name"
+                  >
+                    IPCOut — PContent::Msg_PreferenceUpdate — sent to 2222
+                  </span>
+                </div>
+                <div
+                  aria-level="1"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns odd"
+                  id="treeViewRow-1"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 0px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name"
+                  >
+                    NotifyDidPaint
+                  </span>
+                </div>
+                <div
+                  aria-level="1"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns even"
+                  id="treeViewRow-0"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 0px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name"
+                  >
+                    foobar
                   </span>
                 </div>
               </div>
@@ -1126,6 +1132,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         <span
           class="treeViewHeaderColumn treeViewFixedColumn start sortDescending"
           data-column="start"
+          style="width: 90px;"
         >
           Start
         </span>
@@ -1136,6 +1143,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         <span
           class="treeViewHeaderColumn treeViewFixedColumn duration sortInactive"
           data-column="duration"
+          style="width: 80px;"
         >
           Duration
         </span>
@@ -1146,6 +1154,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         <span
           class="treeViewHeaderColumn treeViewFixedColumn type sortInactive"
           data-column="type"
+          style="width: 150px;"
         >
           Type
         </span>
@@ -1643,8 +1652,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         class="treeViewHeader"
       >
         <span
-          class="treeViewHeaderColumn treeViewFixedColumn start sortDescending"
+          class="treeViewHeaderColumn treeViewFixedColumn start sortInactive"
           data-column="start"
+          style="width: 90px;"
         >
           Start
         </span>
@@ -1653,8 +1663,9 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
           data-column-index="0"
         />
         <span
-          class="treeViewHeaderColumn treeViewFixedColumn duration sortInactive"
+          class="treeViewHeaderColumn treeViewFixedColumn duration sortDescending"
           data-column="duration"
+          style="width: 80px;"
         >
           Duration
         </span>
@@ -1665,6 +1676,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
         <span
           class="treeViewHeaderColumn treeViewFixedColumn type sortInactive"
           data-column="type"
+          style="width: 150px;"
         >
           Type
         </span>
@@ -1738,6 +1750,111 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   <span
                     class="treeViewRowColumn treeViewFixedColumn start"
                     style="width: 90px;"
+                    title="0.153s"
+                  >
+                    0.153s
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn duration"
+                    style="width: 80px;"
+                    title="584.00ns"
+                  >
+                    584.00ns
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn type"
+                    style="width: 150px;"
+                    title="Text"
+                  >
+                    Text
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                </div>
+                <div
+                  class="treeViewRow treeViewRowFixedColumns even"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn start"
+                    style="width: 90px;"
+                    title="0.153s"
+                  >
+                    0.153s
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn duration"
+                    style="width: 80px;"
+                    title="584.00ns"
+                  >
+                    584.00ns
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn type"
+                    style="width: 150px;"
+                    title="Text"
+                  >
+                    Text
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                </div>
+                <div
+                  class="treeViewRow treeViewRowFixedColumns odd"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn start"
+                    style="width: 90px;"
+                    title="0.162s"
+                  >
+                    0.162s
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn duration"
+                    style="width: 80px;"
+                    title="1ms"
+                  >
+                    1ms
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn type"
+                    style="width: 150px;"
+                    title="FileIO"
+                  >
+                    FileIO
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                </div>
+                <div
+                  class="treeViewRow treeViewRowFixedColumns even"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn start"
+                    style="width: 90px;"
                     title="0.002s"
                   >
                     0.002s
@@ -1765,7 +1882,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   />
                 </div>
                 <div
-                  class="treeViewRow treeViewRowFixedColumns even"
+                  class="treeViewRow treeViewRowFixedColumns odd"
                   style="height: 16px; line-height: 16px;"
                 >
                   <span
@@ -1800,77 +1917,7 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   />
                 </div>
                 <div
-                  class="treeViewRow treeViewRowFixedColumns odd"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn start"
-                    style="width: 90px;"
-                    title="0.153s"
-                  >
-                    0.153s
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn duration"
-                    style="width: 80px;"
-                    title="584.00ns"
-                  >
-                    584.00ns
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn type"
-                    style="width: 150px;"
-                    title="Text"
-                  >
-                    Text
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                </div>
-                <div
                   class="treeViewRow treeViewRowFixedColumns even"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn start"
-                    style="width: 90px;"
-                    title="0.153s"
-                  >
-                    0.153s
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn duration"
-                    style="width: 80px;"
-                    title="584.00ns"
-                  >
-                    584.00ns
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn type"
-                    style="width: 150px;"
-                    title="Text"
-                  >
-                    Text
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                </div>
-                <div
-                  class="treeViewRow treeViewRowFixedColumns odd"
                   style="height: 16px; line-height: 16px;"
                 >
                   <span
@@ -1897,41 +1944,6 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                     title="Log"
                   >
                     Log
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                </div>
-                <div
-                  class="treeViewRow treeViewRowFixedColumns even"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn start"
-                    style="width: 90px;"
-                    title="0.162s"
-                  >
-                    0.162s
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn duration"
-                    style="width: 80px;"
-                    title="1ms"
-                  >
-                    1ms
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn type"
-                    style="width: 150px;"
-                    title="FileIO"
-                  >
-                    FileIO
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -1969,48 +1981,6 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                     class="treeViewRowColumn treeViewMainColumn name"
                   >
                     foobar
-                  </span>
-                </div>
-                <div
-                  aria-level="1"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns odd"
-                  id="treeViewRow-1"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 0px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name"
-                  >
-                    NotifyDidPaint
-                  </span>
-                </div>
-                <div
-                  aria-level="1"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns even"
-                  id="treeViewRow-2"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 0px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name"
-                  >
-                    IPCOut — PContent::Msg_PreferenceUpdate — sent to 2222
                   </span>
                 </div>
                 <div
@@ -2059,6 +2029,69 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   aria-level="1"
                   aria-selected="false"
                   class="treeViewRow treeViewRowScrolledColumns odd"
+                  id="treeViewRow-6"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 0px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name"
+                  >
+                    (PoisonIOInterposer) create/open — /foo/bar
+                  </span>
+                </div>
+                <div
+                  aria-level="1"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns even"
+                  id="treeViewRow-1"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 0px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name"
+                  >
+                    NotifyDidPaint
+                  </span>
+                </div>
+                <div
+                  aria-level="1"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns odd"
+                  id="treeViewRow-2"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 0px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name"
+                  >
+                    IPCOut — PContent::Msg_PreferenceUpdate — sent to 2222
+                  </span>
+                </div>
+                <div
+                  aria-level="1"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns even"
                   id="treeViewRow-5"
                   role="treeitem"
                   style="height: 16px; line-height: 16px;"
@@ -2075,27 +2108,6 @@ exports[`MarkerTable sorts when the start header and duration header is clicked 
                   >
                     (nsJarProtocol) nsJARChannel::nsJARChannel [this=0x87f1ec80]
 
-                  </span>
-                </div>
-                <div
-                  aria-level="1"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns even"
-                  id="treeViewRow-6"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 0px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name"
-                  >
-                    (PoisonIOInterposer) create/open — /foo/bar
                   </span>
                 </div>
               </div>

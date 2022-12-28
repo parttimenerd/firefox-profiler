@@ -173,7 +173,8 @@ class TreeViewHeader<DisplayData: Object> extends React.PureComponent<
   };
 
   render() {
-    const { fixedColumns, mainColumn, viewOptions, currentSortedColumn } = this.props;
+    const { fixedColumns, mainColumn, viewOptions, currentSortedColumn } =
+      this.props;
     const columnWidths = viewOptions.fixedColumnWidths;
     if (fixedColumns.length === 0 && !mainColumn.titleL10nId) {
       // If there is nothing to display in the header, do not render it.
@@ -565,12 +566,14 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
 > {
   _list: VirtualList<NodeIndex> | null = null;
   _takeListRef = (list: VirtualList<NodeIndex> | null) => (this._list = list);
-  state = { sortedColumns: new ColumnSortState([]),
-      // This contains the current widths, while or after the user resizes them.
-      fixedColumnWidths: null,
+  state = {
+    sortedColumns: new ColumnSortState([]),
+    // This contains the current widths, while or after the user resizes them.
+    fixedColumnWidths: null,
 
-      // This is true when the user is currently resizing a column.
-      isResizingColumns: false, };
+    // This is true when the user is currently resizing a column.
+    isResizingColumns: false,
+  };
 
   constructor(props: TreeViewProps<DisplayData>) {
     super(props);
@@ -1018,12 +1021,6 @@ export class TreeView<DisplayData: Object> extends React.PureComponent<
       if (onEnterKey && selectedNodeId !== null) {
         onEnterKey(selectedNodeId, event);
       }
-    }
-  };
-
-  _onKeyUp = (event: SyntheticKeyboardEvent<>) => {
-    if (this.props.onKeyUp) {
-      this.props.onKeyUp(event);
     }
   };
 

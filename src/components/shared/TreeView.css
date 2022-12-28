@@ -101,10 +101,10 @@
 }
 
 .treeViewColumnDivider::before {
-  border-bottom: 5px solid var(--grey-30);
-  border-right: 0.2px solid var(--grey-30);
   border-top: 5px solid var(--grey-30);
-  content: "";
+  border-right: 0.2px solid var(--grey-30);
+  border-bottom: 5px solid var(--grey-30);
+  content: '';
 }
 
 .treeViewColumnDivider.isResizable::before {

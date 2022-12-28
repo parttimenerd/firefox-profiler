@@ -151,10 +151,12 @@ exports[`ProfileCallTreeView with JS Allocations matches the snapshot for JS all
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
 includes both the bytes where the function was actually running, and the
@@ -169,6 +171,7 @@ bytes of the callers from this function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
 other functions, then the “other” functions’ bytes are not included.
@@ -184,6 +187,7 @@ allocated or deallocated in the program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -926,10 +930,12 @@ exports[`ProfileCallTreeView with balanced native allocations matches the snapsh
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
 includes both the bytes where the function was actually running, and the
@@ -944,6 +950,7 @@ bytes of the callers from this function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
 other functions, then the “other” functions’ bytes are not included.
@@ -959,6 +966,7 @@ allocated or deallocated in the program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -1701,10 +1709,12 @@ exports[`ProfileCallTreeView with balanced native allocations matches the snapsh
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
 includes both the bytes where the function was actually running, and the
@@ -1719,6 +1729,7 @@ bytes of the callers from this function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
 other functions, then the “other” functions’ bytes are not included.
@@ -1734,6 +1745,7 @@ allocated or deallocated in the program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -2464,10 +2476,12 @@ exports[`ProfileCallTreeView with unbalanced native allocations matches the snap
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
 includes both the bytes where the function was actually running, and the
@@ -2482,6 +2496,7 @@ bytes of the callers from this function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
 other functions, then the “other” functions’ bytes are not included.
@@ -2497,6 +2512,7 @@ allocated or deallocated in the program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -3227,10 +3243,12 @@ exports[`ProfileCallTreeView with unbalanced native allocations matches the snap
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
 includes both the bytes where the function was actually running, and the
@@ -3245,6 +3263,7 @@ bytes of the callers from this function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
 other functions, then the “other” functions’ bytes are not included.
@@ -3260,6 +3279,7 @@ allocated or deallocated in the program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -4260,10 +4280,12 @@ exports[`calltree/ProfileCallTreeView renders an inverted call tree 1`] = `
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -4278,6 +4300,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -4292,6 +4315,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -4990,10 +5014,12 @@ exports[`calltree/ProfileCallTreeView renders an unfiltered call tree 1`] = `
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -5008,6 +5034,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -5022,6 +5049,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -5720,10 +5748,12 @@ exports[`calltree/ProfileCallTreeView renders an unfiltered call tree with filen
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -5738,6 +5768,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -5752,6 +5783,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -6234,10 +6266,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -6252,6 +6286,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -6266,6 +6301,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -6964,10 +7000,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -6982,6 +7020,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -6996,6 +7035,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -7622,10 +7662,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -7640,6 +7682,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -7654,6 +7697,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -8280,10 +8324,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -8298,6 +8344,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -8312,6 +8359,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -8795,10 +8843,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -8813,6 +8863,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -8827,6 +8878,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -9310,10 +9362,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -9328,6 +9382,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -9342,6 +9397,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -9972,10 +10028,12 @@ exports[`calltree/ProfileCallTreeView sorts when the total column header is clic
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -9990,6 +10048,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -10004,6 +10063,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -10702,10 +10762,12 @@ exports[`calltree/ProfileCallTreeView sorts when the total column header is clic
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortDescending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -10720,6 +10782,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -10734,6 +10797,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -10859,6 +10923,50 @@ for understanding where time was actually spent in a program."
                 <span
                   class="treeViewRowColumn treeViewFixedColumn totalPercent"
                   style="width: 50px;"
+                  title="33%"
+                >
+                  33%
+                </span>
+                <span
+                  class="treeViewRowColumn treeViewFixedColumn total"
+                  style="width: 70px;"
+                  title="1"
+                >
+                  1
+                </span>
+                <span
+                  class="treeViewColumnDivider"
+                />
+                <span
+                  class="treeViewRowColumn treeViewFixedColumn self"
+                  style="width: 70px;"
+                  title="—"
+                >
+                  —
+                </span>
+                <span
+                  class="treeViewColumnDivider"
+                />
+                <span
+                  class="treeViewRowColumn treeViewFixedColumn icon"
+                  style="width: 10px;"
+                  title=""
+                >
+                  <div
+                    class="nodeIcon "
+                  />
+                </span>
+                <span
+                  class="treeViewColumnDivider"
+                />
+              </div>
+              <div
+                class="treeViewRow treeViewRowFixedColumns odd"
+                style="height: 16px; line-height: 16px;"
+              >
+                <span
+                  class="treeViewRowColumn treeViewFixedColumn totalPercent"
+                  style="width: 50px;"
                   title="67%"
                 >
                   67%
@@ -10897,7 +11005,7 @@ for understanding where time was actually spent in a program."
                 />
               </div>
               <div
-                class="treeViewRow treeViewRowFixedColumns odd"
+                class="treeViewRow treeViewRowFixedColumns even"
                 style="height: 16px; line-height: 16px;"
               >
                 <span
@@ -10941,7 +11049,7 @@ for understanding where time was actually spent in a program."
                 />
               </div>
               <div
-                class="treeViewRow treeViewRowFixedColumns even isSelected"
+                class="treeViewRow treeViewRowFixedColumns odd isSelected"
                 style="height: 16px; line-height: 16px;"
               >
                 <span
@@ -10967,50 +11075,6 @@ for understanding where time was actually spent in a program."
                   title="1"
                 >
                   1
-                </span>
-                <span
-                  class="treeViewColumnDivider"
-                />
-                <span
-                  class="treeViewRowColumn treeViewFixedColumn icon"
-                  style="width: 10px;"
-                  title=""
-                >
-                  <div
-                    class="nodeIcon "
-                  />
-                </span>
-                <span
-                  class="treeViewColumnDivider"
-                />
-              </div>
-              <div
-                class="treeViewRow treeViewRowFixedColumns odd"
-                style="height: 16px; line-height: 16px;"
-              >
-                <span
-                  class="treeViewRowColumn treeViewFixedColumn totalPercent"
-                  style="width: 50px;"
-                  title="33%"
-                >
-                  33%
-                </span>
-                <span
-                  class="treeViewRowColumn treeViewFixedColumn total"
-                  style="width: 70px;"
-                  title="1"
-                >
-                  1
-                </span>
-                <span
-                  class="treeViewColumnDivider"
-                />
-                <span
-                  class="treeViewRowColumn treeViewFixedColumn self"
-                  style="width: 70px;"
-                  title="—"
-                >
-                  —
                 </span>
                 <span
                   class="treeViewColumnDivider"
@@ -11146,125 +11210,6 @@ for understanding where time was actually spent in a program."
                 />
               </div>
               <div
-                aria-expanded="true"
-                aria-label="C, running count is 2 samples (67%), self count is 0 samples"
-                aria-level="3"
-                aria-selected="false"
-                class="treeViewRow treeViewRowScrolledColumns even"
-                id="treeViewRow-2"
-                role="treeitem"
-                style="height: 16px; line-height: 16px;"
-              >
-                <span
-                  class="treeRowIndentSpacer"
-                  style="width: 20px;"
-                />
-                <span
-                  class="treeRowToggleButton expanded canBeExpanded"
-                />
-                <span
-                  class="colored-square category-color-grey"
-                  title="Other"
-                />
-                <span
-                  class="treeViewRowColumn treeViewMainColumn name dim"
-                >
-                  C
-                </span>
-                <span
-                  class="treeViewRowColumn treeViewAppendageColumn lib"
-                />
-              </div>
-              <div
-                aria-expanded="true"
-                aria-label="D, running count is 1 sample (33%), self count is 0 samples"
-                aria-level="4"
-                aria-selected="false"
-                class="treeViewRow treeViewRowScrolledColumns odd"
-                id="treeViewRow-3"
-                role="treeitem"
-                style="height: 16px; line-height: 16px;"
-              >
-                <span
-                  class="treeRowIndentSpacer"
-                  style="width: 30px;"
-                />
-                <span
-                  class="treeRowToggleButton expanded canBeExpanded"
-                />
-                <span
-                  class="colored-square category-color-grey"
-                  title="Other"
-                />
-                <span
-                  class="treeViewRowColumn treeViewMainColumn name dim"
-                >
-                  D
-                </span>
-                <span
-                  class="treeViewRowColumn treeViewAppendageColumn lib"
-                />
-              </div>
-              <div
-                aria-label="E, running count is 1 sample (33%), self count is 1 sample"
-                aria-level="5"
-                aria-selected="true"
-                class="treeViewRow treeViewRowScrolledColumns even isSelected"
-                id="treeViewRow-4"
-                role="treeitem"
-                style="height: 16px; line-height: 16px;"
-              >
-                <span
-                  class="treeRowIndentSpacer"
-                  style="width: 40px;"
-                />
-                <span
-                  class="treeRowToggleButton collapsed leaf"
-                />
-                <span
-                  class="colored-square category-color-grey"
-                  title="Other"
-                />
-                <span
-                  class="treeViewRowColumn treeViewMainColumn name dim"
-                >
-                  E
-                </span>
-                <span
-                  class="treeViewRowColumn treeViewAppendageColumn lib"
-                />
-              </div>
-              <div
-                aria-expanded="false"
-                aria-label="F, running count is 1 sample (33%), self count is 0 samples"
-                aria-level="4"
-                aria-selected="false"
-                class="treeViewRow treeViewRowScrolledColumns odd"
-                id="treeViewRow-5"
-                role="treeitem"
-                style="height: 16px; line-height: 16px;"
-              >
-                <span
-                  class="treeRowIndentSpacer"
-                  style="width: 30px;"
-                />
-                <span
-                  class="treeRowToggleButton collapsed canBeExpanded"
-                />
-                <span
-                  class="colored-square category-color-grey"
-                  title="Other"
-                />
-                <span
-                  class="treeViewRowColumn treeViewMainColumn name dim"
-                >
-                  F
-                </span>
-                <span
-                  class="treeViewRowColumn treeViewAppendageColumn lib"
-                />
-              </div>
-              <div
                 aria-expanded="false"
                 aria-label="H, running count is 1 sample (33%), self count is 0 samples"
                 aria-level="3"
@@ -11295,6 +11240,125 @@ for understanding where time was actually spent in a program."
                 >
                   libH.so
                 </span>
+              </div>
+              <div
+                aria-expanded="true"
+                aria-label="C, running count is 2 samples (67%), self count is 0 samples"
+                aria-level="3"
+                aria-selected="false"
+                class="treeViewRow treeViewRowScrolledColumns odd"
+                id="treeViewRow-2"
+                role="treeitem"
+                style="height: 16px; line-height: 16px;"
+              >
+                <span
+                  class="treeRowIndentSpacer"
+                  style="width: 20px;"
+                />
+                <span
+                  class="treeRowToggleButton expanded canBeExpanded"
+                />
+                <span
+                  class="colored-square category-color-grey"
+                  title="Other"
+                />
+                <span
+                  class="treeViewRowColumn treeViewMainColumn name dim"
+                >
+                  C
+                </span>
+                <span
+                  class="treeViewRowColumn treeViewAppendageColumn lib"
+                />
+              </div>
+              <div
+                aria-expanded="true"
+                aria-label="D, running count is 1 sample (33%), self count is 0 samples"
+                aria-level="4"
+                aria-selected="false"
+                class="treeViewRow treeViewRowScrolledColumns even"
+                id="treeViewRow-3"
+                role="treeitem"
+                style="height: 16px; line-height: 16px;"
+              >
+                <span
+                  class="treeRowIndentSpacer"
+                  style="width: 30px;"
+                />
+                <span
+                  class="treeRowToggleButton expanded canBeExpanded"
+                />
+                <span
+                  class="colored-square category-color-grey"
+                  title="Other"
+                />
+                <span
+                  class="treeViewRowColumn treeViewMainColumn name dim"
+                >
+                  D
+                </span>
+                <span
+                  class="treeViewRowColumn treeViewAppendageColumn lib"
+                />
+              </div>
+              <div
+                aria-label="E, running count is 1 sample (33%), self count is 1 sample"
+                aria-level="5"
+                aria-selected="true"
+                class="treeViewRow treeViewRowScrolledColumns odd isSelected"
+                id="treeViewRow-4"
+                role="treeitem"
+                style="height: 16px; line-height: 16px;"
+              >
+                <span
+                  class="treeRowIndentSpacer"
+                  style="width: 40px;"
+                />
+                <span
+                  class="treeRowToggleButton collapsed leaf"
+                />
+                <span
+                  class="colored-square category-color-grey"
+                  title="Other"
+                />
+                <span
+                  class="treeViewRowColumn treeViewMainColumn name dim"
+                >
+                  E
+                </span>
+                <span
+                  class="treeViewRowColumn treeViewAppendageColumn lib"
+                />
+              </div>
+              <div
+                aria-expanded="false"
+                aria-label="F, running count is 1 sample (33%), self count is 0 samples"
+                aria-level="4"
+                aria-selected="false"
+                class="treeViewRow treeViewRowScrolledColumns even"
+                id="treeViewRow-5"
+                role="treeitem"
+                style="height: 16px; line-height: 16px;"
+              >
+                <span
+                  class="treeRowIndentSpacer"
+                  style="width: 30px;"
+                />
+                <span
+                  class="treeRowToggleButton collapsed canBeExpanded"
+                />
+                <span
+                  class="colored-square category-color-grey"
+                  title="Other"
+                />
+                <span
+                  class="treeViewRowColumn treeViewMainColumn name dim"
+                >
+                  F
+                </span>
+                <span
+                  class="treeViewRowColumn treeViewAppendageColumn lib"
+                />
               </div>
             </div>
           </div>
@@ -11432,10 +11496,12 @@ exports[`calltree/ProfileCallTreeView sorts when the total column header is clic
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
         data-column="totalPercent"
+        style="width: 50px;"
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
         data-column="total"
+        style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -11450,6 +11516,7 @@ function."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
         data-column="self"
+        style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -11464,6 +11531,7 @@ for understanding where time was actually spent in a program."
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
         data-column="icon"
+        style="width: 10px;"
       />
       <span
         class="treeViewColumnDivider"
@@ -12163,10 +12231,12 @@ exports[`calltree/ProfileCallTreeView sorts when the total header and self heade
         <span
           class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
           data-column="totalPercent"
+          style="width: 50px;"
         />
         <span
-          class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
+          class="treeViewHeaderColumn treeViewFixedColumn total sortDescending"
           data-column="total"
+          style="width: 120px;"
           title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -12181,6 +12251,7 @@ function."
         <span
           class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
           data-column="self"
+          style="width: 70px;"
           title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -12195,6 +12266,7 @@ for understanding where time was actually spent in a program."
         <span
           class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
           data-column="icon"
+          style="width: 10px;"
         />
         <span
           class="treeViewColumnDivider"
@@ -12320,6 +12392,50 @@ for understanding where time was actually spent in a program."
                   <span
                     class="treeViewRowColumn treeViewFixedColumn totalPercent"
                     style="width: 50px;"
+                    title="33%"
+                  >
+                    33%
+                  </span>
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn total"
+                    style="width: 70px;"
+                    title="1"
+                  >
+                    1
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn self"
+                    style="width: 70px;"
+                    title="—"
+                  >
+                    —
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn icon"
+                    style="width: 10px;"
+                    title=""
+                  >
+                    <div
+                      class="nodeIcon "
+                    />
+                  </span>
+                  <span
+                    class="treeViewColumnDivider"
+                  />
+                </div>
+                <div
+                  class="treeViewRow treeViewRowFixedColumns odd"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeViewRowColumn treeViewFixedColumn totalPercent"
+                    style="width: 50px;"
                     title="67%"
                   >
                     67%
@@ -12358,7 +12474,7 @@ for understanding where time was actually spent in a program."
                   />
                 </div>
                 <div
-                  class="treeViewRow treeViewRowFixedColumns odd"
+                  class="treeViewRow treeViewRowFixedColumns even"
                   style="height: 16px; line-height: 16px;"
                 >
                   <span
@@ -12402,7 +12518,7 @@ for understanding where time was actually spent in a program."
                   />
                 </div>
                 <div
-                  class="treeViewRow treeViewRowFixedColumns even isSelected"
+                  class="treeViewRow treeViewRowFixedColumns odd isSelected"
                   style="height: 16px; line-height: 16px;"
                 >
                   <span
@@ -12428,50 +12544,6 @@ for understanding where time was actually spent in a program."
                     title="1"
                   >
                     1
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn icon"
-                    style="width: 10px;"
-                    title=""
-                  >
-                    <div
-                      class="nodeIcon "
-                    />
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                </div>
-                <div
-                  class="treeViewRow treeViewRowFixedColumns odd"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn totalPercent"
-                    style="width: 50px;"
-                    title="33%"
-                  >
-                    33%
-                  </span>
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn total"
-                    style="width: 70px;"
-                    title="1"
-                  >
-                    1
-                  </span>
-                  <span
-                    class="treeViewColumnDivider"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewFixedColumn self"
-                    style="width: 70px;"
-                    title="—"
-                  >
-                    —
                   </span>
                   <span
                     class="treeViewColumnDivider"
@@ -12607,125 +12679,6 @@ for understanding where time was actually spent in a program."
                   />
                 </div>
                 <div
-                  aria-expanded="true"
-                  aria-label="C, running count is 2 samples (67%), self count is 0 samples"
-                  aria-level="3"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns even"
-                  id="treeViewRow-2"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 20px;"
-                  />
-                  <span
-                    class="treeRowToggleButton expanded canBeExpanded"
-                  />
-                  <span
-                    class="colored-square category-color-grey"
-                    title="Other"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name dim"
-                  >
-                    C
-                  </span>
-                  <span
-                    class="treeViewRowColumn treeViewAppendageColumn lib"
-                  />
-                </div>
-                <div
-                  aria-expanded="true"
-                  aria-label="D, running count is 1 sample (33%), self count is 0 samples"
-                  aria-level="4"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns odd"
-                  id="treeViewRow-3"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 30px;"
-                  />
-                  <span
-                    class="treeRowToggleButton expanded canBeExpanded"
-                  />
-                  <span
-                    class="colored-square category-color-grey"
-                    title="Other"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name dim"
-                  >
-                    D
-                  </span>
-                  <span
-                    class="treeViewRowColumn treeViewAppendageColumn lib"
-                  />
-                </div>
-                <div
-                  aria-label="E, running count is 1 sample (33%), self count is 1 sample"
-                  aria-level="5"
-                  aria-selected="true"
-                  class="treeViewRow treeViewRowScrolledColumns even isSelected"
-                  id="treeViewRow-4"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 40px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed leaf"
-                  />
-                  <span
-                    class="colored-square category-color-grey"
-                    title="Other"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name dim"
-                  >
-                    E
-                  </span>
-                  <span
-                    class="treeViewRowColumn treeViewAppendageColumn lib"
-                  />
-                </div>
-                <div
-                  aria-expanded="false"
-                  aria-label="F, running count is 1 sample (33%), self count is 0 samples"
-                  aria-level="4"
-                  aria-selected="false"
-                  class="treeViewRow treeViewRowScrolledColumns odd"
-                  id="treeViewRow-5"
-                  role="treeitem"
-                  style="height: 16px; line-height: 16px;"
-                >
-                  <span
-                    class="treeRowIndentSpacer"
-                    style="width: 30px;"
-                  />
-                  <span
-                    class="treeRowToggleButton collapsed canBeExpanded"
-                  />
-                  <span
-                    class="colored-square category-color-grey"
-                    title="Other"
-                  />
-                  <span
-                    class="treeViewRowColumn treeViewMainColumn name dim"
-                  >
-                    F
-                  </span>
-                  <span
-                    class="treeViewRowColumn treeViewAppendageColumn lib"
-                  />
-                </div>
-                <div
                   aria-expanded="false"
                   aria-label="H, running count is 1 sample (33%), self count is 0 samples"
                   aria-level="3"
@@ -12756,6 +12709,125 @@ for understanding where time was actually spent in a program."
                   >
                     libH.so
                   </span>
+                </div>
+                <div
+                  aria-expanded="true"
+                  aria-label="C, running count is 2 samples (67%), self count is 0 samples"
+                  aria-level="3"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns odd"
+                  id="treeViewRow-2"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 20px;"
+                  />
+                  <span
+                    class="treeRowToggleButton expanded canBeExpanded"
+                  />
+                  <span
+                    class="colored-square category-color-grey"
+                    title="Other"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name dim"
+                  >
+                    C
+                  </span>
+                  <span
+                    class="treeViewRowColumn treeViewAppendageColumn lib"
+                  />
+                </div>
+                <div
+                  aria-expanded="true"
+                  aria-label="D, running count is 1 sample (33%), self count is 0 samples"
+                  aria-level="4"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns even"
+                  id="treeViewRow-3"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 30px;"
+                  />
+                  <span
+                    class="treeRowToggleButton expanded canBeExpanded"
+                  />
+                  <span
+                    class="colored-square category-color-grey"
+                    title="Other"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name dim"
+                  >
+                    D
+                  </span>
+                  <span
+                    class="treeViewRowColumn treeViewAppendageColumn lib"
+                  />
+                </div>
+                <div
+                  aria-label="E, running count is 1 sample (33%), self count is 1 sample"
+                  aria-level="5"
+                  aria-selected="true"
+                  class="treeViewRow treeViewRowScrolledColumns odd isSelected"
+                  id="treeViewRow-4"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 40px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed leaf"
+                  />
+                  <span
+                    class="colored-square category-color-grey"
+                    title="Other"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name dim"
+                  >
+                    E
+                  </span>
+                  <span
+                    class="treeViewRowColumn treeViewAppendageColumn lib"
+                  />
+                </div>
+                <div
+                  aria-expanded="false"
+                  aria-label="F, running count is 1 sample (33%), self count is 0 samples"
+                  aria-level="4"
+                  aria-selected="false"
+                  class="treeViewRow treeViewRowScrolledColumns even"
+                  id="treeViewRow-5"
+                  role="treeitem"
+                  style="height: 16px; line-height: 16px;"
+                >
+                  <span
+                    class="treeRowIndentSpacer"
+                    style="width: 30px;"
+                  />
+                  <span
+                    class="treeRowToggleButton collapsed canBeExpanded"
+                  />
+                  <span
+                    class="colored-square category-color-grey"
+                    title="Other"
+                  />
+                  <span
+                    class="treeViewRowColumn treeViewMainColumn name dim"
+                  >
+                    F
+                  </span>
+                  <span
+                    class="treeViewRowColumn treeViewAppendageColumn lib"
+                  />
                 </div>
               </div>
             </div>
@@ -12895,10 +12967,12 @@ exports[`calltree/ProfileCallTreeView sorts when the total header and self heade
         <span
           class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
           data-column="totalPercent"
+          style="width: 50px;"
         />
         <span
           class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
           data-column="total"
+          style="width: 120px;"
           title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -12913,6 +12987,7 @@ function."
         <span
           class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
           data-column="self"
+          style="width: 70px;"
           title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -12927,6 +13002,7 @@ for understanding where time was actually spent in a program."
         <span
           class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
           data-column="icon"
+          style="width: 10px;"
         />
         <span
           class="treeViewColumnDivider"
@@ -13627,10 +13703,12 @@ exports[`calltree/ProfileCallTreeView sorts when the total header and self heade
         <span
           class="treeViewHeaderColumn treeViewFixedColumn totalPercent sortInactive"
           data-column="totalPercent"
+          style="width: 50px;"
         />
         <span
-          class="treeViewHeaderColumn treeViewFixedColumn total sortAscending"
+          class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
           data-column="total"
+          style="width: 120px;"
           title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
 function was actually running, and the time spent in the callers from this
@@ -13643,8 +13721,9 @@ function."
           data-column-index="1"
         />
         <span
-          class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+          class="treeViewHeaderColumn treeViewFixedColumn self sortDescending"
           data-column="self"
+          style="width: 70px;"
           title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
 then the “other” functions’ counts are not included. The “self” count is useful
@@ -13659,6 +13738,7 @@ for understanding where time was actually spent in a program."
         <span
           class="treeViewHeaderColumn treeViewFixedColumn icon sortInactive"
           data-column="icon"
+          style="width: 10px;"
         />
         <span
           class="treeViewColumnDivider"
