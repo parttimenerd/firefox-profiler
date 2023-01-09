@@ -177,6 +177,14 @@ export function mapCategoryColorNameToStyles(colorName: string): ColorStyles {
         selectedTextColor: '#fff',
         gravity: 9,
       };
+    case 'lightgrey':
+    case 'lightgray':
+      return {
+        selectedFillStyle: GREY_30,
+        unselectedFillStyle: GREY_30 + '60',
+        selectedTextColor: '#000',
+        gravity: 10,
+      };
     case 'grey':
     case 'gray':
       return {
@@ -194,6 +202,9 @@ export function mapCategoryColorNameToStyles(colorName: string): ColorStyles {
         gravity: 11,
       };
     default:
+      if (colorName.startsWith('light')) {
+        return mapCategoryColorNameToStyles(colorName.slice(5));
+      }
       console.error(
         `Unknown color name '${colorName}' encountered. Consider updating this code to handle it.`
       );
