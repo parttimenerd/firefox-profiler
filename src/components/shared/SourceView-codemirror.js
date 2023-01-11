@@ -40,6 +40,7 @@ import { classHighlighter } from '@lezer/highlight';
 import { cpp } from '@codemirror/lang-cpp';
 import { rust } from '@codemirror/lang-rust';
 import { javascript } from '@codemirror/lang-javascript';
+import { java } from '@codemirror/lang-java';
 import clamp from 'clamp';
 
 import type { LineTimings } from 'firefox-profiler/types';
@@ -80,6 +81,9 @@ function _languageExtForPath(
     path.endsWith('.mm')
   ) {
     return cpp();
+  }
+  if (path.endsWith('.java')) {
+    return java();
   }
   return [];
 }
