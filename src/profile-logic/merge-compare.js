@@ -658,7 +658,12 @@ function combineFuncTables(
         if (newFuncTable.sourceUrl === undefined) {
           newFuncTable.sourceUrl = [];
         }
-        newFuncTable.sourceUrl.push(funcTable.sourceUrl[i]);
+        const sourceUrl = funcTable.sourceUrl[i];
+        newFuncTable.sourceUrl.push(
+          sourceUrl === null
+            ? null
+            : newStringTable.indexForString(stringTable.getString(sourceUrl))
+        );
       }
 
       newFuncTable.length++;
