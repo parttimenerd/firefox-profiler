@@ -63,18 +63,13 @@ type StateProps = {|
   +threadsKey: ThreadsKey,
   +scrollToSelectionGeneration: number,
   +focusCallTreeGeneration: number,
-  +tree: CallTreeType,
-  +callNodeInfo: CallNodeInfo,
-  +categories: CategoryList,
-  +selectedCallNodeIndex: IndexIntoCallNodeTable | null,
-  +rightClickedCallNodeIndex: IndexIntoCallNodeTable | null,
-  +expandedCallNodeIndexes: Array<IndexIntoCallNodeTable | null>,
   +searchStringsRegExp: RegExp | null,
   +disableOverscan: boolean,
   +invertCallstack: boolean,
   +implementationFilter: ImplementationFilter,
   +weightType: WeightType,
   +tableViewOptions: TableViewOptions,
+  +categories: CategoryList,
 |};
 
 type DispatchProps = {|
@@ -445,21 +440,13 @@ export const CallTree = explicitConnect<Props, StateProps, DispatchProps>({
     threadsKey: getSelectedThreadsKey(state),
     scrollToSelectionGeneration: getScrollToSelectionGeneration(state),
     focusCallTreeGeneration: getFocusCallTreeGeneration(state),
-    tree: selectedThreadSelectors.getCallTree(state),
-    callNodeInfo: selectedThreadSelectors.getCallNodeInfo(state),
-    categories: getCategories(state),
-    selectedCallNodeIndex:
-      selectedThreadSelectors.getSelectedCallNodeIndex(state),
-    rightClickedCallNodeIndex:
-      selectedThreadSelectors.getRightClickedCallNodeIndex(state),
-    expandedCallNodeIndexes:
-      selectedThreadSelectors.getExpandedCallNodeIndexes(state),
     searchStringsRegExp: getSearchStringsAsRegExp(state),
     disableOverscan: getPreviewSelection(state).isModifying,
     invertCallstack: getInvertCallstack(state),
     implementationFilter: getImplementationFilter(state),
     weightType: selectedThreadSelectors.getWeightTypeForCallTree(state),
     tableViewOptions: getCurrentTableViewOptions(state),
+    categories: getCategories(state),
   }),
   mapDispatchToProps: {
     addTransformToStack,
