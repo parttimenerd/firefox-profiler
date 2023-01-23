@@ -453,7 +453,7 @@ export class CallTree {
       openSourceView(file, null);
       return;
     }
-    let rawSourceUrl = sourceUrl.replace(/^post|/, '');
+    let rawSourceUrl = sourceUrl.replace(/^post[|]/, '');
     let reallyForceLoadSource = forceLoadSource;
     let name = file;
     if (rawSourceUrl.includes('|')) {
