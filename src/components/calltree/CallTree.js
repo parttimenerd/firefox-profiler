@@ -34,7 +34,6 @@ import {
   addTransformToStack,
   handleCallNodeTransformShortcut,
   openSourceView,
-  changeTableViewOptions,
 } from 'firefox-profiler/actions/profile-view';
 import { assertExhaustiveCheck } from 'firefox-profiler/utils/flow';
 
@@ -82,7 +81,6 @@ type DispatchProps = {|
   +addTransformToStack: typeof addTransformToStack,
   +handleCallNodeTransformShortcut: typeof handleCallNodeTransformShortcut,
   +openSourceView: typeof openSourceView,
-  +onTableViewOptionsChange: (TableViewOptions) => any,
 |};
 
 type Props = {|
@@ -98,6 +96,7 @@ type Props = {|
   +changeSelectedCallNode: typeof changeSelectedCallNode,
   +changeRightClickedCallNode?: typeof changeRightClickedCallNode,
   +changeExpandedCallNodes?: typeof changeExpandedCallNodes,
+  +onTableViewOptionsChange: (TableViewOptions) => any,
 |};
 
 type AllProps = ConnectedProps<Props, StateProps, DispatchProps>;
@@ -466,8 +465,6 @@ export const CallTree = explicitConnect<Props, StateProps, DispatchProps>({
     addTransformToStack,
     handleCallNodeTransformShortcut,
     openSourceView,
-    onTableViewOptionsChange: (options: TableViewOptions) =>
-      changeTableViewOptions('calltree', options),
   },
   component: CallTreeImpl,
 });

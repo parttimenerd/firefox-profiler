@@ -9,7 +9,11 @@ import type { ConnectedProps } from 'firefox-profiler/utils/connect';
 import { StackSettings } from 'firefox-profiler/components/shared/StackSettings';
 import { TransformNavigator } from 'firefox-profiler/components/shared/TransformNavigator';
 import { selectedThreadSelectors } from '../../selectors/per-thread';
-import type { CallNodeInfo, IndexIntoCallNodeTable } from '../../types';
+import type {
+  CallNodeInfo,
+  IndexIntoCallNodeTable,
+  TableViewOptions,
+} from '../../types';
 import type { CallTree as CallTreeType } from 'firefox-profiler/profile-logic/call-tree';
 import { CallTree } from './CallTree';
 import explicitConnect from 'firefox-profiler/utils/connect';
@@ -17,6 +21,7 @@ import {
   changeSelectedCallNode,
   changeRightClickedCallNode,
   changeExpandedCallNodes,
+  changeTableViewOptions,
 } from 'firefox-profiler/actions/profile-view';
 import type { TabSlug } from 'firefox-profiler/app-logic/tabs-handling';
 
@@ -34,6 +39,7 @@ type DispatchProps = {|
   +changeSelectedCallNode: typeof changeSelectedCallNode,
   +changeRightClickedCallNode: typeof changeRightClickedCallNode,
   +changeExpandedCallNodes: typeof changeExpandedCallNodes,
+  +onTableViewOptionsChange: (TableViewOptions) => any,
 |};
 
 type Props = ConnectedProps<{||}, StateProps, DispatchProps>;
@@ -80,6 +86,8 @@ export const ProfileCallTreeView = explicitConnect<
     changeSelectedCallNode,
     changeRightClickedCallNode,
     changeExpandedCallNodes,
+    onTableViewOptionsChange: (options: TableViewOptions) =>
+      changeTableViewOptions('calltree', options),
   },
   component: ProfileCallTreeViewImpl,
 });
