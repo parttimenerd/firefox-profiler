@@ -453,39 +453,25 @@ export class CallTree {
       openSourceView(file, null);
       return;
     }
-    let rawSourceUrl = sourceUrl.replace(/^post[|]/, '');
-    let reallyForceLoadSource = forceLoadSource;
-    let name = file;
-    if (rawSourceUrl.includes('|')) {
-      // rawSourceUrl = sourceUrl | alternative
-      const [first, alternative] = rawSourceUrl.split('|');
-      if (first.startsWith(window.location.origin)) {
-        // we're serving the file from the same origin, therefore the first URL
-        rawSourceUrl = first;
-        if (name === null) {
-          name = alternative;
-        }
-      } else {
-        // we're not serving the file from the same origin, like from profiler.firefox.com
-        // so use the public alternative
-        // if present
-        rawSourceUrl = alternative;
-        reallyForceLoadSource = true;
-      }
-    }
-    if (rawSourceUrl.length === 0) {
+    const name = file;
+    if (sourceUrl.length === 0) {
       return;
     }
-    if (sourceUrl.startsWith('post|') && !reallyForceLoadSource) {
+    if (
+      sourceUrl.startsWith(window.location.origin) &&
+      window.location.hostname === 'localhost' &&
+      !forceLoadSource
+    ) {
       this._triggerSourceViewEventOnRemote(
         file,
         line,
         method,
         column,
-        rawSourceUrl
+        sourceUrl,
+        () => openSourceView(sourceUrl, name)
       );
     } else {
-      openSourceView(rawSourceUrl, name);
+      openSourceView(sourceUrl, name);
     }
   }
 
@@ -494,7 +480,8 @@ export class CallTree {
     line: number | null,
     method: string,
     column: number | null,
-    remoteUrl: string
+    remoteUrl: string,
+    fallback: () => void
   ) {
     const requestInit = {
       body: JSON.stringify({
@@ -511,7 +498,11 @@ export class CallTree {
         'Content-Type': 'application/json',
       },
     };
-    fetch(remoteUrl, requestInit);
+    fetch(remoteUrl, requestInit).then((response) => {
+      if (!response.ok || response.text() !== 'ok') {
+        fallback();
+      }
+    });
   }
 }
 

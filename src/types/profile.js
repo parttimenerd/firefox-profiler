@@ -381,15 +381,13 @@ export type FuncTable = {|
 
   // This is the optional information on the url of the source file
   // that this function can be seen in specifically.
-  // Prefixing the URL with `post|` signifies that the URL should
-  // be called with a POST request and the response discarded (the request
-  // includes `name`, `file`, `line` and `column` information if present).
-  // `post|` URLs can have another format: `post|url|alternative` where
-  // the alternative URL is used if the origin of the url does not have
-  // the same origin as the profile viewer. This allows to supply a public
-  // fallback URL for local profile URLs.
-  // These POST requests are used by imported profiles to trigger events
-  // outside of the profiler.
+  // Every URL that has the same host as the current URL
+  // and is on localhost is considered to be potentially an IDE trigger URL.
+  // These URLs are therefore first called with a POST request with the following
+  // in the request body as JSON: { file, line, method, column}
+  // This designed to trigger actions in the IDE.
+  // If this POST request does not return a body only containing the string "ok",
+  // then the URL is not considered to be an IDE trigger URL.
   // Urls may currently only start with `https://raw.githubusercontent.com/` or
   // `http://localhost`.
   sourceUrl?: Array<IndexIntoStringTable | null>,
