@@ -193,6 +193,20 @@ export type NodeSelectors = {|
   +getSourceViewLineTimings: Selector<LineTimings>,
 |};
 
+/** takes the source URL syntax with "post|" prefixes into account */
+const areFilesEqual = (a: string, b: string): boolean => {
+  const aParts = a.split('|');
+  const bParts = b.split('|');
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const aPart = aParts[Math.min(i, aParts.length - 1)];
+    const bPart = bParts[Math.min(i, bParts.length - 1)];
+    if (aPart === bPart && aPart !== 'post') {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const selectedNodeSelectors: NodeSelectors = (() => {
   const getName: Selector<string> = createSelector(
     selectedThreadSelectors.getSelectedCallNodePath,
@@ -276,7 +290,10 @@ export const selectedNodeSelectors: NodeSelectors = (() => {
           (funcTable.sourceUrl ? funcTable.sourceUrl[selectedFunc] : null);
         if (
           selectedFuncFile === null ||
-          stringTable.getString(selectedFuncFile) !== sourceViewFile
+          !areFilesEqual(
+            stringTable.getString(selectedFuncFile),
+            sourceViewFile
+          )
         ) {
           return null;
         }
@@ -380,7 +397,10 @@ export const selectedFunctionTableNodeSelectors: NodeSelectors = (() => {
         const selectedFuncFile = funcTable.fileName[selectedFunc];
         if (
           selectedFuncFile === null ||
-          stringTable.getString(selectedFuncFile) !== sourceViewFile
+          !areFilesEqual(
+            stringTable.getString(selectedFuncFile),
+            sourceViewFile
+          )
         ) {
           return null;
         }
