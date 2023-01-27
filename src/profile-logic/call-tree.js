@@ -499,8 +499,14 @@ export class CallTree {
       },
     };
     fetch(remoteUrl, requestInit).then((response) => {
-      if (!response.ok || response.text() !== 'ok') {
+      if (!response.ok) {
         fallback();
+      } else {
+        response.text().then((x) => {
+          if (x !== 'ok') {
+            fallback();
+          }
+        });
       }
     });
   }
