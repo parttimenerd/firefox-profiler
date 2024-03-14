@@ -27,6 +27,9 @@ function _getNumberFormat({
   places: number,
   style: 'decimal' | 'percent',
 }) {
+  if (places < 0 || places > 10) { // prevent bugs
+    places = 0;
+  }
   return new Intl.NumberFormat(undefined, {
     minimumFractionDigits: places,
     maximumFractionDigits: places,
