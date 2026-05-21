@@ -2,32 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// WASM bridge for the jafar JFR parser.
+// WASM bridge for the jafar JFR parser + converter.
 //
-// This module loads the GraalVM-compiled WASM (jafar.js + jafar.js.wasm) and
-// exposes a Promise-based API for parsing JFR binary data.
+// jafar.js + jafar.js.wasm are loaded eagerly by a classic <script> tag
+// injected into index.html by generateHtmlPlugin (only when JFR_CONVERTER is
+// enabled at build time). See jfr-wasm/README.md for build details.
 //
-// The WASM must expose the following JS-callable methods (added to jafar-ex):
-//   JFRParser.parseJFR(bytesArray, callback)   — calls callback(event) for each event, null to finish
-//   JFRParser.getMetadata()                     — returns metadata object after parseJFR completes
-//
-// If the WASM is not available (JFR_CONVERTER_ENABLED=false), this module is
-// never imported (tree-shaken by esbuild).
+// The Java side does ALL the work in a single native call: it parses the JFR
+// recording AND runs the full Profile conversion (event stream → Profile object),
+// returning the resulting Profile JSON as a single string. The JS side
+// `JSON.parse`s it once. This collapses the WASM↔JS boundary to one crossing.
 
-import type { ParsedJFREvent, JFRMetadata } from '../jfr-converter/types';
-import type { JFREventTypeInfo } from '../jfr-converter/marker-schemas';
-
-export interface ParseResult {
-  events: ParsedJFREvent[];
-  eventTypeInfoMap: Map<string, JFREventTypeInfo>;
-  metadata: JFRMetadata;
-}
-
-// Dynamically loaded WASM module interface (matches what jafar-ex exposes)
 interface JafarWASMModule {
   JFRParser: {
-    parseJFR(binaryString: string, callback: unknown): void;
-    getMetadata(): unknown;
+    parseToProfileJSON(binaryString: string): string;
   };
 }
 
@@ -37,122 +25,67 @@ async function loadWasm(): Promise<JafarWASMModule> {
   if (wasmModule) {
     return wasmModule;
   }
-  // jafar.js is copied to the root of dist/ (same level as index.html).
-  // Use an absolute URL built from PUBLIC_PATH so the import works correctly
-  // regardless of which sub-directory the caller chunk lives in.
-  const publicPath = process.env.PUBLIC_PATH ?? '/';
-  const jafarJsUrl = publicPath + 'jafar.js';
-  // jafar.js uses document.currentScript.src to locate jafar.js.wasm, but
-  // that is null for ES module dynamic imports. Set a global so the patched
-  // jafar.js reads the correct WASM path instead of falling back to location.href.
-  (globalThis as unknown as Record<string, unknown>).__jafarWasmPath =
-    publicPath + 'jafar.js.wasm';
-  await import(/* @vite-ignore */ /* webpackIgnore: true */ jafarJsUrl);
-  // GraalVM bootstrap sets up the module on globalThis
-  const mod = (globalThis as unknown as Record<string, unknown>).JFRParser;
-  if (!mod) {
-    throw new Error(
-      'jafar WASM module did not initialize. Make sure jafar.js.wasm is present.'
-    );
+  // The classic <script src="jafar.js"> tag injected by generateHtmlPlugin
+  // bootstraps GraalVM asynchronously and eventually assigns globalThis.JFRParser
+  // from inside the WASM module's main(). There is no public Promise we can
+  // await on, so poll until JFRParser appears (or time out).
+  const startedAt = Date.now();
+  while (true) {
+    const mod = (globalThis as unknown as Record<string, unknown>).JFRParser;
+    if (mod) {
+      wasmModule = { JFRParser: mod as JafarWASMModule['JFRParser'] };
+      return wasmModule;
+    }
+    if (Date.now() - startedAt > 30_000) {
+      throw new Error(
+        'jafar WASM module did not initialize within 30 s. Make sure ' +
+          'jafar.js + jafar.js.wasm are present in src/profile-logic/import/jfr-wasm/.'
+      );
+    }
+    await new Promise((r) => setTimeout(r, 50));
   }
-  wasmModule = { JFRParser: mod as JafarWASMModule['JFRParser'] };
-  return wasmModule;
 }
 
-export async function parseJFR(fileBytes: Uint8Array): Promise<ParseResult> {
+export async function parseJFRToProfile(
+  fileBytes: Uint8Array
+): Promise<unknown> {
   const wasm = await loadWasm();
 
-  // JFRParser.parseJFR expects a binary string (like FileReader.readAsBinaryString)
-  // Convert Uint8Array → binary string so the Java side can do (byte)char at each index.
-  let binaryString = '';
-  for (let i = 0; i < fileBytes.length; i++) {
-    binaryString += String.fromCharCode(fileBytes[i]);
+  // parseToProfileJSON expects a binary string (FileReader.readAsBinaryString style)
+  // so the Java side can do (byte)char at each index.
+  //
+  // Build it in chunks via fromCharCode.apply rather than `+=` per byte: the
+  // naive loop is O(n²) (each `s += c` allocates a new string of length n)
+  // and gets unusably slow past a few MB. 16 KB chunks keep us well under the
+  // engine's argument-count limit while only allocating ~n/16384 strings.
+  const CHUNK = 16 * 1024;
+  const parts: string[] = [];
+  for (let i = 0; i < fileBytes.length; i += CHUNK) {
+    const end = Math.min(i + CHUNK, fileBytes.length);
+    parts.push(
+      String.fromCharCode.apply(
+        null,
+        fileBytes.subarray(i, end) as unknown as number[]
+      )
+    );
   }
+  const binaryString = parts.join('');
 
-  const events: ParsedJFREvent[] = [];
-  const eventTypeInfoMap = new Map<string, JFREventTypeInfo>();
-
-  await new Promise<void>((resolve, reject) => {
-    try {
-      wasm.JFRParser.parseJFR(binaryString, (event: ParsedJFREvent | null) => {
-        if (event === null) {
-          resolve();
-          return;
-        }
-        events.push(event);
-
-        // Build eventTypeInfoMap on the fly from events if not separately provided
-        // (the WASM may also send type metadata via a special event type)
-        if (!eventTypeInfoMap.has(event.type)) {
-          // Synthesize a minimal JFREventTypeInfo from the event shape.
-          // Ideally, the WASM sends full metadata; this is the fallback.
-          const fieldNames = Object.keys(event.fields).filter(
-            (k) => !k.includes('.')
-          );
-          eventTypeInfoMap.set(event.type, {
-            name: event.type,
-            label: event.type.replace(/^jdk\./, ''),
-            description: undefined,
-            categoryNames: [guessCategoryFromEventType(event.type)],
-            fields: fieldNames.map((name) => ({
-              name,
-              typeName: 'string',
-              contentType: null,
-              label: name,
-            })),
-            hasStackTrace:
-              event.stackTrace !== undefined && event.stackTrace.length > 0,
-          });
-        }
-      });
-    } catch (e) {
-      reject(e);
-    }
-  });
-
-  const rawMeta = wasm.JFRParser.getMetadata() as Partial<JFRMetadata>;
-  const metadata: JFRMetadata = {
-    jvmVersion: rawMeta.jvmVersion ?? null,
-    jvmArgs: rawMeta.jvmArgs ?? null,
-    javaArgs: rawMeta.javaArgs ?? null,
-    startMs: rawMeta.startMs ?? events[0]?.startMs ?? 0,
-    endMs: rawMeta.endMs ?? events[events.length - 1]?.endMs ?? 0,
-    cpuModel: rawMeta.cpuModel ?? null,
-    cpuCores: rawMeta.cpuCores ?? null,
-    cpuHwThreads: rawMeta.cpuHwThreads ?? null,
-    osVersion: rawMeta.osVersion ?? null,
-    pid: rawMeta.pid ?? -1,
-  };
-
-  return { events, eventTypeInfoMap, metadata };
-}
-
-// Guess a JFR category display name from event type for fallback
-function guessCategoryFromEventType(eventType: string): string {
-  if (
-    eventType.startsWith('jdk.GC') ||
-    eventType.includes('GarbageCollection')
-  ) {
-    return 'Java Virtual Machine, GC, Collector';
+  const json = wasm.JFRParser.parseToProfileJSON(binaryString);
+  // GraalVM Web Image sometimes hands back a Java-string proxy rather than a
+  // primitive JS string; coerce explicitly. Also surface the first few bytes
+  // when JSON.parse fails so we can tell whether the converter emitted nothing,
+  // an exception text, or a wrapped object instead of JSON.
+  const jsonStr = typeof json === 'string' ? json : String(json);
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    const head = jsonStr.slice(0, 200);
+    const tail = jsonStr.slice(-100);
+    throw new Error(
+      `JFR converter returned non-JSON (length=${jsonStr.length}, ` +
+        `type=${typeof json}). Head: ${JSON.stringify(head)} ` +
+        `Tail: ${JSON.stringify(tail)}. Original: ${(e as Error).message}`
+    );
   }
-  if (
-    eventType.startsWith('jdk.Compiler') ||
-    eventType.includes('Compilation')
-  ) {
-    return 'Java Virtual Machine, Compiler';
-  }
-  if (eventType.includes('Thread')) {
-    return 'Java Application';
-  }
-  if (
-    eventType.includes('Socket') ||
-    eventType.includes('File') ||
-    eventType.includes('IO')
-  ) {
-    return 'Operating System';
-  }
-  if (eventType.startsWith('jdk.CPU') || eventType.includes('CPULoad')) {
-    return 'Operating System, Processor';
-  }
-  return 'Java Application';
 }

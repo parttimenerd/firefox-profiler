@@ -9,8 +9,8 @@
 //   1. The input bytes start with the JFR magic bytes.
 //   2. process.env.JFR_CONVERTER_ENABLED is true (WASM asset present at build time).
 //
-// Both the WASM bridge and the TypeScript converter are lazy-loaded via dynamic
-// import() so they are never included in the main bundle.
+// The full conversion (parse + transform → Profile) happens inside the WASM
+// module. JS just decodes the resulting JSON string.
 
 import type { Profile } from '../../types/profile';
 
@@ -33,20 +33,7 @@ export async function convertJFRProfile(
     return null;
   }
 
-  const [{ parseJFR }, { convertJFREventStream, defaultConfig }] =
-    await Promise.all([
-      import('./jfr-wasm/index'),
-      import('./jfr-converter/index'),
-    ]);
-
-  const { events, eventTypeInfoMap, metadata } = await parseJFR(fileBytes);
-  const config = defaultConfig();
-  const profile = await convertJFREventStream(
-    events,
-    eventTypeInfoMap,
-    metadata,
-    config
-  );
-  // The converter returns a plain object shaped like Profile; cast it.
+  const { parseJFRToProfile } = await import('./jfr-wasm/index');
+  const profile = await parseJFRToProfile(fileBytes);
   return profile as unknown as Profile;
 }

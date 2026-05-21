@@ -14,6 +14,7 @@
   },
   "scripts": {
     "build": "cross-env NODE_ENV=development node scripts/build.mjs",
+    "build-jfr-wasm": "node scripts/build-jfr-wasm.mjs",
     "build-prod": "cross-env NODE_ENV=production node scripts/build.mjs && yarn build-sw && yarn build-photon",
     "build-l10n": "cross-env NODE_ENV=development L10N=1 node scripts/build.mjs",
     "build-l10n-prod": "cross-env NODE_ENV=production L10N=1 node scripts/build.mjs && yarn build-sw && yarn build-photon",

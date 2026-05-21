@@ -14,14 +14,36 @@ import org.graalvm.webimage.api.JSObject;
 /** GraalVM Web Image entry point — wires JFR parsing into the browser DOM. */
 public class WebMain {
 
-    private static final JSObject DROP_ZONE    = getElementById("drop-zone");
-    private static final JSObject FILE_NAME    = getElementById("file-name");
-    private static final JSObject STATUS       = getElementById("status");
-    private static final JSObject SUMMARY      = getElementById("summary");
-    private static final JSObject FILE_INPUT   = getElementById("file-input");
+    // The WASM is loaded both by the standalone jafar webapp (where these DOM
+    // elements exist and the drag-drop UI runs) and by the firefox-profiler
+    // bundle (where they don't, and only the JFRParser API is needed). Resolve
+    // them lazily inside main() — keeping them as static finals would NPE at
+    // class-init in the embedded case (and triggers a CSP-blocked inline-script
+    // workaround upstream).
+    private static JSObject DROP_ZONE;
+    private static JSObject FILE_NAME;
+    private static JSObject STATUS;
+    private static JSObject SUMMARY;
+    private static JSObject FILE_INPUT;
 
     public static void main(String[] args) {
+        // Always register the JS-callable parse API. This is the only thing
+        // firefox-profiler needs.
         JFRParser.register();
+
+        // The drag-drop UI is only useful when the standalone jafar/index.html
+        // is the host page. If the elements aren't present (firefox-profiler
+        // case), bail out before touching them — addEventListener on null
+        // throws and would otherwise crash the whole WASM bootstrap.
+        DROP_ZONE  = getElementById("drop-zone");
+        FILE_INPUT = getElementById("file-input");
+        if (DROP_ZONE == null || FILE_INPUT == null) {
+            return;
+        }
+        FILE_NAME  = getElementById("file-name");
+        STATUS     = getElementById("status");
+        SUMMARY    = getElementById("summary");
+
         addEventListener(DROP_ZONE, "dragover", WebMain::onDragOver);
         addEventListener(DROP_ZONE, "dragleave", WebMain::onDragLeave);
         addEventListener(DROP_ZONE, "drop", WebMain::onDrop);

@@ -202,6 +202,7 @@ type HomeProps = ConnectedProps<
 
 type HomeState = {
   popupInstallPhase: PopupInstallPhase;
+  exampleJfrAvailable: boolean;
 };
 
 type PopupInstallPhase =
@@ -248,7 +249,26 @@ class HomeImpl extends React.PureComponent<HomeProps, HomeState> {
 
     this.state = {
       popupInstallPhase: popupInstallPhase as PopupInstallPhase,
+      exampleJfrAvailable: false,
     };
+  }
+
+  override componentDidMount() {
+    if (!process.env.JFR_CONVERTER_ENABLED) {
+      return;
+    }
+    const url =
+      (process.env.PUBLIC_PATH || '/') + 'example-profiles/akka-uct.jfr';
+    fetch(url, { method: 'HEAD' }).then(
+      (response) => {
+        if (response.ok) {
+          this.setState({ exampleJfrAvailable: true });
+        }
+      },
+      () => {
+        // Network/CORS error — example simply isn't available.
+      }
+    );
   }
 
   _renderInstructions() {
@@ -619,6 +639,27 @@ class HomeImpl extends React.PureComponent<HomeProps, HomeState> {
     this.props.triggerLoadingFromUrl(url);
   };
 
+  _onLoadExampleJFR = async (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const a = event.currentTarget;
+    const url =
+      (process.env.PUBLIC_PATH || '/') + 'example-profiles/akka-uct.jfr';
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      const file = new File([blob], 'akka-uct.jfr', {
+        type: 'application/octet-stream',
+      });
+      this._onLoadProfileFromFileRequested(file);
+    } catch (err) {
+      console.error('Failed to load example JFR:', err);
+      a.textContent = 'Example unavailable';
+    }
+  };
+
   override render() {
     const { specialMessage } = this.props;
 
@@ -667,7 +708,11 @@ class HomeImpl extends React.PureComponent<HomeProps, HomeState> {
               />
 
               <Localized
-                id="Home--load-files-from-other-tools2"
+                id={
+                  this.state.exampleJfrAvailable
+                    ? 'Home--load-files-from-other-tools2-with-jfr-example'
+                    : 'Home--load-files-from-other-tools2'
+                }
                 elems={{
                   perf: (
                     <a href="https://profiler.firefox.com/docs/#/./guide-perf-profiling" />
@@ -678,6 +723,10 @@ class HomeImpl extends React.PureComponent<HomeProps, HomeState> {
                   androidstudio: (
                     <a href="https://developer.android.com/studio/profile/cpu-profiler" />
                   ),
+                  jfr: (
+                    <a href="https://docs.oracle.com/en/java/javase/21/docs/specs/jfr/jfr-api.html" />
+                  ),
+                  jfrexample: <a href="#" onClick={this._onLoadExampleJFR} />,
                   dhat: (
                     <a href="https://valgrind.org/docs/manual/dh-manual.html" />
                   ),
@@ -694,8 +743,12 @@ class HomeImpl extends React.PureComponent<HomeProps, HomeState> {
                   profilers, such as {'<perf>Linux perf</perf>'},
                   {'<simpleperf>Android SimplePerf</simpleperf>'}, the Chrome
                   performance panel,{' '}
-                  {'<androidstudio>Android Studio</androidstudio>'}, or any file
-                  using the {'<dhat>dhat format</dhat>'} or{' '}
+                  {'<androidstudio>Android Studio</androidstudio>'},{' '}
+                  {'<jfr>JDK Flight Recorder</jfr>'}
+                  {this.state.exampleJfrAvailable
+                    ? ' (<jfrexample>example</jfrexample>)'
+                    : ''}
+                  , or any file using the {'<dhat>dhat format</dhat>'} or{' '}
                   {"<traceevent>Google's Trace Event Format</traceevent>"}.{' '}
                   {'<write>Learn how to write your own importer</write>'}.
                 </p>

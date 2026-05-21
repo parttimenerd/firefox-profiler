@@ -1,5 +1,6 @@
 {
   "extends": ["stylelint-config-standard", "stylelint-config-idiomatic-order"],
+  "ignoreFiles": ["src/profile-logic/import/jfr-wasm/jafar/web/lib/**"],
   "rules": {
     "alpha-value-notation": null,
     "function-url-quotes": null,

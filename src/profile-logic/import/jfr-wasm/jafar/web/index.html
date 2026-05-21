@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JFR Summary — powered by jafar</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>"
+    />
+
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --dim: #8b949e;
+        --accent: #58a6ff;
+        --accent-hover: #79c0ff;
+        --green: #3fb950;
+        --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        min-height: 100vh;
+        padding: 2rem;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── header ──────────────────────────────────────── */
+      .header {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.25rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      h1 span {
+        color: var(--accent);
+      }
+      .header-links {
+        font-size: 0.85rem;
+        color: var(--dim);
+      }
+      .header-links a {
+        margin-left: 0.5rem;
+      }
+      .subtitle {
+        color: var(--dim);
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      }
+
+      /* ── drop zone ───────────────────────────────────── */
+      #drop-zone {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        margin-bottom: 1rem;
+        position: relative;
+      }
+      #drop-zone.drag-over {
+        border-color: var(--accent);
+        background: rgba(88, 166, 255, 0.06);
+      }
+      #drop-zone p {
+        color: var(--dim);
+        font-size: 1.05rem;
+      }
+      #drop-zone .icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+      }
+      #file-input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ── status ──────────────────────────────────────── */
+      .status-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        min-height: 1.5em;
+      }
+      #status {
+        color: var(--dim);
+        font-size: 0.85rem;
+      }
+      #file-name {
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: none;
+      }
+
+      /* ── loading indicator ───────────────────────────── */
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      #loading p {
+        color: var(--dim);
+        font-size: 0.9rem;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── summary cards ───────────────────────────────── */
+      #summary {
+        display: none;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.25rem;
+      }
+      .card h2 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--accent);
+      }
+
+      /* ── tables ──────────────────────────────────────── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th,
+      td {
+        padding: 0.35rem 0.5rem;
+        text-align: left;
+      }
+      thead th {
+        color: var(--dim);
+        font-weight: 500;
+        border-bottom: 1px solid var(--border);
+      }
+      tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      td.label {
+        color: var(--dim);
+        width: 170px;
+      }
+      td.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      td.mono {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading">
+      <div class="spinner"></div>
+      <p>Loading JFR analyser…</p>
+    </div>
+
+    <div class="header">
+      <h1>JFR <span>Summary</span></h1>
+      <div class="header-links">
+        powered by
+        <a href="https://github.com/btraceio/jafar" target="_blank">jafar</a>
+        &middot;
+        <a
+          href="https://github.com/btraceio/jafar/tree/main/jafar-web"
+          target="_blank"
+          >source</a
+        >
+      </div>
+    </div>
+    <p class="subtitle">
+      Drop a Java Flight Recorder (.jfr) file to see a quick summary — all
+      processing happens in your browser.
+    </p>
+
+    <div id="drop-zone">
+      <input type="file" id="file-input" accept=".jfr" />
+      <div class="icon">&#128190;</div>
+      <p>
+        Drop a <strong>.jfr</strong> file here, or
+        <strong>click to browse</strong>
+      </p>
+    </div>
+
+    <div class="status-bar">
+      <span id="status">Initialising…</span>
+      <span id="file-name"></span>
+    </div>
+
+    <div id="summary"></div>
+
+    <script src="jafar.js"></script>
+    <script>
+      document.getElementById('loading').style.display = 'none';
+    </script>
+  </body>
+</html>

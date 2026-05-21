@@ -17,3 +17,12 @@ webpack.local-config.js
 *.rej
 .idea/
 .profiler-cli-dev/
+
+# JFR converter WASM build artifacts (built by `yarn build-jfr-wasm`)
+src/profile-logic/import/jfr-wasm/jafar.js
+src/profile-logic/import/jfr-wasm/jafar.js.wasm
+src/profile-logic/import/jfr-wasm/jafar/target/
+src/profile-logic/import/jfr-wasm/jafar/web/jafar.js
+src/profile-logic/import/jfr-wasm/jafar/web/jafar.js.wasm
+src/profile-logic/import/jfr-wasm/jafar/web/jafar.js.wat
+src/profile-logic/import/jfr-wasm/jafar/web/lib/

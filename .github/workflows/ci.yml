@@ -194,30 +194,43 @@ jobs:
           curl -fsSL "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" \
             | sudo tar -xz -C /usr/local --strip-components=1
 
-      - name: Build jafar WASM
-        working-directory: jafar-web
-        run: mvn package -DskipTests -q
-
-      - name: Copy WASM into firefox-profiler
-        run: |
-          cp jafar-web/web/jafar.js \
-             src/profile-logic/import/jfr-wasm/
-          cp jafar-web/web/jafar.js.wasm \
-             src/profile-logic/import/jfr-wasm/
-          # Patch jafar.js so it reads config.wasm_path from globalThis.__jafarWasmPath
-          # (set by our index.ts before the dynamic import). This is needed because
-          # document.currentScript is null for ES module dynamic imports, so GraalVM's
-          # bootstrap would otherwise fall back to location.href to locate the WASM.
-          sed -i 's/const config = new GraalVM.Config();/const config = new GraalVM.Config(); if (typeof globalThis.__jafarWasmPath !== "undefined") { config.wasm_path = globalThis.__jafarWasmPath; }/' \
-             src/profile-logic/import/jfr-wasm/jafar.js
-
       - name: Setup Node.js and install dependencies
         uses: ./.github/actions/setup-node-and-install
+
+      - name: Build jafar WASM
+        run: yarn build-jfr-wasm
+
+      - name: Record example JFR (Renaissance akka-uct, ~30s)
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/jfr-out
+          # Renaissance is a JVM benchmark suite distributed as a fat jar.
+          curl -fsSL -o /tmp/renaissance.jar \
+            https://github.com/renaissance-benchmarks/renaissance/releases/download/v0.16.1/renaissance-gpl-0.16.1.jar
+          # Use a Temurin JDK (Renaissance 0.16.1 supports Java 11–21; pin to 21
+          # so JFR output is current). The graalvm step above already set up
+          # GraalVM 25, but Renaissance fails to launch on it.
+          curl -fsSL -o /tmp/jdk.tar.gz \
+            "https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse?project=jdk"
+          mkdir -p /tmp/jdk
+          tar -xzf /tmp/jdk.tar.gz -C /tmp/jdk --strip-components=1
+          # Run akka-uct under JFR for 30s. Renaissance accepts -r 1 to limit
+          # to one repetition; the JFR duration is the primary cap.
+          /tmp/jdk/bin/java \
+            -XX:StartFlightRecording=duration=30s,filename=/tmp/jfr-out/akka-uct.jfr,settings=profile \
+            -jar /tmp/renaissance.jar -r 1 akka-uct
+          ls -lh /tmp/jfr-out/akka-uct.jfr
 
       - name: Build with JFR converter
         run: yarn build-prod
         env:
           PUBLIC_PATH: /firefox-profiler/
+
+      - name: Copy example JFR into dist/
+        run: |
+          mkdir -p dist/example-profiles
+          cp /tmp/jfr-out/akka-uct.jfr dist/example-profiles/akka-uct.jfr
+          ls -lh dist/example-profiles/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

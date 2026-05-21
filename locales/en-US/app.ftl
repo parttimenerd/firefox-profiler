@@ -405,7 +405,20 @@ Home--dark-mode-title = Dark mode
 Home--load-files-from-other-tools2 =
     The { -profiler-brand-name } can also import profiles from other profilers, such as
     <perf>Linux perf</perf>, <simpleperf>Android SimplePerf</simpleperf>, the
-    Chrome performance panel, <androidstudio>Android Studio</androidstudio>, or
+    Chrome performance panel, <androidstudio>Android Studio</androidstudio>,
+    <jfr>JDK Flight Recorder</jfr>, or
+    any file using the <dhat>dhat format</dhat> or <traceevent>Google’s Trace Event
+    Format</traceevent>. <write>Learn how to write your
+    own importer</write>.
+
+# Same as Home--load-files-from-other-tools2 but with an inline JFR example link
+# rendered after "JDK Flight Recorder" via the <jfrexample> element. Used in the
+# fork build when an example .jfr is bundled alongside the app.
+Home--load-files-from-other-tools2-with-jfr-example =
+    The { -profiler-brand-name } can also import profiles from other profilers, such as
+    <perf>Linux perf</perf>, <simpleperf>Android SimplePerf</simpleperf>, the
+    Chrome performance panel, <androidstudio>Android Studio</androidstudio>,
+    <jfr>JDK Flight Recorder</jfr> (<jfrexample>example</jfrexample>), or
     any file using the <dhat>dhat format</dhat> or <traceevent>Google’s Trace Event
     Format</traceevent>. <write>Learn how to write your
     own importer</write>.

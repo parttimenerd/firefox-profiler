@@ -37,6 +37,16 @@ if (JFR_CONVERTER_ENABLED) {
   );
 }
 
+// Optional bundled example .jfr — surfaces as an "(example)" link on the home
+// page when present. Local dev keeps the file under res/example-profiles/; CI
+// records a fresh one and copies it into dist/ after the build (so it survives
+// cleanDist()). Either source is fine.
+const EXAMPLE_JFR_PATH = path.join(
+  projectRoot,
+  'res/example-profiles/akka-uct.jfr'
+);
+const EXAMPLE_JFR_PRESENT = fs.existsSync(EXAMPLE_JFR_PATH);
+
 // Configuration shared by both node and browser builds
 const baseConfig = {
   bundle: true,
@@ -129,12 +139,21 @@ export const mainBundleConfig = {
               },
             ]
           : []),
+        ...(EXAMPLE_JFR_PRESENT
+          ? [
+              {
+                from: ['res/example-profiles/akka-uct.jfr'],
+                to: ['dist/example-profiles'],
+              },
+            ]
+          : []),
       ],
     }),
     generateHtmlPlugin({
       filename: 'index.html',
       entryPoint: 'src/index.tsx',
       templateHTML,
+      jfrConverterEnabled: JFR_CONVERTER_ENABLED,
     }),
   ],
 };

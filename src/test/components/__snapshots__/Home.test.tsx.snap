@@ -211,6 +211,13 @@ Chrome performance panel,
           >
             Android Studio
           </a>
+          ,
+
+          <a
+            href="https://docs.oracle.com/en/java/javase/21/docs/specs/jfr/jfr-api.html"
+          >
+            JDK Flight Recorder
+          </a>
           , or
 any file using the 
           <a
@@ -534,6 +541,13 @@ Chrome performance panel,
           >
             Android Studio
           </a>
+          ,
+
+          <a
+            href="https://docs.oracle.com/en/java/javase/21/docs/specs/jfr/jfr-api.html"
+          >
+            JDK Flight Recorder
+          </a>
           , or
 any file using the 
           <a
@@ -797,6 +811,13 @@ Chrome performance panel,
           >
             Android Studio
           </a>
+          ,
+
+          <a
+            href="https://docs.oracle.com/en/java/javase/21/docs/specs/jfr/jfr-api.html"
+          >
+            JDK Flight Recorder
+          </a>
           , or
 any file using the 
           <a
@@ -1059,6 +1080,13 @@ Chrome performance panel,
             href="https://developer.android.com/studio/profile/cpu-profiler"
           >
             Android Studio
+          </a>
+          ,
+
+          <a
+            href="https://docs.oracle.com/en/java/javase/21/docs/specs/jfr/jfr-api.html"
+          >
+            JDK Flight Recorder
           </a>
           , or
 any file using the 

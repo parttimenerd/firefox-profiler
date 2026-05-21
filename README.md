@@ -24,7 +24,7 @@ Fork-only features the Java tooling depends on:
 
 ### GitHub Pages deployment
 
-The `jfrtofp` branch is automatically deployed to **[parttimenerd.github.io/firefox-profiler](https://parttimenerd.github.io/firefox-profiler/)** on every push. The CI builds the JFR WASM from [jafar-ex](https://github.com/parttimenerd/jafar-ex) before the JS build so the deployed version includes the full in-browser converter.
+The `jfrtofp` branch is automatically deployed to **[parttimenerd.github.io/firefox-profiler](https://parttimenerd.github.io/firefox-profiler/)** on every push. The CI builds the JFR WASM via `yarn build-jfr-wasm` before the JS build so the deployed version includes the full in-browser converter. Sources for the WASM live in [`src/profile-logic/import/jfr-wasm/jafar/`](./src/profile-logic/import/jfr-wasm/jafar/).
 
 This branch is rebased onto upstream periodically; the fork is squashed into one commit on top, so `git log upstream..jfrtofp` shows exactly what's added. The `merged` branch (the previous name) was renamed to `jfrtofp` to make its purpose self-describing.
 
