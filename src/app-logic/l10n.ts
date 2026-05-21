@@ -64,7 +64,7 @@ const RTL_LOCALES = ['ar', 'he', 'fa', 'ps', 'ur'];
  */
 export async function fetchMessages(locale: string): Promise<[string, string]> {
   const response = await fetch(
-    `${process.env.PUBLIC_PATH}locales/${locale}/app.ftl`,
+    `${process.env.PUBLIC_PATH ?? '/'}locales/${locale}/app.ftl`,
     {
       // We want to be able to preload some files. However there are some
       // browser limitations when using preloading for fetched resources:
