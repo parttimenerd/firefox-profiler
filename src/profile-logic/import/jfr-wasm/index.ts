@@ -34,14 +34,14 @@ interface JafarWASMModule {
 let wasmModule: JafarWASMModule | null = null;
 
 async function loadWasm(): Promise<JafarWASMModule> {
-  if (wasmModule) return wasmModule;
+  if (wasmModule) {return wasmModule;}
   // jafar.js is the GraalVM bootstrap — it attaches to the global scope.
   // Use a variable so esbuild doesn't try to resolve this at build time when
   // JFR_CONVERTER_ENABLED=false (the entire dynamic import branch is tree-shaken).
   const jafarJsPath = './jafar.js';
   await import(/* @vite-ignore */ jafarJsPath);
   // GraalVM bootstrap sets up the module on globalThis
-  const mod = (globalThis as unknown as Record<string, unknown>)['JFRParser'];
+  const mod = (globalThis as unknown as Record<string, unknown>).JFRParser;
   if (!mod) {
     throw new Error(
       'jafar WASM module did not initialize. Make sure jafar.js.wasm is present.'
@@ -133,7 +133,7 @@ function guessCategoryFromEventType(eventType: string): string {
   ) {
     return 'Java Virtual Machine, Compiler';
   }
-  if (eventType.includes('Thread')) return 'Java Application';
+  if (eventType.includes('Thread')) {return 'Java Application';}
   if (
     eventType.includes('Socket') ||
     eventType.includes('File') ||
@@ -142,6 +142,6 @@ function guessCategoryFromEventType(eventType: string): string {
     return 'Operating System';
   }
   if (eventType.startsWith('jdk.CPU') || eventType.includes('CPULoad'))
-    return 'Operating System, Processor';
+    {return 'Operating System, Processor';}
   return 'Java Application';
 }

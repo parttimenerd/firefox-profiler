@@ -19,7 +19,7 @@ import type { Profile } from '../../types/profile';
 const JFR_MAGIC = [0x46, 0x4c, 0x52, 0x00];
 
 export function isJFRFormat(bytes: Uint8Array): boolean {
-  if (bytes.length < 4) return false;
+  if (bytes.length < 4) {return false;}
   return JFR_MAGIC.every((b, i) => bytes[i] === b);
 }
 

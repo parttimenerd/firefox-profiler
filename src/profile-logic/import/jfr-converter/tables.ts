@@ -44,7 +44,7 @@ export class SourceTableWrapper {
     filename: string | null,
     sourceUrl: string | null
   ): number | null {
-    if (filename === null) return null;
+    if (filename === null) {return null;}
     const filenameIdx = this.stringTable.get(filename);
     const urlIdx = sourceUrl !== null ? this.stringTable.get(sourceUrl) : null;
     const key = `${filenameIdx}:${urlIdx}`;
@@ -318,7 +318,7 @@ export class StackTableWrapper {
 
   // stackFrames: array of frame indices, bottom-of-stack first (caller → callee)
   getStack(frameIndices: number[]): number {
-    if (frameIndices.length === 0) return -1;
+    if (frameIndices.length === 0) {return -1;}
     // Build prefix chain from bottom to top
     let prefixIdx: number | null = null;
     let lastStackIdx = -1;
@@ -395,7 +395,7 @@ export class Tables {
   }
 
   processFrames(rawFrames: JFRFrame[], sourceUrl: string | null): number {
-    if (rawFrames.length === 0) return -1;
+    if (rawFrames.length === 0) {return -1;}
     // JFR gives frames top-of-stack first; Firefox Profiler wants bottom-first prefix chain.
     const reversed = [...rawFrames].reverse();
     const frameIndices = reversed.map((f) =>
@@ -527,7 +527,7 @@ export function getPackage(className: string): string {
 export function formatDescriptor(descriptor: string): string {
   try {
     const closeIdx = descriptor.indexOf(')');
-    if (closeIdx === -1) return descriptor;
+    if (closeIdx === -1) {return descriptor;}
     const paramStr = descriptor.substring(1, closeIdx);
     const returnStr = descriptor.substring(closeIdx + 1);
     const params = parseTypes(paramStr).map((t) => formatType(t, true));
@@ -550,7 +550,7 @@ function parseTypes(s: string): string[] {
       i = end + 1;
     } else if (s[i] === '[') {
       let j = i + 1;
-      while (j < s.length && s[j] === '[') j++;
+      while (j < s.length && s[j] === '[') {j++;}
       if (s[j] === 'L') {
         const end = s.indexOf(';', j);
         result.push(s.substring(i, end + 1));
@@ -568,7 +568,7 @@ function parseTypes(s: string): string[] {
 }
 
 function formatType(t: string, omitPackages: boolean): string {
-  if (t === '') return 'void';
+  if (t === '') {return 'void';}
   const dims = (t.match(/^\[+/) ?? [''])[0].length;
   const base = t.substring(dims);
   const suffix = '[]'.repeat(dims);
@@ -583,7 +583,7 @@ function formatType(t: string, omitPackages: boolean): string {
     J: 'long',
     D: 'double',
   };
-  if (base in PRIMITIVES) return PRIMITIVES[base] + suffix;
+  if (base in PRIMITIVES) {return PRIMITIVES[base] + suffix;}
   if (base.startsWith('L') && base.endsWith(';')) {
     const className = base.substring(1, base.length - 1).replace(/\//g, '.');
     const display = omitPackages ? shortClassName(className) : className;

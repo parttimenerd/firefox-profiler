@@ -8,7 +8,7 @@ import {
   resolveMarkerType,
   convertFieldValue,
   getFormat,
-} from './marker-types';
+ MARKER_TYPES } from './marker-types';
 import type { MarkerTypeEntry, AnyMarkerFormat } from './marker-types';
 import type { Tables } from './tables';
 import type { JFRConverterConfig } from './config';
@@ -74,7 +74,6 @@ interface SpecialConfig {
   isPreSelected?: boolean;
 }
 
-import { MARKER_TYPES } from './marker-types';
 
 const SPECIAL_EVENT_TYPES: Record<string, SpecialConfig> = {
   'jdk.CPULoad': {
@@ -179,11 +178,11 @@ export class MarkerSchemaProcessor {
 
   getMapping(eventTypeInfo: JFREventTypeInfo): SchemaMapping | null {
     const name = eventTypeInfo.name;
-    if (this.cache.has(name)) return this.cache.get(name) ?? null;
+    if (this.cache.has(name)) {return this.cache.get(name) ?? null;}
 
     const result = this.processEventType(eventTypeInfo);
     this.cache.set(name, result.mapping);
-    if (result.schema) this.schemas.push(result.schema);
+    if (result.schema) {this.schemas.push(result.schema);}
     return result.mapping;
   }
 
@@ -241,12 +240,12 @@ export class MarkerSchemaProcessor {
               f.contentType
             );
             // Avoid clashing with reserved property names
-            const targetName =
-              f.name === 'type'
-                ? 'type '
-                : f.name === 'cause'
-                  ? 'cause '
-                  : f.name;
+            let targetName = f.name;
+            if (f.name === 'type') {
+              targetName = 'type ';
+            } else if (f.name === 'cause') {
+              targetName = 'cause ';
+            }
             mapping.push({ sourceName: f.name, targetName, type: markerType });
             return {
               key: targetName,
@@ -291,7 +290,7 @@ export class MarkerSchemaProcessor {
     // Deduplicate by name (keep first)
     const seen = new Set<string>();
     return this.schemas.filter((s) => {
-      if (seen.has(s.name)) return false;
+      if (seen.has(s.name)) {return false;}
       seen.add(s.name);
       return true;
     });
@@ -309,7 +308,7 @@ export class MarkerSchemaProcessor {
       const raw = field.accessor
         ? field.accessor(event)
         : ((event.fields[field.sourceName!] as JFRFieldValue) ?? null);
-      if (raw === null || raw === undefined) continue;
+      if (raw === null || raw === undefined) {continue;}
 
       if (field.type === MARKER_TYPES.STACKTRACE) {
         // stackTrace field: build a stack reference object
@@ -331,18 +330,18 @@ export class MarkerSchemaProcessor {
         raw
       );
     }
-    data['type'] = event.type;
-    data['startTime'] = event.startMs - tables.startTimeMs;
+    data.type = event.type;
+    data.startTime = event.startMs - tables.startTimeMs;
 
     // Special: ObjectAllocationSample class synthetic stack
     if (
       event.type === 'jdk.ObjectAllocationSample' &&
-      event.fields['objectClass']
+      event.fields.objectClass
     ) {
-      const className = String(event.fields['objectClass'] ?? '');
+      const className = String(event.fields.objectClass ?? '');
       if (className) {
         const miscStackIdx = tables.stackTable.getMiscStack(className);
-        data['_class'] = { stack: miscStackIdx };
+        data._class = { stack: miscStackIdx };
       }
     }
 
@@ -464,7 +463,7 @@ export function generateSampleLikeMarkersConfig(
     'jdk.ThreadStart': { name, label, marker: name },
   };
 
-  if (PRIMARY[name]) result.push(PRIMARY[name]);
+  if (PRIMARY[name]) {result.push(PRIMARY[name]);}
 
   // Secondary: class-based strategy for allocation sample
   if (name === 'jdk.ObjectAllocationSample') {
