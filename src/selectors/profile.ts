@@ -1111,6 +1111,24 @@ export const getSourceViewSourceId: Selector<string | null> = createSelector(
     sourceIndex !== null ? sources.id[sourceIndex] : null
 );
 
+// Custom (fork-only): the per-source override URL for the currently displayed
+// source view, if the profile provides one (e.g. jfrtofp profiles pointing at
+// user-configured Java repos).
+export const getSourceViewSourceUrl: Selector<string | null> = createSelector(
+  getSourceTable,
+  getStringTable,
+  UrlState.getSourceViewSourceIndex,
+  (sources, stringTable, sourceIndex) => {
+    if (sourceIndex === null || sources.sourceUrl === undefined) {
+      return null;
+    }
+    const urlStrIndex = sources.sourceUrl[sourceIndex];
+    return urlStrIndex !== null && urlStrIndex !== undefined
+      ? stringTable.getString(urlStrIndex)
+      : null;
+  }
+);
+
 export const getSourceViewStartLine: Selector<number> = createSelector(
   getSourceTable,
   UrlState.getSourceViewSourceIndex,

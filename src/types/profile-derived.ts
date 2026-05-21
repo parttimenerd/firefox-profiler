@@ -33,6 +33,7 @@ import type {
   SourceTable,
   IndexIntoSourceTable,
   CounterDisplayConfig,
+  SampleLikeMarkerConfig,
 } from './profile';
 import type { IndexedArray } from './utils';
 import type { BitSet } from '../utils/bitset';
@@ -113,6 +114,8 @@ export type Thread = {
   // RawThread in that the `time` column is always present.
   samples: SamplesTable;
   tracedValuesBuffer?: ArrayBuffer;
+  // Custom (fork-only): see RawThread.sampleLikeMarkersConfig for documentation.
+  sampleLikeMarkersConfig?: SampleLikeMarkerConfig[];
 };
 
 /**

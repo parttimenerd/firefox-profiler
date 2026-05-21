@@ -2599,6 +2599,7 @@ CallTree {
       "name": Array [],
       "type": Array [],
     },
+    "sampleLikeMarkersConfig": undefined,
     "samples": Object {
       "category": Uint8Array [
         0,
@@ -2958,6 +2959,7 @@ Object {
     "name": Array [],
     "type": Array [],
   },
+  "sampleLikeMarkersConfig": undefined,
   "samples": Object {
     "category": Uint8Array [
       0,
@@ -3395,6 +3397,7 @@ Object {
     "name": Array [],
     "type": Array [],
   },
+  "sampleLikeMarkersConfig": undefined,
   "samples": Object {
     "category": Uint8Array [
       0,
@@ -3740,6 +3743,7 @@ Object {
     "name": Array [],
     "type": Array [],
   },
+  "sampleLikeMarkersConfig": undefined,
   "samples": Object {
     "category": Uint8Array [
       0,
@@ -4097,6 +4101,7 @@ Object {
     "name": Array [],
     "type": Array [],
   },
+  "sampleLikeMarkersConfig": undefined,
   "samples": Object {
     "category": Uint8Array [
       0,

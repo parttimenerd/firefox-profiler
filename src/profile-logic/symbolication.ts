@@ -819,6 +819,10 @@ function _partiallyApplySymbolicationStep(
             sources.startLine.push(1);
             sources.startColumn.push(1);
             sources.sourceMapURL.push(null);
+            // Custom (fork-only): keep sourceUrl in sync if present.
+            if (sources.sourceUrl !== undefined) {
+              sources.sourceUrl.push(null);
+            }
             sources.length++;
           }
           funcTable.source[funcIndex] = sourceIndex;

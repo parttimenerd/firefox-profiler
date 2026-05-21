@@ -179,10 +179,12 @@ exports[`ProfileCallTreeView with JS Allocations matches the snapshot for JS all
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
@@ -196,7 +198,8 @@ bytes of the callers from this function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
@@ -212,6 +215,7 @@ allocated or deallocated in the program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -986,10 +990,12 @@ exports[`ProfileCallTreeView with balanced native allocations matches the snapsh
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
@@ -1003,7 +1009,8 @@ bytes of the callers from this function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
@@ -1019,6 +1026,7 @@ allocated or deallocated in the program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -1793,10 +1801,12 @@ exports[`ProfileCallTreeView with balanced native allocations matches the snapsh
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
@@ -1810,7 +1820,8 @@ bytes of the callers from this function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
@@ -1826,6 +1837,7 @@ allocated or deallocated in the program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -2588,10 +2600,12 @@ exports[`ProfileCallTreeView with unbalanced native allocations matches the snap
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
@@ -2605,7 +2619,8 @@ bytes of the callers from this function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
@@ -2621,6 +2636,7 @@ allocated or deallocated in the program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -3383,10 +3399,12 @@ exports[`ProfileCallTreeView with unbalanced native allocations matches the snap
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 190px;"
         title="The “total size” includes a summary of all of the bytes allocated or
 deallocated while this function was observed to be on the stack. This
@@ -3400,7 +3418,8 @@ bytes of the callers from this function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 90px;"
         title="The “self” bytes includes the bytes allocated or deallocated while this
 function was the end of the stack. If this function called into
@@ -3416,6 +3435,7 @@ allocated or deallocated in the program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -4535,10 +4555,12 @@ exports[`calltree/ProfileCallTreeView renders an inverted call tree 1`] = `
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -4552,7 +4574,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -4567,6 +4590,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -5297,10 +5321,12 @@ exports[`calltree/ProfileCallTreeView renders an unfiltered call tree 1`] = `
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -5314,7 +5340,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -5329,6 +5356,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -6059,10 +6087,12 @@ exports[`calltree/ProfileCallTreeView renders an unfiltered call tree with filen
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -6076,7 +6106,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -6091,6 +6122,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -6605,10 +6637,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -6622,7 +6656,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -6637,6 +6672,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -7367,10 +7403,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -7384,7 +7422,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -7399,6 +7438,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -8057,10 +8097,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -8074,7 +8116,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -8089,6 +8132,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -8747,10 +8791,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -8764,7 +8810,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -8779,6 +8826,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -9294,10 +9342,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -9311,7 +9361,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -9326,6 +9377,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span
@@ -9841,10 +9893,12 @@ exports[`calltree/ProfileCallTreeView renders call tree with some search strings
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn totalPercent"
+        data-column="totalPercent"
         style="width: 50px;"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn total"
+        class="treeViewHeaderColumn treeViewFixedColumn total sortInactive"
+        data-column="total"
         style="width: 120px;"
         title="The “total” sample count includes a summary of every sample where this
 function was observed to be on the stack. This includes the time where the
@@ -9858,7 +9912,8 @@ function."
         data-column-index="1"
       />
       <span
-        class="treeViewHeaderColumn treeViewFixedColumn self"
+        class="treeViewHeaderColumn treeViewFixedColumn self sortInactive"
+        data-column="self"
         style="width: 70px;"
         title="The “self” sample count only includes the samples where the function was
 the end of the stack. If this function called into other functions,
@@ -9873,6 +9928,7 @@ for understanding where time was actually spent in a program."
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn icon"
+        data-column="icon"
         style="width: 10px;"
       />
       <span

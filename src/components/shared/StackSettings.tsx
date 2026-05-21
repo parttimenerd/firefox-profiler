@@ -51,6 +51,9 @@ type StateProps = {
   readonly currentSearchString: string;
   readonly hasUsefulJsAllocations: boolean;
   readonly hasUsefulNativeAllocations: boolean;
+  // Custom (fork-only): true when the selected thread defines marker-based
+  // call-tree strategies via sampleLikeMarkersConfig.
+  readonly hasAdditionalStrategies: boolean;
 };
 
 type DispatchProps = {
@@ -97,9 +100,13 @@ class StackSettingsImpl extends PureComponent<Props> {
       currentSearchString,
       hasUsefulJsAllocations,
       hasUsefulNativeAllocations,
+      hasAdditionalStrategies,
     } = this.props;
 
     const hasAllocations = hasUsefulJsAllocations || hasUsefulNativeAllocations;
+    // Custom (fork-only): also show the strategy dropdown when the thread has
+    // marker-based strategies, even if it has no allocation data.
+    const showStrategySetting = hasAllocations || hasAdditionalStrategies;
     const showInvertCallstack = !hideInvertCallstack;
     const showStackChartOptions = selectedTab === 'stack-chart';
     const showSettingsItem =
@@ -113,7 +120,7 @@ class StackSettingsImpl extends PureComponent<Props> {
               <StackImplementationSetting />
             </li>
           ) : null}
-          {hasAllocations ? (
+          {showStrategySetting ? (
             <li className="panelSettingsListItem">
               <CallTreeStrategySetting />
             </li>
@@ -216,6 +223,8 @@ export const StackSettings = explicitConnect<
       selectedThreadSelectors.getHasUsefulJsAllocations(state),
     hasUsefulNativeAllocations:
       selectedThreadSelectors.getHasUsefulNativeAllocations(state),
+    hasAdditionalStrategies:
+      selectedThreadSelectors.getAdditionalStrategies(state).length > 0,
   }),
   mapDispatchToProps: {
     changeInvertCallstack,

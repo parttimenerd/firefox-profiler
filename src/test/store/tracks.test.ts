@@ -598,8 +598,8 @@ describe('ordering and hiding', function () {
       const { getState } = storeWithProfile(getProfileWithCustomMarkerTracks());
       expect(getHumanReadableTracks(getState())).toEqual([
         'show [process]',
-        '  - show [thread Empty] SELECTED',
         '  - show [marker Marker] SELECTED',
+        '  - show [thread Empty] SELECTED',
       ]);
     });
 

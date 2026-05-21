@@ -708,6 +708,30 @@ export type RawThread = {
   // related to (or, in practice, whose code may be executing in this thread).
   // It's absent in profiles that don't use inner window IDs.
   usedInnerWindowIDs?: InnerWindowID[];
+  // Custom (fork-only): per-thread additional call-tree summary strategies derived
+  // from markers. Each entry exposes a strategy in the Call Tree settings that
+  // treats matching markers as if they were stack samples.
+  sampleLikeMarkersConfig?: SampleLikeMarkerConfig[];
+};
+
+/**
+ * Custom (fork-only): configures markers from which a SamplesLikeTable can be
+ * generated, using the marker's `cause` (or a configurable field) as the stack.
+ */
+export type SampleLikeMarkerConfig = {
+  // Unique identifier for the strategy. Used in URL state as `marker:<name>`.
+  name: string;
+  // Human-readable label for the Call Tree settings UI.
+  label: string;
+  // Marker type / name that this strategy reads from the thread's marker table.
+  marker: string;
+  // Defaults to 'samples' when omitted.
+  weightType?: WeightType;
+  // If set, weight values are read from this field on each marker payload;
+  // otherwise weight is 1 per marker.
+  weightField?: string;
+  // Field on the marker payload that carries the stack info. Defaults to 'cause'.
+  stackField?: string;
 };
 
 export type ExtensionTable = {
@@ -980,6 +1004,11 @@ export type SourceTable = {
   startLine: Array<number>;
   startColumn: Array<number>;
   sourceMapURL: Array<IndexIntoStringTable | null>;
+  // Custom (fork-only): a per-source override URL used by jfrtofp profiles to
+  // point the source view at user-configured Java source repos. When present
+  // (and non-null for a row), the source view fetches from this URL instead of
+  // resolving `filename` through the symbol server.
+  sourceUrl?: Array<IndexIntoStringTable | null>;
 };
 
 export type RawProfileSharedData = {

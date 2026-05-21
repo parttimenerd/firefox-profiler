@@ -121,6 +121,16 @@ export type MarkerGraph = {
   key: string;
   type: MarkerGraphType;
   color?: GraphColor;
+  // Custom (fork-only): per-graph explicit CSS color strings. When present,
+  // these take priority over the enum-based `color` field so that jfrtofp
+  // profiles can supply arbitrary colors (e.g. "#ff6b2c") per track line.
+  fillColor?: string;
+  strokeColor?: string;
+  // Custom (fork-only): if true, values are already in [0,1] and should not
+  // be rescaled to [minNumber, maxNumber].
+  isPreScaled?: boolean;
+  // Custom (fork-only): per-graph line width override (CSS pixels).
+  width?: number;
 };
 
 export type MarkerSchemaField = {
@@ -171,6 +181,18 @@ export type MarkerSchema = {
 
   // if present, give the marker its own local track
   graphs?: Array<MarkerGraph>;
+
+  // Custom (fork-only): display label for the local track in the timeline.
+  // When absent, the marker name is used. Populated from old jfrtofp trackConfig.label.
+  trackLabel?: string;
+
+  // Custom (fork-only): track-level height variant. Maps to pixel values in
+  // TrackCustomMarker. When absent, the default TRACK_MARKER_HEIGHT is used.
+  graphHeight?: 'small' | 'medium' | 'large';
+
+  // Custom (fork-only): if true, this marker's local track is shown by default
+  // without the user having to expand it.
+  isPreSelected?: boolean;
 
   // If present, specifies the key of a marker field that contains the marker's color.
   // The field should contain one of the GraphColor values.

@@ -207,6 +207,7 @@ exports[`MarkerTable renders some basic markers and updates when needed 1`] = `
     >
       <span
         class="treeViewHeaderColumn treeViewFixedColumn start"
+        data-column="start"
         style="width: 90px;"
       >
         Start
@@ -217,6 +218,7 @@ exports[`MarkerTable renders some basic markers and updates when needed 1`] = `
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn duration"
+        data-column="duration"
         style="width: 80px;"
       >
         Duration
@@ -227,6 +229,7 @@ exports[`MarkerTable renders some basic markers and updates when needed 1`] = `
       />
       <span
         class="treeViewHeaderColumn treeViewFixedColumn name"
+        data-column="name"
         style="width: 150px;"
       >
         Name

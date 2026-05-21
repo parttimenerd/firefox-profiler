@@ -1485,9 +1485,44 @@ function _convertGeckoMarkerSchema(
     display,
     data,
     graphs,
+    trackConfig,
+    trackLabel,
     colorField,
     isStackBased,
+    graphHeight,
+    isPreSelected,
   } = markerSchema;
+
+  // Custom (fork-only): convert old jfrtofp trackConfig format to graphs.
+  let resolvedGraphs = graphs;
+  let resolvedGraphHeight = graphHeight;
+  let resolvedIsPreSelected = isPreSelected;
+  let resolvedTrackLabel = trackLabel;
+  if (!resolvedGraphs && trackConfig) {
+    if (trackConfig.lines && trackConfig.lines.length > 0) {
+      resolvedGraphs = trackConfig.lines.map((line) => ({
+        key: line.key,
+        type: (line.type as 'bar' | 'line' | 'line-filled') || 'line',
+        strokeColor: line.strokeColor,
+        fillColor: line.fillColor,
+      }));
+    }
+    if (trackConfig.height && !resolvedGraphHeight) {
+      const h = trackConfig.height;
+      if (h === 'small' || h === 'medium' || h === 'large') {
+        resolvedGraphHeight = h;
+      }
+    }
+    if (
+      trackConfig.isPreSelected !== undefined &&
+      resolvedIsPreSelected === undefined
+    ) {
+      resolvedIsPreSelected = trackConfig.isPreSelected;
+    }
+    if (trackConfig.label && !resolvedTrackLabel) {
+      resolvedTrackLabel = trackConfig.label;
+    }
+  }
 
   const fields: MarkerSchemaField[] = [];
   const staticFields: GeckoStaticFieldSchemaData[] = [];
@@ -1530,9 +1565,12 @@ function _convertGeckoMarkerSchema(
     display,
     fields,
     description,
-    graphs,
+    graphs: resolvedGraphs,
+    trackLabel: resolvedTrackLabel,
     colorField,
     isStackBased,
+    graphHeight: resolvedGraphHeight,
+    isPreSelected: resolvedIsPreSelected,
   };
 }
 

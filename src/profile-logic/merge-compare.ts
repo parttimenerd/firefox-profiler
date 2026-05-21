@@ -571,6 +571,13 @@ function mergeSources(
           ? oldStringToNewStringPlusOne[originalSourceMapURLIndex] - 1
           : null;
 
+      // Custom (fork-only): preserve per-source override URLs through merge.
+      const originalSourceUrlIndex = sources.sourceUrl?.[i] ?? null;
+      const newSourceUrlIndex =
+        originalSourceUrlIndex !== null
+          ? oldStringToNewStringPlusOne[originalSourceUrlIndex] - 1
+          : null;
+
       const sourceKey = id ?? `null-id-${newUrlIndex}`;
       let insertedSourceIndex = mapOfInsertedSources.get(sourceKey);
       if (insertedSourceIndex === undefined) {
@@ -581,6 +588,14 @@ function mergeSources(
         newSources.startLine[insertedSourceIndex] = sources.startLine[i];
         newSources.startColumn[insertedSourceIndex] = sources.startColumn[i];
         newSources.sourceMapURL[insertedSourceIndex] = newSourceMapURLIndex;
+        if (newSourceUrlIndex !== null) {
+          if (newSources.sourceUrl === undefined) {
+            newSources.sourceUrl = new Array(insertedSourceIndex).fill(null);
+          }
+          newSources.sourceUrl[insertedSourceIndex] = newSourceUrlIndex;
+        } else if (newSources.sourceUrl !== undefined) {
+          newSources.sourceUrl[insertedSourceIndex] = null;
+        }
         newSources.length++;
         mapOfInsertedSources.set(sourceKey, insertedSourceIndex);
       }
@@ -1226,6 +1241,26 @@ export function mergeThreads(threads: RawThread[]): RawThread {
     );
   }
 
+  // Fork-only: union sampleLikeMarkersConfig from all source threads so the
+  // Data Source dropdown still shows alternate strategies on a merged thread.
+  const sampleLikeMarkersConfig = (() => {
+    const seen = new Set<string>();
+    const merged = [];
+    for (const thread of threads) {
+      if (!thread.sampleLikeMarkersConfig) {
+        continue;
+      }
+      for (const config of thread.sampleLikeMarkersConfig) {
+        if (seen.has(config.name)) {
+          continue;
+        }
+        seen.add(config.name);
+        merged.push(config);
+      }
+    }
+    return merged.length > 0 ? merged : undefined;
+  })();
+
   const mergedThread = {
     processType: 'merged',
     processStartupTime,
@@ -1240,6 +1275,7 @@ export function mergeThreads(threads: RawThread[]): RawThread {
     isMainThread: true,
     samples: newSamples,
     markers: newMarkers,
+    sampleLikeMarkersConfig,
   };
 
   return mergedThread;

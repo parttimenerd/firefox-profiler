@@ -1,6 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Custom (fork-only): the Function Table is a flat call-tree view that
+// aggregates samples by function rather than call path. It uses the inverted
+// CallNodeInfo (so each top-level row is one function) and only renders the
+// roots — the tree is never expanded deeper. Most behavior mirrors CallTree;
+// see that file for details on sorting, columns, and selection.
+
 import { PureComponent } from 'react';
 import memoize from 'memoize-immutable';
 import explicitConnect from 'firefox-profiler/utils/connect';
@@ -11,7 +18,6 @@ import {
 import { CallTreeEmptyReasons } from './CallTreeEmptyReasons';
 import { Icon } from 'firefox-profiler/components/shared/Icon';
 import {
-  getInvertCallstack,
   getImplementationFilter,
   getSearchStringsAsRegExp,
   getSelectedThreadsKey,
@@ -20,7 +26,6 @@ import {
   getScrollToSelectionGeneration,
   getFocusCallTreeGeneration,
   getPreviewSelectionIsBeingModified,
-  getIdleCategoryIndex,
   getCurrentTableViewOptions,
 } from 'firefox-profiler/selectors/profile';
 import { selectedThreadSelectors } from 'firefox-profiler/selectors/per-thread';
@@ -39,7 +44,6 @@ import type {
   State,
   ImplementationFilter,
   ThreadsKey,
-  IndexIntoCategoryList,
   IndexIntoCallNodeTable,
   CallNodeDisplayData,
   WeightType,
@@ -63,13 +67,11 @@ type StateProps = {
   readonly focusCallTreeGeneration: number;
   readonly tree: CallTreeType;
   readonly callNodeInfo: CallNodeInfo;
-  readonly idleCategoryIndex: IndexIntoCategoryList | null;
   readonly selectedCallNodeIndex: IndexIntoCallNodeTable | null;
   readonly rightClickedCallNodeIndex: IndexIntoCallNodeTable | null;
   readonly expandedCallNodeIndexes: Array<IndexIntoCallNodeTable | null>;
   readonly searchStringsRegExp: RegExp | null;
   readonly disableOverscan: boolean;
-  readonly invertCallstack: boolean;
   readonly implementationFilter: ImplementationFilter;
   readonly callNodeMaxDepthPlusOne: number;
   readonly weightType: WeightType;
@@ -88,7 +90,7 @@ type DispatchProps = {
 
 type Props = ConnectedProps<{}, StateProps, DispatchProps>;
 
-class CallTreeImpl extends PureComponent<Props> {
+class FunctionTableImpl extends PureComponent<Props> {
   _mainColumn: Column<CallNodeDisplayData> = {
     propName: 'name',
     titleL10nId: '',
@@ -101,21 +103,14 @@ class CallTreeImpl extends PureComponent<Props> {
   _takeTreeViewRef = (treeView: TreeView<CallNodeDisplayData> | null) =>
     (this._treeView = treeView);
 
-  // Custom (fork-only): only self/total are meaningful to sort. The other
-  // columns are derived (e.g. percentages) or non-comparable (icon, name).
   _sortableColumns: ReadonlySet<string> = new Set(['self', 'total']);
 
-  // Custom (fork-only): turn the persisted plain-object sort state into a
-  // ColumnSortState. Memoized so the TreeView only re-seeds when the URL
-  // state changes, not on every render.
   _toColumnSortState = memoize(
     (sortedColumns: TableViewOptions['sortedColumns']): ColumnSortState =>
       new ColumnSortState(sortedColumns ?? []),
     { limit: 1 }
   );
 
-  // Custom (fork-only): forward sort changes to the URL/redux state alongside
-  // the existing column-width persistence path.
   _onSort = (sortedColumns: ColumnSortState) => {
     const { tableViewOptions, onTableViewOptionsChange } = this.props;
     onTableViewOptionsChange({
@@ -124,10 +119,6 @@ class CallTreeImpl extends PureComponent<Props> {
     });
   };
 
-  /**
-   * Call Trees can have different types of "weights" for the data. Choose the
-   * appropriate labels for the call tree based on this weight.
-   */
   _weightTypeToColumns = memoize(
     (weightType: WeightType): MaybeResizableColumn<CallNodeDisplayData>[] => {
       switch (weightType) {
@@ -225,13 +216,11 @@ class CallTreeImpl extends PureComponent<Props> {
           throw assertExhaustiveCheck(weightType, 'Unhandled WeightType.');
       }
     },
-    // Use a Map cache, as the function only takes one argument, which is a simple string.
     { cache: new Map() }
   );
 
   override componentDidMount() {
     this.focus();
-    this.maybeProcureInterestingInitialSelection();
 
     if (this.props.selectedCallNodeIndex !== null && this._treeView) {
       this._treeView.scrollSelectionIntoView();
@@ -244,8 +233,6 @@ class CallTreeImpl extends PureComponent<Props> {
     ) {
       this.focus();
     }
-
-    this.maybeProcureInterestingInitialSelection();
 
     if (
       this.props.selectedCallNodeIndex !== null &&
@@ -315,62 +302,8 @@ class CallTreeImpl extends PureComponent<Props> {
   _onEnterOrDoubleClick = (nodeId: IndexIntoCallNodeTable) => {
     const { tree, updateBottomBoxContentsAndMaybeOpen } = this.props;
     const bottomBoxInfo = tree.getBottomBoxInfoForCallNode(nodeId);
-    updateBottomBoxContentsAndMaybeOpen('calltree', bottomBoxInfo);
+    updateBottomBoxContentsAndMaybeOpen('function-table', bottomBoxInfo);
   };
-
-  maybeProcureInterestingInitialSelection() {
-    // Expand the heaviest callstack up to a certain depth and select the frame
-    // at that depth.
-    const {
-      tree,
-      expandedCallNodeIndexes,
-      selectedCallNodeIndex,
-      callNodeInfo,
-      idleCategoryIndex,
-    } = this.props;
-
-    if (selectedCallNodeIndex !== null || expandedCallNodeIndexes.length > 0) {
-      // Let's not change some existing state.
-      return;
-    }
-
-    const newExpandedCallNodeIndexes = expandedCallNodeIndexes.slice();
-    const maxInterestingDepth = 17; // scientifically determined
-    let currentCallNodeIndex = tree.getRoots()[0];
-    if (currentCallNodeIndex === undefined) {
-      // This tree is empty.
-      return;
-    }
-    newExpandedCallNodeIndexes.push(currentCallNodeIndex);
-    for (let i = 0; i < maxInterestingDepth; i++) {
-      const children = tree.getChildren(currentCallNodeIndex);
-      if (children.length === 0) {
-        break;
-      }
-
-      // Let's find if there's a non idle children.
-      const firstNonIdleNode = children.find(
-        (nodeIndex) =>
-          callNodeInfo.categoryForNode(nodeIndex) !== idleCategoryIndex
-      );
-
-      // If there's a non idle children, use it; otherwise use the first
-      // children (that will be idle).
-      currentCallNodeIndex =
-        firstNonIdleNode !== undefined ? firstNonIdleNode : children[0];
-      newExpandedCallNodeIndexes.push(currentCallNodeIndex);
-    }
-    this._onExpandedCallNodesChange(newExpandedCallNodeIndexes);
-
-    const categoryIndex = callNodeInfo.categoryForNode(currentCallNodeIndex);
-    if (categoryIndex !== idleCategoryIndex) {
-      // If we selected the call node with a "idle" category, we'd have a
-      // completely dimmed activity graph because idle stacks are not drawn in
-      // this graph. Because this isn't probably what the average user wants we
-      // do it only when the category is something different.
-      this._onSelectedCallNodeChange(currentCallNodeIndex, { source: 'auto' });
-    }
-  }
 
   override render() {
     const {
@@ -422,32 +355,30 @@ class CallTreeImpl extends PureComponent<Props> {
   }
 }
 
-export const CallTree = explicitConnect<{}, StateProps, DispatchProps>({
-  mapStateToProps: (state: State) => ({
-    threadsKey: getSelectedThreadsKey(state),
-    scrollToSelectionGeneration: getScrollToSelectionGeneration(state),
-    focusCallTreeGeneration: getFocusCallTreeGeneration(state),
-    tree: selectedThreadSelectors.getCallTree(state),
-    callNodeInfo: selectedThreadSelectors.getCallNodeInfo(state),
-    idleCategoryIndex: getIdleCategoryIndex(state),
-    selectedCallNodeIndex:
-      selectedThreadSelectors.getSelectedCallNodeIndex(state),
-    rightClickedCallNodeIndex:
-      selectedThreadSelectors.getRightClickedCallNodeIndex(state),
-    expandedCallNodeIndexes:
-      selectedThreadSelectors.getExpandedCallNodeIndexes(state),
-    searchStringsRegExp: getSearchStringsAsRegExp(state),
-    disableOverscan: getPreviewSelectionIsBeingModified(state),
-    invertCallstack: getInvertCallstack(state),
-    implementationFilter: getImplementationFilter(state),
-    // Use the filtered call node max depth, rather than the preview filtered call node
-    // max depth so that the width of the TreeView component is stable across preview
-    // selections.
-    callNodeMaxDepthPlusOne:
-      selectedThreadSelectors.getFilteredCallNodeMaxDepthPlusOne(state),
-    weightType: selectedThreadSelectors.getWeightTypeForCallTree(state),
-    tableViewOptions: getCurrentTableViewOptions(state),
-  }),
+export const FunctionTable = explicitConnect<{}, StateProps, DispatchProps>({
+  mapStateToProps: (state: State) => {
+    const callNodeInfo = selectedThreadSelectors.getInvertedCallNodeInfo(state);
+    return {
+      threadsKey: getSelectedThreadsKey(state),
+      scrollToSelectionGeneration: getScrollToSelectionGeneration(state),
+      focusCallTreeGeneration: getFocusCallTreeGeneration(state),
+      tree: selectedThreadSelectors.getFunctionListTree(state),
+      callNodeInfo,
+      selectedCallNodeIndex:
+        selectedThreadSelectors.getSelectedCallNodeIndex(state),
+      rightClickedCallNodeIndex:
+        selectedThreadSelectors.getRightClickedCallNodeIndex(state),
+      expandedCallNodeIndexes:
+        selectedThreadSelectors.getExpandedCallNodeIndexes(state),
+      searchStringsRegExp: getSearchStringsAsRegExp(state),
+      disableOverscan: getPreviewSelectionIsBeingModified(state),
+      implementationFilter: getImplementationFilter(state),
+      callNodeMaxDepthPlusOne:
+        selectedThreadSelectors.getFilteredCallNodeMaxDepthPlusOne(state),
+      weightType: selectedThreadSelectors.getWeightTypeForCallTree(state),
+      tableViewOptions: getCurrentTableViewOptions(state),
+    };
+  },
   mapDispatchToProps: {
     changeSelectedCallNode,
     changeRightClickedCallNode,
@@ -456,7 +387,7 @@ export const CallTree = explicitConnect<{}, StateProps, DispatchProps>({
     handleCallNodeTransformShortcut,
     updateBottomBoxContentsAndMaybeOpen,
     onTableViewOptionsChange: (options: TableViewOptions) =>
-      changeTableViewOptions('calltree', options),
+      changeTableViewOptions('function-table', options),
   },
-  component: CallTreeImpl,
+  component: FunctionTableImpl,
 });

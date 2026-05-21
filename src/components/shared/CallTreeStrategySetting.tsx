@@ -31,6 +31,11 @@ type StateProps = {
   readonly hasUsefulJsAllocations: boolean;
   readonly hasUsefulNativeAllocations: boolean;
   readonly canShowRetainedMemory: boolean;
+  // Custom (fork-only): per-thread strategies derived from sampleLikeMarkersConfig.
+  readonly additionalStrategies: ReadonlyArray<{
+    name: `marker:${string}`;
+    label: string;
+  }>;
 };
 
 type DispatchProps = {
@@ -68,6 +73,7 @@ class CallTreeStrategySettingImpl extends PureComponent<Props> {
       hasUsefulNativeAllocations,
       canShowRetainedMemory,
       callTreeSummaryStrategy,
+      additionalStrategies,
     } = this.props;
 
     return (
@@ -115,6 +121,14 @@ class CallTreeStrategySettingImpl extends PureComponent<Props> {
                   'native-deallocations-sites'
                 )
               : null}
+            {/* Custom (fork-only): marker-derived strategies. The label comes
+                from the thread's sampleLikeMarkersConfig so we don't go through
+                Fluent localization. */}
+            {additionalStrategies.map((strategy) => (
+              <option key={strategy.name} value={strategy.name}>
+                {strategy.label}
+              </option>
+            ))}
           </select>
         </label>
       </>
@@ -138,6 +152,8 @@ export const CallTreeStrategySetting = explicitConnect<
       selectedThreadSelectors.getCanShowRetainedMemory(state),
     callTreeSummaryStrategy:
       selectedThreadSelectors.getCallTreeSummaryStrategy(state),
+    additionalStrategies:
+      selectedThreadSelectors.getAdditionalStrategies(state),
   }),
   mapDispatchToProps: {
     changeCallTreeSummaryStrategy,

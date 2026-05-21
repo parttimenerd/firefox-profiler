@@ -13,11 +13,7 @@ import * as ProfileData from '../../profile-logic/profile-data';
 import * as CallTree from '../../profile-logic/call-tree';
 import * as ProfileSelectors from '../profile';
 import * as JsTracer from '../../profile-logic/js-tracer';
-import {
-  assertExhaustiveCheck,
-  ensureExists,
-  getFirstItemFromSet,
-} from '../../utils/types';
+import { ensureExists, getFirstItemFromSet } from '../../utils/types';
 import { base64StringToBytes } from '../../utils/base64';
 
 import type {
@@ -262,11 +258,22 @@ export function getBasicThreadSelectorsPerThread(
               return 'timing';
             }
             break;
-          default:
-            assertExhaustiveCheck(
-              lastSelectedCallTreeSummaryStrategy,
-              'Unhandled call tree sumary strategy.'
-            );
+          default: {
+            // Custom (fork-only): `marker:NAME` strategies are valid when the
+            // current thread has a matching SampleLikeMarkerConfig. After the
+            // literal cases above, this is the only remaining variant.
+            const markerName: string = (
+              lastSelectedCallTreeSummaryStrategy satisfies `marker:${string}`
+            ).slice('marker:'.length);
+            if (
+              !thread.sampleLikeMarkersConfig?.some(
+                (c) => c.name === markerName
+              )
+            ) {
+              return 'timing';
+            }
+            break;
+          }
         }
         return lastSelectedCallTreeSummaryStrategy;
       }
@@ -283,6 +290,13 @@ export function getBasicThreadSelectorsPerThread(
     getCallTreeSummaryStrategy,
     CallTree.extractUnfilteredSamplesLikeTable
   );
+
+  // Custom (fork-only): expose any extra Call Tree strategies derived from the
+  // thread's `sampleLikeMarkersConfig` so the UI can render them alongside
+  // the built-in `timing` / allocation strategies.
+  const getAdditionalStrategies: Selector<
+    Array<{ name: `marker:${string}`; label: string }>
+  > = createSelector(getThread, ProfileData.getAdditionalStrategiesForThread);
 
   const getUnfilteredCtssSampleCategoriesAndSubcategories: Selector<SampleCategoriesAndSubcategories> =
     createSelector(
@@ -458,6 +472,7 @@ export function getBasicThreadSelectorsPerThread(
     getCanShowRetainedMemory,
     getProcessedEventDelays,
     getCallTreeSummaryStrategy,
+    getAdditionalStrategies,
   };
 }
 

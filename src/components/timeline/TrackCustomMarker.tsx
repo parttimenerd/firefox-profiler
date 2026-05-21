@@ -6,7 +6,11 @@ import * as React from 'react';
 import explicitConnect from 'firefox-profiler/utils/connect';
 import { getCommittedRange } from 'firefox-profiler/selectors/profile';
 import { TrackCustomMarkerGraph } from './TrackCustomMarkerGraph';
-import { TRACK_MARKER_HEIGHT } from 'firefox-profiler/app-logic/constants';
+import {
+  TRACK_MARKER_HEIGHT,
+  TRACK_MARKER_HEIGHT_SMALL,
+  TRACK_MARKER_HEIGHT_LARGE,
+} from 'firefox-profiler/app-logic/constants';
 
 import type { ThreadIndex, Milliseconds } from 'firefox-profiler/types';
 import type { MarkerSchema } from 'firefox-profiler/types/markers';
@@ -34,13 +38,19 @@ type Props = ConnectedProps<OwnProps, StateProps, DispatchProps>;
 export class TrackCustomMarkerImpl extends React.PureComponent<Props> {
   override render() {
     const { markerSchema, markerName, threadIndex } = this.props;
+    let height = TRACK_MARKER_HEIGHT;
+    if (markerSchema.graphHeight === 'small') {
+      height = TRACK_MARKER_HEIGHT_SMALL;
+    } else if (markerSchema.graphHeight === 'large') {
+      height = TRACK_MARKER_HEIGHT_LARGE;
+    }
     return (
       <div
         className="timelineTrackCustomMarker"
         style={
           {
-            height: TRACK_MARKER_HEIGHT,
-            '--graph-height': `${TRACK_MARKER_HEIGHT}px`,
+            height,
+            '--graph-height': `${height}px`,
           } as React.CSSProperties
         }
       >
@@ -48,7 +58,7 @@ export class TrackCustomMarkerImpl extends React.PureComponent<Props> {
           threadIndex={threadIndex}
           markerSchema={markerSchema}
           markerName={markerName}
-          graphHeight={TRACK_MARKER_HEIGHT}
+          graphHeight={height}
         />
       </div>
     );

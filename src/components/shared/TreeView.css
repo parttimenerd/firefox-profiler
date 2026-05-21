@@ -155,6 +155,26 @@
   flex: none;
 }
 
+/* Custom (fork-only): sort indicator arrows for sortable columns. */
+.treeViewHeaderColumn.sortInactive,
+.treeViewHeaderColumn.sortAscending,
+.treeViewHeaderColumn.sortDescending {
+  cursor: pointer;
+}
+
+.treeViewHeaderColumn.sortInactive::after {
+  content: ' ▲';
+  opacity: 0;
+}
+
+.treeViewHeaderColumn.sortDescending::after {
+  content: ' ▲';
+}
+
+.treeViewHeaderColumn.sortAscending::after {
+  content: ' ▼ ';
+}
+
 .treeBadge,
 .backtraceBadge {
   display: inline-block;

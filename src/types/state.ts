@@ -67,8 +67,19 @@ export type ThreadViewOptionsPerThreads = {
   [K in ThreadsKey]: ThreadViewOptions;
 };
 
+// Custom (fork-only): a per-column sort instruction. The TreeView accumulates
+// these into a stable, multi-column sort order; the most recently clicked
+// column is the primary sort key, with earlier clicks acting as tiebreakers.
+export type SingleColumnSortState = {
+  readonly column: string;
+  readonly ascending: boolean;
+};
+
 export type TableViewOptions = {
   readonly fixedColumnWidths: Array<CssPixels> | null;
+  // Custom (fork-only): persisted column sort state. Order matters — the last
+  // entry is the most recently clicked column.
+  readonly sortedColumns?: ReadonlyArray<SingleColumnSortState>;
 };
 
 export type TableViewOptionsPerTab = { [K in TabSlug]: TableViewOptions };

@@ -335,6 +335,7 @@ export function getQueryStringFromUrlState(urlState: UrlState): string {
         : undefined;
     /* fallsthrough */
     case 'flame-graph':
+    case 'function-table':
     case 'calltree': {
       query = baseQuery as CallTreeQueryShape;
 
