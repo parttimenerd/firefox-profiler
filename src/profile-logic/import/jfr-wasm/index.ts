@@ -14,10 +14,7 @@
 // If the WASM is not available (JFR_CONVERTER_ENABLED=false), this module is
 // never imported (tree-shaken by esbuild).
 
-import type {
-  ParsedJFREvent,
-  JFRMetadata,
-} from '../jfr-converter/types';
+import type { ParsedJFREvent, JFRMetadata } from '../jfr-converter/types';
 import type { JFREventTypeInfo } from '../jfr-converter/marker-schemas';
 
 export interface ParseResult {
@@ -95,7 +92,8 @@ export async function parseJFR(fileBytes: Uint8Array): Promise<ParseResult> {
               contentType: null,
               label: name,
             })),
-            hasStackTrace: event.stackTrace !== undefined && event.stackTrace.length > 0,
+            hasStackTrace:
+              event.stackTrace !== undefined && event.stackTrace.length > 0,
           });
         }
       });
@@ -109,8 +107,8 @@ export async function parseJFR(fileBytes: Uint8Array): Promise<ParseResult> {
     jvmVersion: rawMeta.jvmVersion ?? null,
     jvmArgs: rawMeta.jvmArgs ?? null,
     javaArgs: rawMeta.javaArgs ?? null,
-    startMs: rawMeta.startMs ?? (events[0]?.startMs ?? 0),
-    endMs: rawMeta.endMs ?? (events[events.length - 1]?.endMs ?? 0),
+    startMs: rawMeta.startMs ?? events[0]?.startMs ?? 0,
+    endMs: rawMeta.endMs ?? events[events.length - 1]?.endMs ?? 0,
     cpuModel: rawMeta.cpuModel ?? null,
     cpuCores: rawMeta.cpuCores ?? null,
     cpuHwThreads: rawMeta.cpuHwThreads ?? null,
@@ -123,16 +121,27 @@ export async function parseJFR(fileBytes: Uint8Array): Promise<ParseResult> {
 
 // Guess a JFR category display name from event type for fallback
 function guessCategoryFromEventType(eventType: string): string {
-  if (eventType.startsWith('jdk.GC') || eventType.includes('GarbageCollection')) {
+  if (
+    eventType.startsWith('jdk.GC') ||
+    eventType.includes('GarbageCollection')
+  ) {
     return 'Java Virtual Machine, GC, Collector';
   }
-  if (eventType.startsWith('jdk.Compiler') || eventType.includes('Compilation')) {
+  if (
+    eventType.startsWith('jdk.Compiler') ||
+    eventType.includes('Compilation')
+  ) {
     return 'Java Virtual Machine, Compiler';
   }
   if (eventType.includes('Thread')) return 'Java Application';
-  if (eventType.includes('Socket') || eventType.includes('File') || eventType.includes('IO')) {
+  if (
+    eventType.includes('Socket') ||
+    eventType.includes('File') ||
+    eventType.includes('IO')
+  ) {
     return 'Operating System';
   }
-  if (eventType.startsWith('jdk.CPU') || eventType.includes('CPULoad')) return 'Operating System, Processor';
+  if (eventType.startsWith('jdk.CPU') || eventType.includes('CPULoad'))
+    return 'Operating System, Processor';
   return 'Java Application';
 }

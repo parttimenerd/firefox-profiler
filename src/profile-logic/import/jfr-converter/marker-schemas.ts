@@ -4,7 +4,11 @@
 
 // Port of MarkerSchemaWrapper.kt — JFR event → Firefox Profiler marker schema.
 
-import { resolveMarkerType, convertFieldValue, getFormat } from './marker-types';
+import {
+  resolveMarkerType,
+  convertFieldValue,
+  getFormat,
+} from './marker-types';
 import type { MarkerTypeEntry, AnyMarkerFormat } from './marker-types';
 import type { Tables, RawMarkerTableWrapper } from './tables';
 import type { JFRConverterConfig } from './config';
@@ -93,17 +97,34 @@ const SPECIAL_EVENT_TYPES: Record<string, SpecialConfig> = {
   },
   'jdk.GCHeapSummary': {
     directDataFields: [
-      { sourceName: 'gcId', targetName: 'gcId', type: MARKER_TYPES.INT, label: 'GC Identifier' },
-      { sourceName: 'when', targetName: 'when', type: MARKER_TYPES.STRING, label: 'When' },
-      { sourceName: 'heapUsed', targetName: 'heapUsed', type: MARKER_TYPES.BYTES, label: 'Heap Used' },
       {
-        accessor: (e) => (e.fields['heapSpace.committedSize'] as JFRFieldValue) ?? null,
+        sourceName: 'gcId',
+        targetName: 'gcId',
+        type: MARKER_TYPES.INT,
+        label: 'GC Identifier',
+      },
+      {
+        sourceName: 'when',
+        targetName: 'when',
+        type: MARKER_TYPES.STRING,
+        label: 'When',
+      },
+      {
+        sourceName: 'heapUsed',
+        targetName: 'heapUsed',
+        type: MARKER_TYPES.BYTES,
+        label: 'Heap Used',
+      },
+      {
+        accessor: (e) =>
+          (e.fields['heapSpace.committedSize'] as JFRFieldValue) ?? null,
         targetName: 'heapCommitted',
         type: MARKER_TYPES.BYTES,
         label: 'Heap Committed',
       },
       {
-        accessor: (e) => (e.fields['heapSpace.reservedSize'] as JFRFieldValue) ?? null,
+        accessor: (e) =>
+          (e.fields['heapSpace.reservedSize'] as JFRFieldValue) ?? null,
         targetName: 'heapReserved',
         type: MARKER_TYPES.BYTES,
         label: 'Heap Reserved',
@@ -171,7 +192,14 @@ export class MarkerSchemaProcessor {
     mapping: SchemaMapping;
     schema: MarkerSchema;
   } {
-    const { name, label, description, categoryNames, fields: rawFields, hasStackTrace } = eventTypeInfo;
+    const {
+      name,
+      label,
+      description,
+      categoryNames,
+      fields: rawFields,
+      hasStackTrace,
+    } = eventTypeInfo;
 
     const display: string[] = ['marker-chart', 'marker-table'];
     if (TIMELINE_OVERVIEW_EVENTS.has(name)) {
@@ -182,7 +210,11 @@ export class MarkerSchemaProcessor {
 
     const mapping: Field[] = [];
     if (hasStackTrace) {
-      mapping.push({ sourceName: 'stackTrace', targetName: 'cause', type: MARKER_TYPES.STACKTRACE });
+      mapping.push({
+        sourceName: 'stackTrace',
+        targetName: 'cause',
+        type: MARKER_TYPES.STACKTRACE,
+      });
     }
 
     const addedFields: MarkerSchemaField[] = [
@@ -201,14 +233,22 @@ export class MarkerSchemaProcessor {
           };
         })
       : rawFields
-          .filter((f) => f.name !== 'stackTrace' && !this.isIgnoredField(f.name))
+          .filter(
+            (f) => f.name !== 'stackTrace' && !this.isIgnoredField(f.name)
+          )
           .map((f) => {
-            const markerType = resolveMarkerType(f.name, f.typeName, f.contentType);
+            const markerType = resolveMarkerType(
+              f.name,
+              f.typeName,
+              f.contentType
+            );
             // Avoid clashing with reserved property names
             const targetName =
-              f.name === 'type' ? 'type '
-              : f.name === 'cause' ? 'cause '
-              : f.name;
+              f.name === 'type'
+                ? 'type '
+                : f.name === 'cause'
+                  ? 'cause '
+                  : f.name;
             mapping.push({ sourceName: f.name, targetName, type: markerType });
             return {
               key: targetName,
@@ -227,10 +267,7 @@ export class MarkerSchemaProcessor {
       .slice(0, 3)
       .map((f) => `${f.label} = {marker.data.${f.key}}`)
       .join(', ');
-    if (
-      nonTableFields.length === 2 &&
-      nonTableFields[0].key === 'key'
-    ) {
+    if (nonTableFields.length === 2 && nonTableFields[0].key === 'key') {
       tableLabel = `{marker.data.key} = {marker.data.${nonTableFields[1].key}}`;
     } else if (nonTableFields.length <= 1 && description) {
       tableLabel = `${description}: ${tableLabel}`;
@@ -273,13 +310,16 @@ export class MarkerSchemaProcessor {
     for (const field of mapping.fields) {
       const raw = field.accessor
         ? field.accessor(event)
-        : (event.fields[field.sourceName!] as JFRFieldValue ?? null);
+        : ((event.fields[field.sourceName!] as JFRFieldValue) ?? null);
       if (raw === null || raw === undefined) continue;
 
       if (field.type === MARKER_TYPES.STACKTRACE) {
         // stackTrace field: build a stack reference object
         if (event.stackTrace && event.stackTrace.length > 0) {
-          const stackIdx = tables.processFrames(event.stackTrace, tables.defaultUrl);
+          const stackIdx = tables.processFrames(
+            event.stackTrace,
+            tables.defaultUrl
+          );
           stackRefCallback(stackIdx);
           data[field.targetName] = { stack: stackIdx, time: event.startMs };
         }
@@ -297,7 +337,10 @@ export class MarkerSchemaProcessor {
     data['startTime'] = event.startMs - tables.startTimeMs;
 
     // Special: ObjectAllocationSample class synthetic stack
-    if (event.type === 'jdk.ObjectAllocationSample' && event.fields['objectClass']) {
+    if (
+      event.type === 'jdk.ObjectAllocationSample' &&
+      event.fields['objectClass']
+    ) {
       const className = String(event.fields['objectClass'] ?? '');
       if (className) {
         const miscStackIdx = tables.stackTable.getMiscStack(className);
@@ -329,25 +372,97 @@ export function generateSampleLikeMarkersConfig(
   const result: SampleLikeMarkerConfig[] = [];
 
   const PRIMARY: Record<string, SampleLikeMarkerConfig> = {
-    'jdk.AllocationRequiringGC': { name, label, marker: name, weightType: 'bytes', weightField: 'size' },
+    'jdk.AllocationRequiringGC': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'size',
+    },
     'jdk.ClassDefine': { name, label, marker: name },
-    'jdk.ClassLoad': { name, label, marker: name, weightType: 'tracing-ms', weightField: 'duration' },
+    'jdk.ClassLoad': {
+      name,
+      label,
+      marker: name,
+      weightType: 'tracing-ms',
+      weightField: 'duration',
+    },
     'jdk.Deoptimization': { name, label, marker: name },
-    'jdk.FileRead': { name, label, marker: name, weightType: 'bytes', weightField: 'bytesRead' },
-    'jdk.FileWrite': { name, label, marker: name, weightType: 'bytes', weightField: 'bytesWritten' },
+    'jdk.FileRead': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'bytesRead',
+    },
+    'jdk.FileWrite': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'bytesWritten',
+    },
     'jdk.JavaErrorThrow': { name, label, marker: name },
     'jdk.JavaExceptionThrow': { name, label, marker: name },
     'jdk.JavaMonitorEnter': { name, label, marker: name },
-    'jdk.JavaMonitorWait': { name, label, marker: name, weightType: 'tracing-ms', weightField: 'timeout' },
-    'jdk.ObjectAllocationSample': { name, label, marker: name, weightType: 'bytes', weightField: 'weight' },
-    'jdk.ObjectAllocationInNewTLAB': { name, label, marker: name, weightType: 'bytes', weightField: 'allocationSize' },
-    'jdk.ObjectAllocationOutsideTLAB': { name, label, marker: name, weightType: 'bytes', weightField: 'allocationSize' },
+    'jdk.JavaMonitorWait': {
+      name,
+      label,
+      marker: name,
+      weightType: 'tracing-ms',
+      weightField: 'timeout',
+    },
+    'jdk.ObjectAllocationSample': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'weight',
+    },
+    'jdk.ObjectAllocationInNewTLAB': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'allocationSize',
+    },
+    'jdk.ObjectAllocationOutsideTLAB': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'allocationSize',
+    },
     'jdk.ProcessStart': { name, label, marker: name },
-    'jdk.SocketRead': { name, label, marker: name, weightType: 'bytes', weightField: 'bytesRead' },
-    'jdk.SocketWrite': { name, label, marker: name, weightType: 'bytes', weightField: 'bytesWritten' },
+    'jdk.SocketRead': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'bytesRead',
+    },
+    'jdk.SocketWrite': {
+      name,
+      label,
+      marker: name,
+      weightType: 'bytes',
+      weightField: 'bytesWritten',
+    },
     'jdk.SystemGC': { name, label, marker: name },
-    'jdk.ThreadPark': { name, label, marker: name, weightType: 'tracing-ms', weightField: 'duration' },
-    'jdk.ThreadSleep': { name, label, marker: name, weightType: 'tracing-ms', weightField: 'duration' },
+    'jdk.ThreadPark': {
+      name,
+      label,
+      marker: name,
+      weightType: 'tracing-ms',
+      weightField: 'duration',
+    },
+    'jdk.ThreadSleep': {
+      name,
+      label,
+      marker: name,
+      weightType: 'tracing-ms',
+      weightField: 'duration',
+    },
     'jdk.ThreadStart': { name, label, marker: name },
   };
 

@@ -28,7 +28,13 @@ function cat(
 // Keep insertion order — index is assigned below.
 const _CATEGORIES: CategoryEntry[] = [
   cat('Other', 'grey', ['Profiling', 'Waiting']),
-  cat('Java', 'blue', ['Other', 'Interpreted', 'Compiled', 'Native', 'Inlined']),
+  cat('Java', 'blue', [
+    'Other',
+    'Interpreted',
+    'Compiled',
+    'Native',
+    'Inlined',
+  ]),
   cat('Java (non-project)', 'darkgray', [
     'Other',
     'Interpreted',

@@ -35,7 +35,13 @@ export interface TableMarkerFormat {
 
 export type AnyMarkerFormat = MarkerFormatType | TableMarkerFormat;
 
-export type ConvertedValue = string | number | boolean | null | unknown[] | Record<string, unknown>;
+export type ConvertedValue =
+  | string
+  | number
+  | boolean
+  | null
+  | unknown[]
+  | Record<string, unknown>;
 
 type Converter = (
   tables: Tables,
@@ -53,7 +59,8 @@ interface MarkerTypeEntry {
 const stringConverter: Converter = (_, __, v) => String(v ?? '');
 
 function numericConverter(transform: (v: number) => number): Converter {
-  return (_, __, v) => (v !== null && v !== undefined ? transform(Number(v)) : 0);
+  return (_, __, v) =>
+    v !== null && v !== undefined ? transform(Number(v)) : 0;
 }
 
 // Modifier bit flags
@@ -78,24 +85,54 @@ const MARKER_TYPES: Record<string, MarkerTypeEntry> = {
     format: 'bytes',
     convert: (_, __, v) => Number(v ?? 0),
     aliases: [
-      'dataAmount', 'allocated', 'totalSize', 'usedSize', 'initialSize',
-      'reservedSize', 'nonNMethodSize', 'profiledSize', 'nonProfiledSize',
-      'expansionSize', 'minBlockLength', 'minSize', 'maxSize',
-      'osrBytesCompiled', 'minTLABSize', 'tlabRefillWasteLimit',
+      'dataAmount',
+      'allocated',
+      'totalSize',
+      'usedSize',
+      'initialSize',
+      'reservedSize',
+      'nonNMethodSize',
+      'profiledSize',
+      'nonProfiledSize',
+      'expansionSize',
+      'minBlockLength',
+      'minSize',
+      'maxSize',
+      'osrBytesCompiled',
+      'minTLABSize',
+      'tlabRefillWasteLimit',
     ],
   },
   ADDRESS: {
     format: 'string',
-    convert: (_, __, v) => '0x' + (BigInt(Number(v ?? 0)) & BigInt('0xFFFFFFFFFFFFFFFF')).toString(16),
+    convert: (_, __, v) =>
+      '0x' +
+      (BigInt(Number(v ?? 0)) & BigInt('0xFFFFFFFFFFFFFFFF')).toString(16),
     aliases: [
-      'baseAddress', 'topAddress', 'startAddress', 'reservedTopAddress',
-      'heapAddressBits', 'objectAlignment',
+      'baseAddress',
+      'topAddress',
+      'startAddress',
+      'reservedTopAddress',
+      'heapAddressBits',
+      'objectAlignment',
     ],
   },
   INT: { format: 'integer', convert: (_, __, v) => Number(v ?? 0) },
-  LONG: { format: 'integer', convert: (_, __, v) => Number(v ?? 0), generic: true },
-  FLOAT: { format: 'decimal', convert: (_, __, v) => Number(v ?? 0), generic: true },
-  DOUBLE: { format: 'decimal', convert: (_, __, v) => Number(v ?? 0), generic: true },
+  LONG: {
+    format: 'integer',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
+  FLOAT: {
+    format: 'decimal',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
+  DOUBLE: {
+    format: 'decimal',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
   STRING: { format: 'string', convert: stringConverter, generic: true },
   MILLIS: {
     format: 'milliseconds',
@@ -153,7 +190,10 @@ const MARKER_TYPES: Record<string, MarkerTypeEntry> = {
         .join(' ');
     },
   },
-  EPOCH_MILLIS: { format: 'milliseconds', convert: (_, __, v) => Number(v ?? 0) },
+  EPOCH_MILLIS: {
+    format: 'milliseconds',
+    convert: (_, __, v) => Number(v ?? 0),
+  },
   TICKS: { format: 'integer', convert: (_, __, v) => Number(v ?? 0) },
   TICKSPAN: { format: 'integer', convert: (_, __, v) => Number(v ?? 0) },
   TABLE: {
@@ -161,11 +201,31 @@ const MARKER_TYPES: Record<string, MarkerTypeEntry> = {
     convert: stringConverter,
     generic: true,
   },
-  UBYTE: { format: 'integer', convert: (_, __, v) => Number(v ?? 0), generic: true },
-  UNSIGNED: { format: 'integer', convert: (_, __, v) => Number(v ?? 0), generic: true },
-  UINT: { format: 'integer', convert: (_, __, v) => Number(v ?? 0), generic: true },
-  USHORT: { format: 'integer', convert: (_, __, v) => Number(v ?? 0), generic: true },
-  ULONG: { format: 'integer', convert: (_, __, v) => Number(v ?? 0), generic: true },
+  UBYTE: {
+    format: 'integer',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
+  UNSIGNED: {
+    format: 'integer',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
+  UINT: {
+    format: 'integer',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
+  USHORT: {
+    format: 'integer',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
+  ULONG: {
+    format: 'integer',
+    convert: (_, __, v) => Number(v ?? 0),
+    generic: true,
+  },
 };
 
 // Aliases used for name-based lookup (fieldName → type)
@@ -182,23 +242,47 @@ const TYPE_NAME_MAP = new Map<string, MarkerTypeEntry>();
   }
   // extra string aliases that share the STRING converter
   for (const alias of [
-    'COMPILER_PHASE_TYPE', 'COMPILER_TYPE', 'DEOPTIMIZATION_ACTION',
-    'DEOPTIMIZATION_REASON', 'FLAG_VALUE_ORIGIN', 'FRAME_TYPE',
-    'G1_HEAP_REGION_TYPE', 'G1_YC_TYPE', 'GC_CAUSE', 'GC_NAME',
-    'GC_THRESHHOLD_UPDATER', 'GC_WHEN', 'INFLATE_CAUSE',
-    'METADATA_TYPE', 'METASPACE_OBJECT_TYPE', 'NARROW_OOP_MODE',
-    'NETWORK_INTERFACE_NAME', 'OLD_OBJECT_ROOT_TYPE',
-    'OLD_OBJECT_ROOT_SYSTEM', 'REFERENCE_TYPE',
-    'ShenandoahHeapRegionState', 'SYMBOL', 'ThreadState',
-    'VMOperationType', 'ZPageTypeType',
-    'ZStatisticsCounterType', 'ZStatisticsSamplerType',
+    'COMPILER_PHASE_TYPE',
+    'COMPILER_TYPE',
+    'DEOPTIMIZATION_ACTION',
+    'DEOPTIMIZATION_REASON',
+    'FLAG_VALUE_ORIGIN',
+    'FRAME_TYPE',
+    'G1_HEAP_REGION_TYPE',
+    'G1_YC_TYPE',
+    'GC_CAUSE',
+    'GC_NAME',
+    'GC_THRESHHOLD_UPDATER',
+    'GC_WHEN',
+    'INFLATE_CAUSE',
+    'METADATA_TYPE',
+    'METASPACE_OBJECT_TYPE',
+    'NARROW_OOP_MODE',
+    'NETWORK_INTERFACE_NAME',
+    'OLD_OBJECT_ROOT_TYPE',
+    'OLD_OBJECT_ROOT_SYSTEM',
+    'REFERENCE_TYPE',
+    'ShenandoahHeapRegionState',
+    'SYMBOL',
+    'ThreadState',
+    'VMOperationType',
+    'ZPageTypeType',
+    'ZStatisticsCounterType',
+    'ZStatisticsSamplerType',
   ]) {
-    TYPE_NAME_MAP.set(alias.toLowerCase().replace(/_/g, ''), MARKER_TYPES.STRING);
+    TYPE_NAME_MAP.set(
+      alias.toLowerCase().replace(/_/g, ''),
+      MARKER_TYPES.STRING
+    );
   }
 })();
 
 const BYTE_FIELD_NAMES = new Set([
-  'committed', 'reserved', 'used', 'gcThreshold', 'unallocatedCapacity',
+  'committed',
+  'reserved',
+  'used',
+  'gcThreshold',
+  'unallocatedCapacity',
 ]);
 
 export function resolveMarkerType(

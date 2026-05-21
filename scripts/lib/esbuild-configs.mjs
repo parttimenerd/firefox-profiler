@@ -23,15 +23,14 @@ const isProduction = process.env.NODE_ENV === 'production';
 // The JFR converter is optional. It is only included when the WASM asset is present.
 // See src/profile-logic/import/jfr-wasm/README.md for build instructions.
 const JFR_CONVERTER_ENABLED = fs.existsSync(
-  path.join(
-    projectRoot,
-    'src/profile-logic/import/jfr-wasm/jafar.js.wasm'
-  )
+  path.join(projectRoot, 'src/profile-logic/import/jfr-wasm/jafar.js.wasm')
 );
 if (JFR_CONVERTER_ENABLED) {
   console.log('JFR converter: enabled (jafar.js.wasm found)');
 } else {
-  console.log('JFR converter: disabled (jafar.js.wasm not found — see src/profile-logic/import/jfr-wasm/README.md)');
+  console.log(
+    'JFR converter: disabled (jafar.js.wasm not found — see src/profile-logic/import/jfr-wasm/README.md)'
+  );
 }
 
 // Configuration shared by both node and browser builds

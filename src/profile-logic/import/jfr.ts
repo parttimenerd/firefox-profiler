@@ -39,7 +39,12 @@ export async function convertJFRProfile(
 
   const { events, eventTypeInfoMap, metadata } = await parseJFR(fileBytes);
   const config = defaultConfig();
-  const profile = await convertJFREventStream(events, eventTypeInfoMap, metadata, config);
+  const profile = await convertJFREventStream(
+    events,
+    eventTypeInfoMap,
+    metadata,
+    config
+  );
   // The converter returns a plain object shaped like Profile; cast it.
   return profile as unknown as Profile;
 }

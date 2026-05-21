@@ -40,7 +40,10 @@ export class SourceTableWrapper {
 
   constructor(private stringTable: StringTableWrapper) {}
 
-  getOrCreate(filename: string | null, sourceUrl: string | null): number | null {
+  getOrCreate(
+    filename: string | null,
+    sourceUrl: string | null
+  ): number | null {
     if (filename === null) return null;
     const filenameIdx = this.stringTable.get(filename);
     const urlIdx = sourceUrl !== null ? this.stringTable.get(sourceUrl) : null;
@@ -156,16 +159,18 @@ export class FuncTableWrapper {
       this.isJss.push(isJava);
       this.relevantForJss.push(true);
       this.resources.push(this.resourceTable.getResource(className, isJava));
-      this.sources.push(
-        this.sourceTable.getOrCreate(className, sourceUrl)
-      );
+      this.sources.push(this.sourceTable.getOrCreate(className, sourceUrl));
       this.lineNumbers.push(lineNumber);
       this.map.set(key, idx);
     }
     return idx;
   }
 
-  getMiscFunction(name: string, isNative: boolean, defaultUrl: string | null): number {
+  getMiscFunction(
+    name: string,
+    isNative: boolean,
+    defaultUrl: string | null
+  ): number {
     let idx = this.miscFunctions.get(name);
     if (idx === undefined) {
       idx = this.names.length;
@@ -258,7 +263,13 @@ export class FrameTableWrapper {
     return idx;
   }
 
-  getMiscFrame(name: string, categoryName: string, subcategoryName: string, isNative: boolean, defaultUrl: string | null): number {
+  getMiscFrame(
+    name: string,
+    categoryName: string,
+    subcategoryName: string,
+    isNative: boolean,
+    defaultUrl: string | null
+  ): number {
     let idx = this.miscFrames.get(name);
     if (idx === undefined) {
       const catEntry = fromCategoryName(categoryName) ?? CategoryE.MISC;
@@ -266,9 +277,7 @@ export class FrameTableWrapper {
       idx = this.funcs.length;
       this.categories.push(catIdx);
       this.subcategories.push(subIdx);
-      this.funcs.push(
-        this.funcTable.getMiscFunction(name, isNative, null)
-      );
+      this.funcs.push(this.funcTable.getMiscFunction(name, isNative, null));
       this.lines.push(null);
       this.miscFrames.set(name, idx);
     }
@@ -409,7 +418,13 @@ export class Tables {
       frameTable: this.frameTable.toFrameTable(),
       funcTable: this.funcTable.toFuncTable(),
       resourceTable: this.resourceTable.toResourceTable(),
-      nativeSymbols: { libIndex: [], address: [], name: [], functionSize: [], length: 0 },
+      nativeSymbols: {
+        libIndex: [],
+        address: [],
+        name: [],
+        functionSize: [],
+        length: 0,
+      },
       sources: this.sourceTable.toSourceTable(),
     };
   }
@@ -440,7 +455,9 @@ export class SamplesTableWrapper {
       if (i === time.length - 1) {
         threadCPUDelta.push(0);
       } else {
-        threadCPUDelta.push((time[i] - time[i - 1]) * 1000.0 * cpuLoadAtTime(time[i]));
+        threadCPUDelta.push(
+          (time[i] - time[i - 1]) * 1000.0 * cpuLoadAtTime(time[i])
+        );
       }
     }
 

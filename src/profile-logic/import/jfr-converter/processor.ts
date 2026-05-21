@@ -6,18 +6,22 @@
 
 import type { JFRConverterConfig } from './config';
 import { isExecutionSample, isNonProjectPackage } from './config';
-import {
-  Tables,
-  SamplesTableWrapper,
-  RawMarkerTableWrapper,
-} from './tables';
+import { Tables, SamplesTableWrapper, RawMarkerTableWrapper } from './tables';
 import {
   MarkerSchemaProcessor,
   generateSampleLikeMarkersConfig,
 } from './marker-schemas';
-import type { JFREventTypeInfo, SampleLikeMarkerConfig } from './marker-schemas';
+import type {
+  JFREventTypeInfo,
+  SampleLikeMarkerConfig,
+} from './marker-schemas';
 import { toCategoryList, fromCategoryName } from './categories';
-import type { ParsedJFREvent, JFRMetadata, Milliseconds, Percentage } from './types';
+import type {
+  ParsedJFREvent,
+  JFRMetadata,
+  Milliseconds,
+  Percentage,
+} from './types';
 
 // ---- Thread processing ----
 
@@ -69,7 +73,10 @@ class ThreadProcessor {
 
     if (isExecutionSample(event.type, this.tables.config)) {
       if (event.stackTrace && event.stackTrace.length > 0) {
-        const stackIdx = this.tables.processFrames(event.stackTrace, this.tables.defaultUrl);
+        const stackIdx = this.tables.processFrames(
+          event.stackTrace,
+          this.tables.defaultUrl
+        );
         this.samplesTable.processEvent(stackIdx, event.startMs);
       }
       this.itemCount++;
@@ -136,8 +143,14 @@ class ThreadProcessor {
     let ceil: Percentage | null = null;
     let ceilKey = Infinity;
     for (const [k, v] of this.cpuLoads) {
-      if (k <= micros && k > floorKey) { floorKey = k; floor = v; }
-      if (k >= micros && k < ceilKey) { ceilKey = k; ceil = v; }
+      if (k <= micros && k > floorKey) {
+        floorKey = k;
+        floor = v;
+      }
+      if (k >= micros && k < ceilKey) {
+        ceilKey = k;
+        ceil = v;
+      }
     }
     if (floor === null) return ceil!;
     if (ceil === null) return floor;
@@ -186,7 +199,9 @@ class ThreadProcessor {
 
   toThread() {
     const threadName = this.name;
-    const samples = this.samplesTable.toSamplesTable(this.getCpuLoad.bind(this));
+    const samples = this.samplesTable.toSamplesTable(
+      this.getCpuLoad.bind(this)
+    );
     const markers = this.markerTable.toRawMarkerTable();
     const sampleLikeMarkersConfig = this.generateSampleLikeMarkersConfig();
     return {
@@ -195,7 +210,9 @@ class ThreadProcessor {
       processShutdownTime: this.end,
       registerTime: this.registerTime,
       unregisterTime: this.unregisterTime,
-      pausedRanges: [...this.pausedRanges].sort((a, b) => a.startTime - b.startTime),
+      pausedRanges: [...this.pausedRanges].sort(
+        (a, b) => a.startTime - b.startTime
+      ),
       name: threadName,
       isMainThread: threadName === 'GeckoMain',
       processName: 'Parent Process',
@@ -205,7 +222,10 @@ class ThreadProcessor {
       jsAllocations: null,
       nativeAllocations: null,
       markers,
-      sampleLikeMarkersConfig: sampleLikeMarkersConfig.length > 0 ? sampleLikeMarkersConfig : undefined,
+      sampleLikeMarkersConfig:
+        sampleLikeMarkersConfig.length > 0
+          ? sampleLikeMarkersConfig
+          : undefined,
     };
   }
 }
@@ -259,21 +279,33 @@ interface ThreadInfo {
   otherSampleCount: number;
 }
 
-function isSystemThread(javaName: string | null, osName: string | null): boolean {
+function isSystemThread(
+  javaName: string | null,
+  osName: string | null
+): boolean {
   if (javaName === null || javaName === '') return false;
   const systemNames = [
-    'JFR Periodic Tasks', 'JFR Shutdown Hook', 'Permissionless thread',
-    'Thread Monitor CTRL-C', 'Monitor Ctrl-Break', 'Notification Thread',
-    'Finalizer', 'Attach Listener',
+    'JFR Periodic Tasks',
+    'JFR Shutdown Hook',
+    'Permissionless thread',
+    'Thread Monitor CTRL-C',
+    'Monitor Ctrl-Break',
+    'Notification Thread',
+    'Finalizer',
+    'Attach Listener',
   ];
   if (systemNames.includes(javaName)) return true;
   if (javaName.startsWith('JFR ')) return true;
-  if (javaName.startsWith('GC Thread') || javaName.includes('CompilerThread')) return true;
+  if (javaName.startsWith('GC Thread') || javaName.includes('CompilerThread'))
+    return true;
   return false;
 }
 
 function isGCThread(javaName: string | null, osName: string | null): boolean {
-  return (osName ?? '').startsWith('GC Thread') && (javaName === null || javaName === '');
+  return (
+    (osName ?? '').startsWith('GC Thread') &&
+    (javaName === null || javaName === '')
+  );
 }
 
 // ---- Estimate sampling interval ----
@@ -380,7 +412,11 @@ export async function convertJFREventStream(
 
   // Parent (process) thread processor
   const parentProcessor = new ThreadProcessor(
-    true, -1, tables, markerSchemaProcessor, basicInfo
+    true,
+    -1,
+    tables,
+    markerSchemaProcessor,
+    basicInfo
   );
 
   // Per-thread processors
@@ -406,18 +442,31 @@ export async function convertJFREventStream(
       });
     }
     if (event.type === 'jdk.GCHeapSummary') {
-      usedHeapSamples.push({ timeMs: event.startMs, bytes: Number(event.fields['heapUsed'] ?? 0) });
-      committedHeapSamples.push({ timeMs: event.startMs, bytes: Number(event.fields['heapSpace.committedSize'] ?? 0) });
+      usedHeapSamples.push({
+        timeMs: event.startMs,
+        bytes: Number(event.fields['heapUsed'] ?? 0),
+      });
+      committedHeapSamples.push({
+        timeMs: event.startMs,
+        bytes: Number(event.fields['heapSpace.committedSize'] ?? 0),
+      });
     }
 
     const t = event.thread;
     if (t === undefined || t === null) {
       parentProcessor.processEvent(event, eventTypeInfo);
     } else {
-      if (!config.includeGCThreads && isGCThread(t.javaName, t.osName)) continue;
+      if (!config.includeGCThreads && isGCThread(t.javaName, t.osName))
+        continue;
       let proc = threadProcessors.get(t.id);
       if (!proc) {
-        proc = new ThreadProcessor(false, t.id, tables, markerSchemaProcessor, basicInfo);
+        proc = new ThreadProcessor(
+          false,
+          t.id,
+          tables,
+          markerSchemaProcessor,
+          basicInfo
+        );
         threadProcessors.set(t.id, proc);
       }
       proc.processEvent(event, eventTypeInfo);
@@ -476,7 +525,9 @@ export async function convertJFREventStream(
       mainThreadIndex: 0,
       samples: {
         time: sorted.map((s) => s.timeMs),
-        count: sorted.map((s) => Math.round((s.jvmUser + s.jvmSystem) * 1_000_000)),
+        count: sorted.map((s) =>
+          Math.round((s.jvmUser + s.jvmSystem) * 1_000_000)
+        ),
         length: sorted.length,
       },
       display: { graphType: 'line-rate', unit: '%', color: 'grey' },
@@ -493,7 +544,11 @@ export async function convertJFREventStream(
       description: 'Used heap',
       pid,
       mainThreadIndex: 0,
-      samples: { time: sorted.map((s) => s.timeMs), count: deltas, length: sorted.length },
+      samples: {
+        time: sorted.map((s) => s.timeMs),
+        count: deltas,
+        length: sorted.length,
+      },
       display: {
         graphType: 'line-accumulated',
         unit: 'bytes',
@@ -508,10 +563,13 @@ export async function convertJFREventStream(
   const markerSchema = markerSchemaProcessor.toMarkerSchemaList();
 
   const osVersion = meta.osVersion ?? '';
-  const platform = osVersion.includes('Android') ? 'Android'
-    : osVersion.includes('Mac OS X') ? 'Macintosh'
-    : osVersion.includes('Windows') ? 'Windows'
-    : 'X11';
+  const platform = osVersion.includes('Android')
+    ? 'Android'
+    : osVersion.includes('Mac OS X')
+      ? 'Macintosh'
+      : osVersion.includes('Windows')
+        ? 'Windows'
+        : 'X11';
 
   const meta_: unknown = {
     interval: basicInfo.intervalMs,
