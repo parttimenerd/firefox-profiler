@@ -20,6 +20,10 @@ const projectRoot = path.normalize(path.join(__dirname, '..', '..'));
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+// PUBLIC_PATH lets deployments at a sub-path (e.g. GitHub Pages) set the base
+// URL for chunk/asset references. Defaults to '/' for normal dev/prod builds.
+const publicPath = process.env.PUBLIC_PATH ?? '/';
+
 // The JFR converter is optional. It is only included when the WASM asset is present.
 // See src/profile-logic/import/jfr-wasm/README.md for build instructions.
 const JFR_CONVERTER_ENABLED = fs.existsSync(
@@ -83,7 +87,7 @@ export const mainBundleConfig = {
   entryPoints: ['src/index.tsx'],
   outdir: 'dist',
   metafile: true,
-  publicPath: '/',
+  publicPath: publicPath,
   entryNames: '[name]-[hash]',
   define: {
     'process.env.L10N': process.env.L10N
@@ -93,6 +97,7 @@ export const mainBundleConfig = {
       ? JSON.stringify(fs.readdirSync('./locales'))
       : 'undefined',
     'process.env.JFR_CONVERTER_ENABLED': JSON.stringify(JFR_CONVERTER_ENABLED),
+    'process.env.PUBLIC_PATH': JSON.stringify(publicPath),
     // no need to define NODE_ENV:
     // esbuild automatically defines NODE_ENV based on the value for "minify"
   },
@@ -134,7 +139,7 @@ export const photonConfig = {
   platform: 'browser',
   target: browserslistToEsbuild(),
   sourcemap: true,
-  publicPath: '/photon/',
+  publicPath: publicPath + 'photon/',
   entryPoints: ['res/photon/index.js'],
   outdir: 'dist/photon',
   metafile: true,

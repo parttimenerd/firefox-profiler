@@ -147,10 +147,15 @@ export function generateHtmlPlugin(options) {
         }
 
         const headContent = headTags.map((tag) => '    ' + tag).join('\n');
-        const html = templateHTML.replace(
+        let html = templateHTML.replace(
           '</head>',
           '\n' + headContent + '\n  </head>'
         );
+
+        // Rewrite absolute-root resource paths when deployed at a sub-path
+        if (publicPath && publicPath !== '/') {
+          html = html.replace(/href="\//g, `href="${publicPath}`);
+        }
 
         fs.writeFileSync(outdir + '/' + filename, html);
       });

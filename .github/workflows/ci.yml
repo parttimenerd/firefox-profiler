@@ -210,6 +210,8 @@ jobs:
 
       - name: Build with JFR converter
         run: yarn build-prod
+        env:
+          PUBLIC_PATH: /firefox-profiler/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
