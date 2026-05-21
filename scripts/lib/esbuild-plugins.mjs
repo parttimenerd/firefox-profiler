@@ -150,16 +150,22 @@ export function generateHtmlPlugin(options) {
           );
         }
 
+        // Rewrite absolute-root resource paths when deployed at a sub-path.
+        // Apply to the template BEFORE inserting the generated head tags so
+        // the rewrite doesn't double-prefix already-prefixed paths.
+        let adjustedTemplate = templateHTML;
+        if (publicPath && publicPath !== '/') {
+          adjustedTemplate = adjustedTemplate.replace(
+            /href="\//g,
+            `href="${publicPath}`
+          );
+        }
+
         const headContent = headTags.map((tag) => '    ' + tag).join('\n');
-        let html = templateHTML.replace(
+        const html = adjustedTemplate.replace(
           '</head>',
           '\n' + headContent + '\n  </head>'
         );
-
-        // Rewrite absolute-root resource paths when deployed at a sub-path
-        if (publicPath && publicPath !== '/') {
-          html = html.replace(/href="\//g, `href="${publicPath}`);
-        }
 
         fs.writeFileSync(outdir + '/' + filename, html);
       });
