@@ -20,6 +20,11 @@ Fork-only features the Java tooling depends on:
 - **Function Table tab** — aggregates samples by function rather than by call path.
 - **TreeView column sort** — multi-column sortable headers for the call tree / function table.
 - **Java syntax highlighting** in the source view.
+- **In-browser JFR converter** — drag-and-drop a `.jfr` file directly into the profiler without running jfrtofp-server. Requires the optional GraalVM WASM asset; see [`src/profile-logic/import/jfr-wasm/README.md`](src/profile-logic/import/jfr-wasm/README.md). The build works without it (`JFR_CONVERTER_ENABLED=false`).
+
+### GitHub Pages deployment
+
+The `jfrtofp` branch is automatically deployed to **[parttimenerd.github.io/firefox-profiler](https://parttimenerd.github.io/firefox-profiler/)** on every push. The CI builds the JFR WASM from [jafar-ex](https://github.com/parttimenerd/jafar-ex) before the JS build so the deployed version includes the full in-browser converter.
 
 This branch is rebased onto upstream periodically; the fork is squashed into one commit on top, so `git log upstream..jfrtofp` shows exactly what's added. The `merged` branch (the previous name) was renamed to `jfrtofp` to make its purpose self-describing.
 

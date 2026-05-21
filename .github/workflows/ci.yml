@@ -167,3 +167,52 @@ jobs:
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: './bin'
+
+  deploy-pages:
+    name: Deploy to GitHub Pages (with JFR converter)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/jfrtofp'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout firefox-profiler
+        uses: actions/checkout@v5
+
+      - name: Setup GraalVM (Java 25)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+
+      - name: Build jafar WASM
+        working-directory: jafar-web
+        run: mvn package -DskipTests -q
+
+      - name: Copy WASM into firefox-profiler
+        run: |
+          cp jafar-web/web/jafar.js \
+             src/profile-logic/import/jfr-wasm/
+          cp jafar-web/web/jafar.js.wasm \
+             src/profile-logic/import/jfr-wasm/
+
+      - name: Setup Node.js and install dependencies
+        uses: ./.github/actions/setup-node-and-install
+
+      - name: Build with JFR converter
+        run: yarn build-prod
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

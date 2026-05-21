@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 import { attemptToConvertChromeProfile } from './import/chrome';
 import { attemptToConvertDhat } from './import/dhat';
+import { isJFRFormat } from './import/jfr';
 import { GlobalDataCollector } from './global-data-collector';
 import { AddressLocator } from './address-locator';
 import {
@@ -2069,6 +2070,7 @@ async function parseJSONFromBytes(bytes: Uint8Array): Promise<any> {
  *  - Chrome profile: input can be ArrayBuffer or string or JSON object
  *  - `perf script` profile: input can be ArrayBuffer or string
  *  - ART trace: input must be ArrayBuffer
+ *  - JFR profile: input must be ArrayBuffer (requires JFR_CONVERTER_ENABLED build flag)
  *
  * `upgradeInfo` is an outparam and will be populated by this function.
  */
@@ -2102,6 +2104,16 @@ export async function unserializeProfileOfArbitraryFormat(
 
       if (isArtTraceFormat(profileBytes)) {
         arbitraryFormat = convertArtTraceProfile(profileBytes);
+      } else if (isJFRFormat(profileBytes)) {
+        const { convertJFRProfile } = await import('./import/jfr');
+        const jfrProfile = await convertJFRProfile(profileBytes);
+        if (jfrProfile !== null) {
+          return jfrProfile;
+        }
+        throw new Error(
+          'This .jfr file requires the JFR converter, which was not included in this build. ' +
+            'See src/profile-logic/import/jfr-wasm/README.md for build instructions.'
+        );
       } else if (verifyMagic(SIMPLEPERF_MAGIC, profileBytes)) {
         const { convertSimpleperfTraceProfile } =
           await import('./import/simpleperf');
