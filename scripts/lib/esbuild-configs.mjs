@@ -123,6 +123,10 @@ export const mainBundleConfig = {
                 from: ['src/profile-logic/import/jfr-wasm/jafar.js'],
                 to: ['dist'],
               },
+              {
+                from: ['src/profile-logic/import/jfr-wasm/jafar.js.wasm'],
+                to: ['dist'],
+              },
             ]
           : []),
       ],

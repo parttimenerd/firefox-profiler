@@ -40,7 +40,13 @@ async function loadWasm(): Promise<JafarWASMModule> {
   // jafar.js is copied to the root of dist/ (same level as index.html).
   // Use an absolute URL built from PUBLIC_PATH so the import works correctly
   // regardless of which sub-directory the caller chunk lives in.
-  const jafarJsUrl = (process.env.PUBLIC_PATH ?? '/') + 'jafar.js';
+  const publicPath = process.env.PUBLIC_PATH ?? '/';
+  const jafarJsUrl = publicPath + 'jafar.js';
+  // jafar.js uses document.currentScript.src to locate jafar.js.wasm, but
+  // that is null for ES module dynamic imports. Set a global so the patched
+  // jafar.js reads the correct WASM path instead of falling back to location.href.
+  (globalThis as unknown as Record<string, unknown>).__jafarWasmPath =
+    publicPath + 'jafar.js.wasm';
   await import(/* @vite-ignore */ /* webpackIgnore: true */ jafarJsUrl);
   // GraalVM bootstrap sets up the module on globalThis
   const mod = (globalThis as unknown as Record<string, unknown>).JFRParser;
