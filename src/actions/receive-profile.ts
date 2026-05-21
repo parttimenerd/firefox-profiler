@@ -56,6 +56,7 @@ import {
   withHistoryReplaceStateSync,
   stateFromLocation,
   ensureIsValidDataSource,
+  stripBasePath,
 } from 'firefox-profiler/app-logic/url-handling';
 import { tabsShowingSampleData } from 'firefox-profiler/app-logic/tabs-handling';
 import {
@@ -1265,7 +1266,9 @@ export function retrieveProfileForRawUrl(
   browserConnectionStatus?: BrowserConnectionStatus
 ): ThunkAction<Promise<ProfileAndProfileUpgradeInfo | null>> {
   return async (dispatch, getState) => {
-    const pathParts = location.pathname.split('/').filter((d) => d);
+    const pathParts = stripBasePath(location.pathname)
+      .split('/')
+      .filter((d) => d);
     let possibleDataSource = pathParts[0];
 
     // Treat from-addon as from-browser, for compatibility with Firefox < 93.

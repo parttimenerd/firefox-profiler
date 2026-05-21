@@ -117,6 +117,10 @@ export function generateHtmlPlugin(options) {
         }
 
         function convertPath(absolutePath) {
+          // chunk.path in metafile imports may already be publicPath-prefixed
+          if (publicPath && absolutePath?.startsWith?.(publicPath)) {
+            return absolutePath;
+          }
           const prefix = outdir + '/';
           if (!absolutePath?.startsWith?.(prefix)) {
             throw new Error(`Path ${absolutePath} is outside outdir ${outdir}`);

@@ -419,17 +419,28 @@ export function getQueryStringFromUrlState(urlState: UrlState): string {
   return qString;
 }
 
+// The deployment base path (e.g. "/firefox-profiler" when hosted at a sub-path).
+// Empty string for root deployments.
+const BASE_PATH = (process.env.PUBLIC_PATH ?? '/').replace(/\/$/, '');
+
+export function stripBasePath(pathname: string): string {
+  if (BASE_PATH && pathname.startsWith(BASE_PATH)) {
+    return pathname.slice(BASE_PATH.length) || '/';
+  }
+  return pathname;
+}
+
 export function urlFromState(urlState: UrlState): string {
   const pathParts = getPathParts(urlState);
   const qString = getQueryStringFromUrlState(urlState);
   const { dataSource } = urlState;
   if (dataSource === 'none') {
-    return '/';
+    return BASE_PATH + '/';
   }
   const pathname =
     pathParts.length === 0 ? '/' : '/' + pathParts.join('/') + '/';
 
-  return pathname + (qString ? '?' + qString : '');
+  return BASE_PATH + pathname + (qString ? '?' + qString : '');
 }
 
 export function ensureIsValidDataSource(
@@ -485,7 +496,7 @@ export function stateFromLocation(
 ): UrlState {
   const { pathname, query } = upgradeLocationToCurrentVersion(
     {
-      pathname: location.pathname,
+      pathname: stripBasePath(location.pathname),
       hash: location.hash,
       query: queryString.parse(location.search.substr(1), {
         arrayFormat: 'bracket', // This uses parameters with brackets for arrays.
