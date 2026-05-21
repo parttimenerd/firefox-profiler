@@ -117,6 +117,14 @@ export const mainBundleConfig = {
         { from: ['res/img/favicon.png'], to: ['dist/res/img'] },
         { from: ['docs-user/**/*'], to: ['dist/docs'] },
         { from: ['locales/**/*'], to: ['dist/locales'] },
+        ...(JFR_CONVERTER_ENABLED
+          ? [
+              {
+                from: ['src/profile-logic/import/jfr-wasm/jafar.js'],
+                to: ['dist'],
+              },
+            ]
+          : []),
       ],
     }),
     generateHtmlPlugin({

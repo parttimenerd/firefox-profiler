@@ -37,11 +37,11 @@ async function loadWasm(): Promise<JafarWASMModule> {
   if (wasmModule) {
     return wasmModule;
   }
-  // jafar.js is the GraalVM bootstrap — it attaches to the global scope.
-  // Use a variable so esbuild doesn't try to resolve this at build time when
-  // JFR_CONVERTER_ENABLED=false (the entire dynamic import branch is tree-shaken).
-  const jafarJsPath = './jafar.js';
-  await import(/* @vite-ignore */ jafarJsPath);
+  // jafar.js is copied to the root of dist/ (same level as index.html).
+  // Use an absolute URL built from PUBLIC_PATH so the import works correctly
+  // regardless of which sub-directory the caller chunk lives in.
+  const jafarJsUrl = (process.env.PUBLIC_PATH ?? '/') + 'jafar.js';
+  await import(/* @vite-ignore */ /* webpackIgnore: true */ jafarJsUrl);
   // GraalVM bootstrap sets up the module on globalThis
   const mod = (globalThis as unknown as Record<string, unknown>).JFRParser;
   if (!mod) {
