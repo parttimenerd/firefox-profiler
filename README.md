@@ -20,7 +20,7 @@ Fork-only features the Java tooling depends on:
 - **Function Table tab** — aggregates samples by function rather than by call path.
 - **TreeView column sort** — multi-column sortable headers for the call tree / function table.
 - **Java syntax highlighting** in the source view.
-- **In-browser JFR converter** — drag-and-drop a `.jfr` file directly into the profiler without running jfrtofp-server. Built on the excellent [jafar] JFR parser by [Jaroslav Bachorik](https://github.com/jbachorik), compiled to WebAssembly via GraalVM Web Image. Requires the optional WASM asset; see [`src/profile-logic/import/jfr-wasm/README.md`](src/profile-logic/import/jfr-wasm/README.md). The build works without it (`JFR_CONVERTER_ENABLED=false`).
+- **In-browser JFR converter** — drag-and-drop a `.jfr` file directly into the profiler without running jfrtofp-server. Built on the excellent [jafar](https://github.com/btraceio/jafar) JFR parser by [Jaroslav Bachorik](https://github.com/jbachorik), compiled to WebAssembly via [GraalVM Web Image](https://www.graalvm.org/latest/reference-manual/web-image/). Requires the optional WASM asset; see [`src/profile-logic/import/jfr-wasm/README.md`](src/profile-logic/import/jfr-wasm/README.md). The build works without it (`JFR_CONVERTER_ENABLED=false`).
 
 ### GitHub Pages deployment
 
