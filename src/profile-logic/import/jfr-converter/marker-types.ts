@@ -58,11 +58,6 @@ interface MarkerTypeEntry {
 
 const stringConverter: Converter = (_, __, v) => String(v ?? '');
 
-function numericConverter(transform: (v: number) => number): Converter {
-  return (_, __, v) =>
-    v !== null && v !== undefined ? transform(Number(v)) : 0;
-}
-
 // Modifier bit flags
 const MODIFIER_FLAGS: Array<[number, string]> = [
   [0x0001, 'public'],

@@ -10,9 +10,8 @@ import {
   getFormat,
 } from './marker-types';
 import type { MarkerTypeEntry, AnyMarkerFormat } from './marker-types';
-import type { Tables, RawMarkerTableWrapper } from './tables';
+import type { Tables } from './tables';
 import type { JFRConverterConfig } from './config';
-import { fromCategoryName, CategoryE } from './categories';
 import type { ParsedJFREvent, JFRFieldValue } from './types';
 
 // ---- Schema types (what we emit in profile.meta.markerSchema) ----
@@ -196,7 +195,6 @@ export class MarkerSchemaProcessor {
       name,
       label,
       description,
-      categoryNames,
       fields: rawFields,
       hasStackTrace,
     } = eventTypeInfo;

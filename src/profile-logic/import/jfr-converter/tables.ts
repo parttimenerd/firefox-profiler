@@ -268,7 +268,7 @@ export class FrameTableWrapper {
     categoryName: string,
     subcategoryName: string,
     isNative: boolean,
-    defaultUrl: string | null
+    _defaultUrl: string | null
   ): number {
     let idx = this.miscFrames.get(name);
     if (idx === undefined) {

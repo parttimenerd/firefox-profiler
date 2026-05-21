@@ -5,7 +5,7 @@
 // Port of Processor.kt — top-level orchestration of JFR event stream → Profile.
 
 import type { JFRConverterConfig } from './config';
-import { isExecutionSample, isNonProjectPackage } from './config';
+import { isExecutionSample } from './config';
 import { Tables, SamplesTableWrapper, RawMarkerTableWrapper } from './tables';
 import {
   MarkerSchemaProcessor,
@@ -281,7 +281,7 @@ interface ThreadInfo {
 
 function isSystemThread(
   javaName: string | null,
-  osName: string | null
+  _osName: string | null
 ): boolean {
   if (javaName === null || javaName === '') return false;
   const systemNames = [
