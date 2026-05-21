@@ -8,7 +8,8 @@ import {
   resolveMarkerType,
   convertFieldValue,
   getFormat,
- MARKER_TYPES } from './marker-types';
+  MARKER_TYPES,
+} from './marker-types';
 import type { MarkerTypeEntry, AnyMarkerFormat } from './marker-types';
 import type { Tables } from './tables';
 import type { JFRConverterConfig } from './config';
@@ -73,7 +74,6 @@ interface SpecialConfig {
   graphHeight?: 'small' | 'medium' | 'large';
   isPreSelected?: boolean;
 }
-
 
 const SPECIAL_EVENT_TYPES: Record<string, SpecialConfig> = {
   'jdk.CPULoad': {
@@ -178,11 +178,15 @@ export class MarkerSchemaProcessor {
 
   getMapping(eventTypeInfo: JFREventTypeInfo): SchemaMapping | null {
     const name = eventTypeInfo.name;
-    if (this.cache.has(name)) {return this.cache.get(name) ?? null;}
+    if (this.cache.has(name)) {
+      return this.cache.get(name) ?? null;
+    }
 
     const result = this.processEventType(eventTypeInfo);
     this.cache.set(name, result.mapping);
-    if (result.schema) {this.schemas.push(result.schema);}
+    if (result.schema) {
+      this.schemas.push(result.schema);
+    }
     return result.mapping;
   }
 
@@ -290,7 +294,9 @@ export class MarkerSchemaProcessor {
     // Deduplicate by name (keep first)
     const seen = new Set<string>();
     return this.schemas.filter((s) => {
-      if (seen.has(s.name)) {return false;}
+      if (seen.has(s.name)) {
+        return false;
+      }
       seen.add(s.name);
       return true;
     });
@@ -308,7 +314,9 @@ export class MarkerSchemaProcessor {
       const raw = field.accessor
         ? field.accessor(event)
         : ((event.fields[field.sourceName!] as JFRFieldValue) ?? null);
-      if (raw === null || raw === undefined) {continue;}
+      if (raw === null || raw === undefined) {
+        continue;
+      }
 
       if (field.type === MARKER_TYPES.STACKTRACE) {
         // stackTrace field: build a stack reference object
@@ -463,7 +471,9 @@ export function generateSampleLikeMarkersConfig(
     'jdk.ThreadStart': { name, label, marker: name },
   };
 
-  if (PRIMARY[name]) {result.push(PRIMARY[name]);}
+  if (PRIMARY[name]) {
+    result.push(PRIMARY[name]);
+  }
 
   // Secondary: class-based strategy for allocation sample
   if (name === 'jdk.ObjectAllocationSample') {

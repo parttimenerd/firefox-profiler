@@ -138,7 +138,9 @@ const MARKER_TYPES: Record<string, MarkerTypeEntry> = {
     convert: (tables, _, v) => {
       const startMs = tables.startTimeMs;
       let val = Number(v ?? 0);
-      while (val > startMs * 100) {val /= 1000;}
+      while (val > startMs * 100) {
+        val /= 1000;
+      }
       return val - startMs;
     },
   },
@@ -287,9 +289,12 @@ export function resolveMarkerType(
 ): MarkerTypeEntry {
   const fieldNameLower = fieldName.toLowerCase();
 
-  if (fieldNameLower.endsWith('pointer')) {return MARKER_TYPES.ADDRESS;}
-  if (fieldName.endsWith('Size') || BYTE_FIELD_NAMES.has(fieldName))
-    {return MARKER_TYPES.BYTES;}
+  if (fieldNameLower.endsWith('pointer')) {
+    return MARKER_TYPES.ADDRESS;
+  }
+  if (fieldName.endsWith('Size') || BYTE_FIELD_NAMES.has(fieldName)) {
+    return MARKER_TYPES.BYTES;
+  }
 
   const contentTypeResult = contentType
     ? TYPE_NAME_MAP.get(

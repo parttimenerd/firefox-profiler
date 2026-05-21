@@ -62,13 +62,19 @@ class ThreadProcessor {
   }
 
   processEvent(event: ParsedJFREvent, eventTypeInfo: JFREventTypeInfo): void {
-    if (this.start === null) {this.start = event.startMs;}
+    if (this.start === null) {
+      this.start = event.startMs;
+    }
     this.end = Math.max(this.end, event.endMs);
     this.seenEventTypes.add(event.type);
 
     if (event.thread) {
-      if (this.javaName === null) {this.javaName = event.thread.javaName;}
-      if (this.osName === null) {this.osName = event.thread.osName;}
+      if (this.javaName === null) {
+        this.javaName = event.thread.javaName;
+      }
+      if (this.osName === null) {
+        this.osName = event.thread.osName;
+      }
     }
 
     if (isExecutionSample(event.type, this.tables.config)) {
@@ -137,7 +143,9 @@ class ThreadProcessor {
   }
 
   getCpuLoad(timeMs: Milliseconds): Percentage {
-    if (this.cpuLoads.size === 0) {return 1.0;}
+    if (this.cpuLoads.size === 0) {
+      return 1.0;
+    }
     const micros = Math.round(timeMs * 1000);
     // Find nearest entry
     let floor: Percentage | null = null;
@@ -154,13 +162,19 @@ class ThreadProcessor {
         ceil = v;
       }
     }
-    if (floor === null) {return ceil!;}
-    if (ceil === null) {return floor;}
+    if (floor === null) {
+      return ceil!;
+    }
+    if (ceil === null) {
+      return floor;
+    }
     return micros - floorKey < ceilKey - micros ? floor : ceil;
   }
 
   get name(): string {
-    if (this.isParentThread) {return 'GeckoMain';}
+    if (this.isParentThread) {
+      return 'GeckoMain';
+    }
     const jn = this.javaName && this.javaName !== '' ? this.javaName : null;
     return jn ?? this.osName ?? '<unknown>';
   }
@@ -285,7 +299,9 @@ function isSystemThread(
   javaName: string | null,
   _osName: string | null
 ): boolean {
-  if (javaName === null || javaName === '') {return false;}
+  if (javaName === null || javaName === '') {
+    return false;
+  }
   const systemNames = [
     'JFR Periodic Tasks',
     'JFR Shutdown Hook',
@@ -296,10 +312,15 @@ function isSystemThread(
     'Finalizer',
     'Attach Listener',
   ];
-  if (systemNames.includes(javaName)) {return true;}
-  if (javaName.startsWith('JFR ')) {return true;}
-  if (javaName.startsWith('GC Thread') || javaName.includes('CompilerThread'))
-    {return true;}
+  if (systemNames.includes(javaName)) {
+    return true;
+  }
+  if (javaName.startsWith('JFR ')) {
+    return true;
+  }
+  if (javaName.startsWith('GC Thread') || javaName.includes('CompilerThread')) {
+    return true;
+  }
   return false;
 }
 
@@ -316,20 +337,28 @@ function estimateInterval(startTimesPerThread: Map<number, number[]>): number {
   const MAX_INTERVAL = 1000.0;
   const allIntervals: number[] = [];
   for (const times of startTimesPerThread.values()) {
-    if (times.length < 3) {continue;}
+    if (times.length < 3) {
+      continue;
+    }
     const sorted = [...times].sort((a, b) => a - b);
     for (let i = 1; i < sorted.length; i++) {
       const diff = sorted[i] - sorted[i - 1];
-      if (diff > 0 && diff < MAX_INTERVAL) {allIntervals.push(diff);}
+      if (diff > 0 && diff < MAX_INTERVAL) {
+        allIntervals.push(diff);
+      }
     }
   }
-  if (allIntervals.length === 0) {return 1.0;}
+  if (allIntervals.length === 0) {
+    return 1.0;
+  }
   allIntervals.sort((a, b) => a - b);
   const subset = allIntervals.slice(
     Math.floor(allIntervals.length * 0.1),
     Math.floor(allIntervals.length * 0.8)
   );
-  if (subset.length === 0) {return 1.0;}
+  if (subset.length === 0) {
+    return 1.0;
+  }
   return subset.reduce((a, b) => a + b, 0) / subset.length;
 }
 
@@ -372,8 +401,12 @@ export async function convertJFREventStream(
 
   for (const event of events) {
     const t = event.thread;
-    if (!t) {continue;}
-    if (t.javaName === 'main' && mainThreadId === -1) {mainThreadId = t.id;}
+    if (!t) {
+      continue;
+    }
+    if (t.javaName === 'main' && mainThreadId === -1) {
+      mainThreadId = t.id;
+    }
     let info = threadInfoMap.get(t.id);
     if (!info) {
       info = {
@@ -406,7 +439,9 @@ export async function convertJFREventStream(
   // Mark main thread
   if (mainThreadId !== -1) {
     const mainInfo = threadInfoMap.get(mainThreadId);
-    if (mainInfo) {mainInfo.isMainThread = true;}
+    if (mainInfo) {
+      mainInfo.isMainThread = true;
+    }
   }
 
   const tables = new Tables(config, meta.startMs, config.sourceUrl);
@@ -431,9 +466,13 @@ export async function convertJFREventStream(
 
   // Second pass: process events
   for (const event of events) {
-    if (config.ignoredEvents.has(event.type)) {continue;}
+    if (config.ignoredEvents.has(event.type)) {
+      continue;
+    }
     const eventTypeInfo = eventTypeInfoMap.get(event.type);
-    if (!eventTypeInfo) {continue;}
+    if (!eventTypeInfo) {
+      continue;
+    }
 
     // Counter extraction
     if (event.type === 'jdk.CPULoad') {
@@ -458,8 +497,9 @@ export async function convertJFREventStream(
     if (t === undefined || t === null) {
       parentProcessor.processEvent(event, eventTypeInfo);
     } else {
-      if (!config.includeGCThreads && isGCThread(t.javaName, t.osName))
-        {continue;}
+      if (!config.includeGCThreads && isGCThread(t.javaName, t.osName)) {
+        continue;
+      }
       let proc = threadProcessors.get(t.id);
       if (!proc) {
         proc = new ThreadProcessor(
@@ -477,16 +517,26 @@ export async function convertJFREventStream(
 
   // Filter and rank threads
   function isValidThread(info: ThreadInfo): boolean {
-    if (info.isMainThread) {return true;}
-    if (info.isGCThread) {return config.includeGCThreads;}
+    if (info.isMainThread) {
+      return true;
+    }
+    if (info.isGCThread) {
+      return config.includeGCThreads;
+    }
     const combined = info.executionSampleCount + info.otherSampleCount;
-    if (combined < config.minRequiredItemsPerThread) {return false;}
-    if (!info.isSystemThread) {return info.executionSampleCount > 0;}
+    if (combined < config.minRequiredItemsPerThread) {
+      return false;
+    }
+    if (!info.isSystemThread) {
+      return info.executionSampleCount > 0;
+    }
     return true;
   }
 
   function threadScore(info: ThreadInfo): number {
-    if (info.isMainThread) {return Number.MAX_SAFE_INTEGER;}
+    if (info.isMainThread) {
+      return Number.MAX_SAFE_INTEGER;
+    }
     return info.executionSampleCount * 2 + info.otherSampleCount;
   }
 
@@ -497,7 +547,9 @@ export async function convertJFREventStream(
   const threadList = [parentProcessor.toThread()];
   for (const info of validInfos) {
     const proc = threadProcessors.get(info.id);
-    if (proc) {threadList.push(proc.toThread());}
+    if (proc) {
+      threadList.push(proc.toThread());
+    }
   }
 
   // Visibility

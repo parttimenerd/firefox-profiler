@@ -34,7 +34,9 @@ interface JafarWASMModule {
 let wasmModule: JafarWASMModule | null = null;
 
 async function loadWasm(): Promise<JafarWASMModule> {
-  if (wasmModule) {return wasmModule;}
+  if (wasmModule) {
+    return wasmModule;
+  }
   // jafar.js is the GraalVM bootstrap — it attaches to the global scope.
   // Use a variable so esbuild doesn't try to resolve this at build time when
   // JFR_CONVERTER_ENABLED=false (the entire dynamic import branch is tree-shaken).
@@ -133,7 +135,9 @@ function guessCategoryFromEventType(eventType: string): string {
   ) {
     return 'Java Virtual Machine, Compiler';
   }
-  if (eventType.includes('Thread')) {return 'Java Application';}
+  if (eventType.includes('Thread')) {
+    return 'Java Application';
+  }
   if (
     eventType.includes('Socket') ||
     eventType.includes('File') ||
@@ -141,7 +145,8 @@ function guessCategoryFromEventType(eventType: string): string {
   ) {
     return 'Operating System';
   }
-  if (eventType.startsWith('jdk.CPU') || eventType.includes('CPULoad'))
-    {return 'Operating System, Processor';}
+  if (eventType.startsWith('jdk.CPU') || eventType.includes('CPULoad')) {
+    return 'Operating System, Processor';
+  }
   return 'Java Application';
 }
