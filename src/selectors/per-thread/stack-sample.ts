@@ -509,6 +509,9 @@ export function getStackAndSampleSelectorsPerThread(
     getCallTree,
     getFunctionListTree,
     getFunctionListTimings,
+    // Custom (fork-only): exposed so the Function Table view can use the
+    // inverted call node info regardless of the user's invertCallstack setting.
+    getInvertedCallNodeInfo: _getInvertedCallNodeInfo,
     getSourceViewLineTimings,
     getAssemblyViewAddressTimings,
     getTracedTiming,

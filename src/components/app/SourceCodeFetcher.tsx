@@ -12,6 +12,7 @@ import {
   getSourceViewFile,
   getSourceViewSourceIndex,
   getSourceViewSourceId,
+  getSourceViewSourceUrl,
 } from 'firefox-profiler/selectors';
 import {
   beginLoadingSourceCodeFromUrl,
@@ -37,6 +38,7 @@ type StateProps = {
   readonly sourceViewFile: string | null;
   readonly sourceViewSourceIndex: IndexIntoSourceTable | null;
   readonly sourceViewSourceId: string | null;
+  readonly sourceViewSourceUrl: string | null;
   readonly sourceViewCode: SourceCodeStatus | void;
   readonly symbolServerUrl: string;
   readonly profile: Profile | null;
@@ -69,6 +71,7 @@ class SourceCodeFetcherImpl extends React.PureComponent<Props> {
       sourceViewCode,
       sourceViewFile,
       sourceViewSourceId,
+      sourceViewSourceUrl,
       beginLoadingSourceCodeFromUrl,
       beginLoadingSourceCodeFromBrowserConnection,
       finishLoadingSourceCode,
@@ -83,6 +86,32 @@ class SourceCodeFetcherImpl extends React.PureComponent<Props> {
     }
 
     if (!profile) {
+      return;
+    }
+
+    // Custom (fork-only): if the profile provides an explicit per-source URL
+    // (jfrtofp profiles do), fetch directly from that URL and skip the
+    // symbol-server / address-proof flow.
+    if (sourceViewSourceUrl !== null && sourceViewSourceUrl.length !== 0) {
+      beginLoadingSourceCodeFromUrl(sourceViewSourceIndex, sourceViewSourceUrl);
+      try {
+        const response = await fetch(sourceViewSourceUrl);
+        if (!response.ok) {
+          throw new Error(
+            `Got ${response.status} (${response.statusText}) for ${sourceViewSourceUrl}`
+          );
+        }
+        const source = await response.text();
+        finishLoadingSourceCode(sourceViewSourceIndex, source);
+      } catch (e) {
+        failLoadingSourceCode(sourceViewSourceIndex, [
+          {
+            type: 'NETWORK_ERROR',
+            url: sourceViewSourceUrl,
+            networkErrorMessage: e instanceof Error ? e.message : String(e),
+          },
+        ]);
+      }
       return;
     }
 
@@ -138,6 +167,7 @@ export const SourceCodeFetcher = explicitConnect<{}, StateProps, DispatchProps>(
       sourceViewSourceIndex: getSourceViewSourceIndex(state),
       sourceViewFile: getSourceViewFile(state),
       sourceViewSourceId: getSourceViewSourceId(state),
+      sourceViewSourceUrl: getSourceViewSourceUrl(state),
       sourceViewCode: getSourceViewCode(state),
       symbolServerUrl: getSymbolServerUrl(state),
       profile: getProfileOrNull(state),

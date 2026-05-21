@@ -52,6 +52,7 @@ import type {
   SamplesTable,
   RawStackTable,
   SampleUnits,
+  SampleLikeMarkerConfig,
   StackTable,
   FrameTable,
   FuncTable,
@@ -96,6 +97,8 @@ import type {
   NativeSymbolInfo,
   Bytes,
   FuncTableWithReservedFunctions,
+  RawMarkerTable,
+  WeightType,
   TabID,
   SourceTable,
   IndexIntoSourceTable,
@@ -1596,6 +1599,12 @@ export function toValidCallTreeSummaryStrategy(
     case 'native-deallocations-memory':
       return strategy;
     default:
+      // Custom (fork-only): preserve marker-based strategies as-is. Validation
+      // against the current thread's sampleLikeMarkersConfig happens in the
+      // per-thread getCallTreeSummaryStrategy selector.
+      if (typeof strategy === 'string' && strategy.startsWith('marker:')) {
+        return strategy as `marker:${string}`;
+      }
       // Default to "timing" if the strategy is not recognized. This value can come
       // from a user-generated URL.
       // e.g. `profiler.firefox.com/public/hash/ctSummary=tiiming` (note the typo.)
@@ -1603,6 +1612,92 @@ export function toValidCallTreeSummaryStrategy(
       // the store.
       return 'timing';
   }
+}
+
+/**
+ * Custom (fork-only): returns the additional Call Tree strategies advertised
+ * by the thread's `sampleLikeMarkersConfig`. The `name` is namespaced as
+ * `marker:<config.name>` so it round-trips through CallTreeSummaryStrategy.
+ */
+export const getAdditionalStrategiesForThread = memoize(
+  (thread: Thread): Array<{ name: `marker:${string}`; label: string }> => {
+    if (!thread.sampleLikeMarkersConfig) {
+      return [];
+    }
+    return thread.sampleLikeMarkersConfig.map((config) => ({
+      name: `marker:${config.name}` as const,
+      label: config.label,
+    }));
+  }
+);
+
+/**
+ * Custom (fork-only): given a `marker:NAME` strategy, build a SamplesLikeTable
+ * by treating each matching marker as one sample, taking its stack from the
+ * configured stack field (default `cause`).
+ */
+export const applyAdditionalStrategy: (
+  thread: Thread,
+  strategy: `marker:${string}`
+) => SamplesLikeTable = memoize(
+  (thread: Thread, strategy: `marker:${string}`): SamplesLikeTable => {
+    const name = strategy.slice('marker:'.length);
+    const config = thread.sampleLikeMarkersConfig?.find((c) => c.name === name);
+    if (config === undefined) {
+      throw new Error(
+        `Thread doesn't have a sampleLikeMarkersConfig entry for "${name}"`
+      );
+    }
+    return _applyAdditionalStrategyOnMarkers(thread.markers, config, thread);
+  }
+);
+
+function _applyAdditionalStrategyOnMarkers(
+  rawTable: RawMarkerTable,
+  config: SampleLikeMarkerConfig,
+  thread: Thread
+): SamplesLikeTable {
+  const stack: Array<IndexIntoStackTable | null> = [];
+  const time: Milliseconds[] = [];
+  const weight: number[] = [];
+  const weightType: WeightType = config.weightType || 'samples';
+  let length = 0;
+  const markerNameId = thread.stringTable.indexForString(config.marker);
+  const stackField = config.stackField || 'cause';
+  const weightField = config.weightField;
+  for (let i = 0; i < rawTable.length; i++) {
+    if (rawTable.name[i] !== markerNameId) {
+      continue;
+    }
+    const data = rawTable.data[i] as Record<string, unknown> | null;
+    time[length] = rawTable.startTime[i] ?? rawTable.endTime[i] ?? -1;
+    if (weightField !== undefined && data) {
+      const rawVal = data[weightField];
+      // jfrtofp omits a payload field entirely (rather than emitting null) when
+      // the underlying JFR event has no value for it. In that case we count the
+      // event as a single sample. A genuine zero stays zero; upstream code
+      // filters out zero-self call nodes when rendering, which is the correct
+      // outcome for "this event has no weight to contribute".
+      // (The legacy fork used -1 / 0.000001 here; both produced misleading
+      // totals.)
+      weight[length] = rawVal === undefined ? 1 : Number(rawVal);
+    } else {
+      weight[length] = 1;
+    }
+    const stackPayload =
+      data && stackField in data
+        ? (data[stackField] as { stack?: IndexIntoStackTable | null } | null)
+        : null;
+    stack[length] = stackPayload?.stack ?? null;
+    length++;
+  }
+  return {
+    stack,
+    time,
+    weight,
+    weightType,
+    length,
+  };
 }
 
 export function filterThreadByImplementation(
@@ -2808,6 +2903,7 @@ export function createThreadFromDerivedTables(
     isPrivateBrowsing,
     userContextId,
     tracedObjectShapes,
+    sampleLikeMarkersConfig,
   } = rawThread;
 
   const thread: Thread = {
@@ -2833,6 +2929,7 @@ export function createThreadFromDerivedTables(
     isPrivateBrowsing,
     userContextId,
     tracedObjectShapes,
+    sampleLikeMarkersConfig,
 
     // These fields are derived:
     samples,

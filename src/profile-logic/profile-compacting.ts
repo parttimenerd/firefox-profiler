@@ -53,9 +53,9 @@ type ColumnDescription<TCol> = null extends (
       | { type: 'NO_REF' };
 
 type TableDescription<T> = {
-  [K in keyof T as T[K] extends Array<any> ? K : never]: ColumnDescription<
-    T[K]
-  >;
+  [K in keyof T as NonNullable<T[K]> extends Array<any>
+    ? K
+    : never]: ColumnDescription<NonNullable<T[K]>>;
 };
 
 const ColDesc = {
@@ -181,6 +181,9 @@ export function computeCompactedProfile(
     startLine: ColDesc.noRef(),
     startColumn: ColDesc.noRef(),
     sourceMapURL: ColDesc.indexRefOrNull(tcs.stringArray),
+    // Custom (fork-only): per-source override URL; column is optional, so
+    // _markTableAndComputeTranslation/_compactTable skip when undefined.
+    sourceUrl: ColDesc.indexRefOrNull(tcs.stringArray),
   };
 
   // Step 1: Gather all references.
@@ -293,7 +296,10 @@ function _markTableAndComputeTranslation<T>(
   for (const key of keys) {
     const desc = tableDesc[key];
     if (desc.type === 'SELF_INDEX_REF_OR_NULL') {
-      markSelfColumnWithNullableFields((table as any)[key], markBuffer);
+      const col = (table as any)[key];
+      if (col !== undefined) {
+        markSelfColumnWithNullableFields(col, markBuffer);
+      }
     }
   }
 
@@ -301,6 +307,10 @@ function _markTableAndComputeTranslation<T>(
   for (const key of keys) {
     const desc = tableDesc[key];
     const col = (table as any)[key];
+    // Skip optional columns that are absent on this table instance.
+    if (col === undefined) {
+      continue;
+    }
     switch (desc.type) {
       case 'INDEX_REF':
         markColumn(col, markBuffer, desc.referencedTable.markBuffer);
@@ -467,6 +477,10 @@ function _compactTable<T extends { length: number }>(
   for (const key of Object.keys(tableDesc) as Array<keyof typeof tableDesc>) {
     const desc = tableDesc[key];
     const oldCol = (oldTable as any)[key];
+    // Skip optional columns that are absent on this table instance.
+    if (oldCol === undefined) {
+      continue;
+    }
     switch (desc.type) {
       case 'INDEX_REF':
         result[key] = _compactColIndex(

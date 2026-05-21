@@ -62,8 +62,12 @@ function _calculateUnitValue(
   type: MarkerGraphType,
   minNumber: number,
   maxNumber: number,
-  value: number
+  value: number,
+  isPreScaled?: boolean
 ) {
+  if (isPreScaled) {
+    return value * 0.85;
+  }
   let scaled;
   switch (type) {
     case 'line':
@@ -144,23 +148,35 @@ class TrackCustomMarkerCanvas extends React.PureComponent<CanvasProps> {
 
     {
       for (let graphIndex = 0; graphIndex < graphs.length; graphIndex++) {
-        const { type, color } = graphs[graphIndex];
+        const { type, color, strokeColor, fillColor, width, isPreScaled } =
+          graphs[graphIndex];
         const samples = collectedSamples.numbersPerLine[graphIndex];
         // Draw the chart.
         //
-        ctx.strokeStyle = getStrokeColor(color || TRACK_MARKER_DEFAULT_COLOR);
+        // Per-graph explicit CSS color strings take priority over the enum-based
+        // `color` field so that jfrtofp profiles can supply arbitrary colors.
+        const resolvedStrokeColor = strokeColor
+          ? strokeColor
+          : getStrokeColor(color || TRACK_MARKER_DEFAULT_COLOR);
+
+        const deviceGraphLineWidth = width
+          ? width * devicePixelRatio
+          : deviceLineWidth;
+        ctx.lineWidth = deviceGraphLineWidth;
+        ctx.strokeStyle = resolvedStrokeColor;
 
         const getX = (time: number) =>
           Math.round((time - rangeStart) * millisecondWidth);
         // For line graphs, ensure y is at least half the stroke's line width
         // so that it won't be cut off the bottom edge of the graph.
-        const minY = type === 'bar' ? 0 : deviceLineWidth * 0.5;
+        const minY = type === 'bar' ? 0 : deviceGraphLineWidth * 0.5;
         const getY = (i: number) => {
           const unitValue = _calculateUnitValue(
             type,
             minNumber,
             maxNumber,
-            samples[i]
+            samples[i],
+            isPreScaled
           );
           return Math.floor(deviceHeight - deviceHeight * unitValue - minY);
         };
@@ -219,7 +235,9 @@ class TrackCustomMarkerCanvas extends React.PureComponent<CanvasProps> {
               ctx.lineTo(firstX, deviceHeight);
 
               // The line from 4 to 1 will be implicitly filled in.
-              ctx.fillStyle = getFillColor(color || TRACK_MARKER_DEFAULT_COLOR);
+              ctx.fillStyle = fillColor
+                ? fillColor
+                : getFillColor(color || TRACK_MARKER_DEFAULT_COLOR);
               ctx.fill();
               ctx.closePath();
             }
@@ -518,20 +536,24 @@ class TrackCustomMarkerGraphImpl extends React.PureComponent<Props, State> {
     const dots = [];
 
     for (let graphIndex = 0; graphIndex < graphs.length; graphIndex++) {
-      const { type, color } = graphs[graphIndex];
+      const { type, color, strokeColor, isPreScaled } = graphs[graphIndex];
       const samples = numbersPerLine[graphIndex];
       const unitValue = _calculateUnitValue(
         type,
         minNumber,
         maxNumber,
-        samples[counterIndex]
+        samples[counterIndex],
+        isPreScaled
       );
       const halfLineWidth = TRACK_MARKER_LINE_WIDTH / 2;
       const innerTrackHeight = graphHeight - halfLineWidth;
       const top =
         innerTrackHeight - unitValue * innerTrackHeight - halfLineWidth;
       const style: React.CSSProperties = { left, top };
-      style.backgroundColor = getDotColor(color || TRACK_MARKER_DEFAULT_COLOR);
+      // Use explicit strokeColor if present, otherwise derive from color enum.
+      style.backgroundColor = strokeColor
+        ? strokeColor
+        : getDotColor(color || TRACK_MARKER_DEFAULT_COLOR);
 
       if (marker.end) {
         let screenWidth = (width * (marker.end - marker.start)) / rangeLength;

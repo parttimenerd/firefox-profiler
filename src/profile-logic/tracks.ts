@@ -64,16 +64,16 @@ const LOCAL_TRACK_INDEX_ORDER = {
   marker: 5,
 };
 const LOCAL_TRACK_DISPLAY_ORDER = {
-  network: 0,
-  counter: 1,
+  marker: 0,
+  network: 1,
+  counter: 2,
   // IPC tracks that belong to the global track will appear right after network
   // and counter tracks. But we want to show the IPC tracks that belong to the
   // local threads right after their track. This special handling happens inside
   // the sort function.
-  ipc: 2,
-  thread: 3,
-  'event-delay': 4,
-  marker: 5,
+  ipc: 3,
+  thread: 4,
+  'event-delay': 5,
 };
 
 const GLOBAL_TRACK_INDEX_ORDER = {
@@ -1301,7 +1301,10 @@ export function getLocalTrackName(
         ' Event Delay'
       );
     case 'marker':
-      return shared.stringArray[localTrack.markerName];
+      return (
+        localTrack.markerSchema.trackLabel ||
+        shared.stringArray[localTrack.markerName]
+      );
     default:
       throw assertExhaustiveCheck(localTrack, 'Unhandled LocalTrack type.');
   }

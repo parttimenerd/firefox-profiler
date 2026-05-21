@@ -396,6 +396,26 @@ export type GeckoMetaMarkerSchema = {
   // if present, give the marker its own local track
   graphs?: Array<MarkerGraph>;
 
+  // Custom (fork-only): old jfrtofp trackConfig format (pre-2025), converted to graphs on load.
+  trackConfig?: {
+    label?: string;
+    height?: string;
+    isPreSelected?: boolean;
+    lines?: Array<{
+      key: string;
+      type?: string;
+      strokeColor?: string;
+      fillColor?: string;
+    }>;
+  };
+
+  // Custom (fork-only): display label for the local track (populated from trackConfig.label).
+  trackLabel?: string;
+
+  // Custom (fork-only): track-level height and pre-selection, mirroring MarkerSchema.
+  graphHeight?: 'small' | 'medium' | 'large';
+  isPreSelected?: boolean;
+
   // If present, specifies the key of a marker field that contains the marker's color.
   // The field should contain one of the GraphColor values.
   // This allows individual markers to have different colors based on their data.

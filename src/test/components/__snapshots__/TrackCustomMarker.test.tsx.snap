@@ -79,6 +79,10 @@ Array [
     "bevel",
   ],
   Array [
+    "set lineWidth",
+    2,
+  ],
+  Array [
     "set strokeStyle",
     "#737373",
   ],
@@ -167,6 +171,10 @@ Array [
   ],
   Array [
     "stroke",
+  ],
+  Array [
+    "set lineWidth",
+    2,
   ],
   Array [
     "set strokeStyle",

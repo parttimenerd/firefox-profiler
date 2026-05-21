@@ -50,7 +50,8 @@ export function getStrokeColor(color: GraphColor) {
     case 'ink':
       return INK_50;
     default:
-      throw new Error('Unexpected track color: ' + color);
+      // Custom (fork-only): fall back to grey for unknown color names (e.g. from jfrtofp)
+      return GREY_50;
   }
 }
 
@@ -82,7 +83,8 @@ export function getDotColor(color: GraphColor) {
     case 'ink':
       return INK_60;
     default:
-      throw new Error('Unexpected track color: ' + color);
+      // Custom (fork-only): fall back to grey for unknown color names (e.g. from jfrtofp)
+      return GREY_60;
   }
 }
 

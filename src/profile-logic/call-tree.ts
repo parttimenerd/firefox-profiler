@@ -39,6 +39,9 @@ import * as ProfileData from './profile-data';
 import type { CallTreeSummaryStrategy } from '../types/actions';
 import type { CallNodeInfo, CallNodeInfoInverted } from './call-node-info';
 import { getBottomBoxInfoForCallNode } from './bottom-box';
+// Custom (fork-only): used to apply user-driven multi-column sort to call tree
+// children.
+import type { ColumnSortState } from '../components/shared/TreeView';
 
 type CallNodeChildren = IndexIntoCallNodeTable[];
 
@@ -394,17 +397,50 @@ export class CallTree {
     return this._rootTotalSummary;
   }
 
-  getRoots() {
-    return this._roots;
+  getRoots(sort?: ColumnSortState | null): CallNodeChildren {
+    return sort ? this._sortChildren(this._roots, sort) : this._roots;
   }
 
-  getChildren(callNodeIndex: IndexIntoCallNodeTable): CallNodeChildren {
+  getChildren(
+    callNodeIndex: IndexIntoCallNodeTable,
+    sort?: ColumnSortState | null
+  ): CallNodeChildren {
     let children = this._children[callNodeIndex];
     if (children === undefined) {
       children = this._internal.createChildren(callNodeIndex);
       this._children[callNodeIndex] = children;
     }
-    return children;
+    return sort ? this._sortChildren(children, sort) : children;
+  }
+
+  // Custom (fork-only): apply a ColumnSortState across the children of a node.
+  // Falls back to the natural order when no sortable columns are active.
+  _sortChildren(
+    children: CallNodeChildren,
+    sort: ColumnSortState
+  ): CallNodeChildren {
+    if (sort.sortedColumns.length === 0) {
+      return children;
+    }
+    return sort.sortItems(
+      children,
+      (
+        a: IndexIntoCallNodeTable,
+        b: IndexIntoCallNodeTable,
+        column: string
+      ) => {
+        const aValues = this._internal.getSelfAndTotal(a);
+        const bValues = this._internal.getSelfAndTotal(b);
+        switch (column) {
+          case 'total':
+            return bValues.total - aValues.total;
+          case 'self':
+            return bValues.self - aValues.self;
+          default:
+            return 0;
+        }
+      }
+    );
   }
 
   hasChildren(callNodeIndex: IndexIntoCallNodeTable): boolean {
@@ -1130,6 +1166,13 @@ export function extractSamplesLikeTable(
   thread: Thread,
   strategy: CallTreeSummaryStrategy
 ): SamplesLikeTable {
+  // Custom (fork-only): marker-based strategies are namespaced as `marker:NAME`.
+  if (typeof strategy === 'string' && strategy.startsWith('marker:')) {
+    return ProfileData.applyAdditionalStrategy(
+      thread,
+      strategy as `marker:${string}`
+    );
+  }
   switch (strategy) {
     case 'timing':
       return thread.samples;
@@ -1190,7 +1233,12 @@ export function extractSamplesLikeTable(
     }
     /* istanbul ignore next */
     default:
-      throw assertExhaustiveCheck(strategy);
+      // Custom (fork-only): the only remaining variant after the literal cases
+      // is `marker:${string}`, which is handled at the top of the function;
+      // any other value here means the union grew without us updating this code.
+      throw assertExhaustiveCheck(
+        strategy as Exclude<typeof strategy, `marker:${string}`>
+      );
   }
 }
 
@@ -1205,6 +1253,14 @@ export function extractUnfilteredSamplesLikeTable(
   thread: Thread,
   strategy: CallTreeSummaryStrategy
 ): SamplesLikeTable {
+  // Custom (fork-only): marker-based strategies don't null-out their stacks,
+  // so the unfiltered variant returns the same table as the filtered one.
+  if (typeof strategy === 'string' && strategy.startsWith('marker:')) {
+    return ProfileData.applyAdditionalStrategy(
+      thread,
+      strategy as `marker:${string}`
+    );
+  }
   switch (strategy) {
     case 'timing':
       return thread.samples;
@@ -1223,7 +1279,9 @@ export function extractUnfilteredSamplesLikeTable(
       );
     /* istanbul ignore next */
     default:
-      throw assertExhaustiveCheck(strategy);
+      throw assertExhaustiveCheck(
+        strategy as Exclude<typeof strategy, `marker:${string}`>
+      );
   }
 }
 

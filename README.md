@@ -8,6 +8,25 @@ The [Firefox Profiler] visualizes performance data recorded from web browsers. I
 
 ![Screenshot of the Firefox Profiler](./docs-user/images/screenshot-2022-04-25.png?raw=true)
 
+## About this fork (`jfrtofp` branch)
+
+This is a fork of the [upstream Firefox Profiler] maintained by [Johannes Bechberger](https://github.com/parttimenerd). The `jfrtofp` branch contains a single feature commit on top of an upstream snapshot, used by the Java profiling tools [jfrtofp] and [jfrtofp-server]. It is less stable than upstream but ships features that are not yet (or may never be) merged there.
+
+Fork-only features the Java tooling depends on:
+
+- **Custom marker tracks** (`MarkerSchema.graphs` / `trackLabel` / `graphHeight` / `isPreSelected`, with per-line `fillColor` / `strokeColor` / `width` / `isPreScaled`) — used by jfrtofp for GC heap, CPU load, and network utilization tracks.
+- **Marker-based stack strategies** (`Thread.sampleLikeMarkersConfig`) — turns selected markers (e.g. `jdk.ObjectAllocationSample`, `jdk.ThreadStart`) into call-tree-style sample sources.
+- **Per-source override URL** (`SourceTable.sourceUrl`) — lets the source view fetch directly from a configured Java source repo URL instead of going through the symbol server.
+- **Function Table tab** — aggregates samples by function rather than by call path.
+- **TreeView column sort** — multi-column sortable headers for the call tree / function table.
+- **Java syntax highlighting** in the source view.
+
+This branch is rebased onto upstream periodically; the fork is squashed into one commit on top, so `git log upstream..jfrtofp` shows exactly what's added. The `merged` branch (the previous name) was renamed to `jfrtofp` to make its purpose self-describing.
+
+[upstream Firefox Profiler]: https://github.com/firefox-devtools/profiler
+[jfrtofp]: https://github.com/parttimenerd/jfrtofp
+[jfrtofp-server]: https://github.com/parttimenerd/jfrtofp-server
+
 ### Usage
 
 > Visit [profiler.firefox.com](https://profiler.firefox.com/) :rocket:

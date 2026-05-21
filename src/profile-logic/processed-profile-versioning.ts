@@ -106,6 +106,37 @@ export function attemptToUpgradeProcessedProfileThroughMutation(
   const upgradedProfile = profile as Profile;
   upgradedProfile.meta.preprocessedProfileVersion = PROCESSED_PROFILE_VERSION;
 
+  // Custom (fork-only): convert old jfrtofp trackConfig format to graphs.
+  // jfrtofp profiles pre-2025 embed trackConfig on marker schemas instead of
+  // the upstream graphs array. Do this after all version upgrades so the
+  // schema fields (graphs, graphHeight, isPreSelected, trackLabel) are in place.
+  for (const schema of upgradedProfile.meta.markerSchema) {
+    const s = schema as any;
+    if (!s.graphs && s.trackConfig) {
+      const tc = s.trackConfig;
+      if (Array.isArray(tc.lines) && tc.lines.length > 0) {
+        s.graphs = tc.lines.map((line: any) => ({
+          key: line.key,
+          type: line.type || 'line',
+          strokeColor: line.strokeColor,
+          fillColor: line.fillColor,
+        }));
+      }
+      if (tc.height && !s.graphHeight) {
+        const h = tc.height;
+        if (h === 'small' || h === 'medium' || h === 'large') {
+          s.graphHeight = h;
+        }
+      }
+      if (tc.isPreSelected !== undefined && s.isPreSelected === undefined) {
+        s.isPreSelected = tc.isPreSelected;
+      }
+      if (tc.label && !s.trackLabel) {
+        s.trackLabel = tc.label;
+      }
+    }
+  }
+
   return upgradedProfile;
 }
 

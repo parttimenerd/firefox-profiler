@@ -9,6 +9,8 @@
  */
 export const tabsWithTitleL10nId = {
   calltree: 'TabBar--calltree-tab',
+  // Custom (fork-only): aggregates samples by function rather than call path.
+  'function-table': 'TabBar--function-table-tab',
   'flame-graph': 'TabBar--flame-graph-tab',
   'stack-chart': 'TabBar--stack-chart-tab',
   'marker-chart': 'TabBar--marker-chart-tab',
@@ -41,6 +43,7 @@ export const tabsWithTitleL10nIdArray: readonly TabsWithTitleL10nId[] =
 
 export const tabsShowingSampleData: readonly TabSlug[] = [
   'calltree',
+  'function-table',
   'flame-graph',
   'stack-chart',
 ];

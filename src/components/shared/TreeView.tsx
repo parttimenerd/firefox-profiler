@@ -11,7 +11,11 @@ import { VirtualList } from './VirtualList';
 
 import { ContextMenuTrigger } from './ContextMenuTrigger';
 
-import type { CssPixels, TableViewOptions } from 'firefox-profiler/types';
+import type {
+  CssPixels,
+  SingleColumnSortState,
+  TableViewOptions,
+} from 'firefox-profiler/types';
 
 import './TreeView.css';
 
@@ -43,6 +47,62 @@ type TableViewOptionsWithDefault = {
   fixedColumnWidths: Array<CssPixels>;
 };
 
+// Custom (fork-only): tracks an ordered list of column sort instructions. The
+// last entry is the primary key (most recently clicked); earlier entries act
+// as tiebreakers, so a user can sort by "self" then "total" and get a stable
+// secondary order. Instances are immutable — every mutating operation returns
+// a new ColumnSortState.
+export class ColumnSortState {
+  readonly sortedColumns: ReadonlyArray<SingleColumnSortState>;
+
+  constructor(sortedColumns: ReadonlyArray<SingleColumnSortState> = []) {
+    this.sortedColumns = sortedColumns;
+  }
+
+  // Click cycles: inactive → ascending → descending → ascending …
+  // Clicking a different column moves it to the end of the order (becoming the
+  // new primary key) but preserves the previous columns as tiebreakers.
+  sortColumn(column: string): ColumnSortState {
+    const isPrimary = this._isLastSortedColumn(column);
+    const current = isPrimary ? this.getStateForColumn(column) : null;
+    const filtered = this.sortedColumns.filter((c) => c.column !== column);
+    const next: SingleColumnSortState =
+      current === null
+        ? { column, ascending: true }
+        : { column, ascending: !current.ascending };
+    return new ColumnSortState([...filtered, next]);
+  }
+
+  _isLastSortedColumn(column: string): boolean {
+    const cur = this.current();
+    return cur !== null && cur.column === column;
+  }
+
+  getStateForColumn(column: string): SingleColumnSortState | null {
+    return this.sortedColumns.find((c) => c.column === column) ?? null;
+  }
+
+  current(): SingleColumnSortState | null {
+    return this.sortedColumns.length > 0
+      ? this.sortedColumns[this.sortedColumns.length - 1]
+      : null;
+  }
+
+  // Apply this sort state on top of an array's existing order. Uses a stable
+  // chain of sorts in priority order (oldest first, so newest wins).
+  sortItems<T>(
+    items: ReadonlyArray<T>,
+    compareColumn: (a: T, b: T, column: string) => number
+  ): T[] {
+    let sorted = items.slice();
+    for (const { column, ascending } of this.sortedColumns) {
+      const sign = ascending ? -1 : 1;
+      sorted = sorted.sort((a, b) => sign * compareColumn(a, b, column));
+    }
+    return sorted;
+  }
+}
+
 export type Column<DisplayData extends Record<string, any>> = {
   readonly propName: string;
   readonly titleL10nId: string;
@@ -73,6 +133,11 @@ type TreeViewHeaderProps<DisplayData extends Record<string, any>> = {
   // passes the column index and the start x coordinate
   readonly onColumnWidthChangeStart: (param: number, x: CssPixels) => void;
   readonly onColumnWidthReset: (param: number) => void;
+  // Custom (fork-only): clicking a sortable column header invokes onSort with
+  // the column's propName. currentSortedColumn drives the indicator arrow.
+  readonly onSort?: (column: string) => void;
+  readonly currentSortedColumn?: SingleColumnSortState | null;
+  readonly sortableColumns?: ReadonlySet<string>;
 };
 
 class TreeViewHeader<
@@ -91,8 +156,27 @@ class TreeViewHeader<
     );
   };
 
+  // Custom (fork-only): a header click on a sortable column triggers sort.
+  _onSortClick = (event: React.MouseEvent<HTMLElement>) => {
+    const { onSort } = this.props;
+    if (!onSort) {
+      return;
+    }
+    const column = event.currentTarget.dataset.column;
+    if (column) {
+      onSort(column);
+    }
+  };
+
   override render() {
-    const { fixedColumns, mainColumn, viewOptions } = this.props;
+    const {
+      fixedColumns,
+      mainColumn,
+      viewOptions,
+      currentSortedColumn,
+      sortableColumns,
+      onSort,
+    } = this.props;
     const columnWidths = viewOptions.fixedColumnWidths;
     if (fixedColumns.length === 0 && !mainColumn.titleL10nId) {
       // If there is nothing to display in the header, do not render it.
@@ -102,12 +186,31 @@ class TreeViewHeader<
       <div className="treeViewHeader">
         {fixedColumns.map((col, i) => {
           const width = columnWidths[i] + (col.headerWidthAdjustment || 0);
+          const isSortable =
+            !!onSort && !!sortableColumns && sortableColumns.has(col.propName);
+          let sortClass = '';
+          if (isSortable) {
+            if (
+              currentSortedColumn &&
+              currentSortedColumn.column === col.propName
+            ) {
+              sortClass = currentSortedColumn.ascending
+                ? 'sortDescending'
+                : 'sortAscending';
+            } else {
+              sortClass = 'sortInactive';
+            }
+          }
           return (
             <React.Fragment key={col.propName}>
               <PermissiveLocalized id={col.titleL10nId} attrs={{ title: true }}>
                 <span
                   style={{ width }}
-                  className={`treeViewHeaderColumn treeViewFixedColumn ${col.propName}`}
+                  className={`treeViewHeaderColumn treeViewFixedColumn ${col.propName}${
+                    sortClass ? ` ${sortClass}` : ''
+                  }`}
+                  data-column={col.propName}
+                  onClick={isSortable ? this._onSortClick : undefined}
                 ></span>
               </PermissiveLocalized>
               {col.hideDividerAfter !== true ? (
@@ -431,10 +534,12 @@ class TreeViewRowScrolledColumns<
 
 interface Tree<DisplayData extends Record<string, any>> {
   getDepth(nodeIndex: NodeIndex): number;
-  getRoots(): NodeIndex[];
+  // Custom (fork-only): getRoots and getChildren accept an optional sort state
+  // so the tree can return rows in user-selected column order.
+  getRoots(sort?: ColumnSortState | null): NodeIndex[];
   getDisplayData(nodeIndex: NodeIndex): DisplayData;
   getParent(nodeIndex: NodeIndex): NodeIndex;
-  getChildren(nodeIndex: NodeIndex): NodeIndex[];
+  getChildren(nodeIndex: NodeIndex, sort?: ColumnSortState | null): NodeIndex[];
   hasChildren(nodeIndex: NodeIndex): boolean;
   getAllDescendants(nodeIndex: NodeIndex): Set<NodeIndex>;
 }
@@ -465,11 +570,21 @@ type TreeViewProps<DisplayData extends Record<string, any>> = {
   readonly onKeyDown?: (param: React.KeyboardEvent<HTMLElement>) => void;
   readonly viewOptions: TableViewOptions;
   readonly onViewOptionsChange?: (param: TableViewOptions) => void;
+  // Custom (fork-only): names of columns the user can sort. If unset or empty,
+  // sort indicators are hidden.
+  readonly sortableColumns?: ReadonlySet<string>;
+  // Custom (fork-only): initial sort state (e.g. seeded from URL state).
+  readonly initialSortedColumns?: ColumnSortState;
+  // Custom (fork-only): fired with the new sort state whenever the user clicks
+  // a sortable header.
+  readonly onSort?: (sortedColumns: ColumnSortState) => void;
 };
 
 type TreeViewState = {
   readonly fixedColumnWidths: Array<CssPixels> | null;
   readonly isResizingColumns: boolean;
+  // Custom (fork-only): current column sort order.
+  readonly sortedColumns: ColumnSortState;
 };
 
 export class TreeView<
@@ -485,12 +600,38 @@ export class TreeView<
     initialWidth: CssPixels;
   } | null = null;
 
-  override state = {
+  override state: TreeViewState = {
     // This contains the current widths, while or after the user resizes them.
     fixedColumnWidths: null,
 
     // This is true when the user is currently resizing a column.
     isResizingColumns: false,
+
+    // Custom (fork-only): start unsorted; replaced in the constructor when
+    // initialSortedColumns is provided.
+    sortedColumns: new ColumnSortState(),
+  };
+
+  constructor(props: TreeViewProps<DisplayData>) {
+    super(props);
+    if (props.initialSortedColumns) {
+      this.state = { ...this.state, sortedColumns: props.initialSortedColumns };
+    }
+  }
+
+  // Custom (fork-only): handle a header click on a sortable column.
+  _onSort = (column: string) => {
+    const { sortableColumns, onSort } = this.props;
+    if (!sortableColumns || !sortableColumns.has(column)) {
+      return;
+    }
+    this.setState((prev) => {
+      const newSortedColumns = prev.sortedColumns.sortColumn(column);
+      if (onSort) {
+        onSort(newSortedColumns);
+      }
+      return { sortedColumns: newSortedColumns };
+    });
   };
 
   // This is incremented when a column changed its size. We use this to force a
@@ -612,7 +753,13 @@ export class TreeView<
   };
 
   _computeAllVisibleRowsMemoized = memoize(
-    (tree: Tree<DisplayData>, expandedNodes: Set<NodeIndex | null>) => {
+    (
+      tree: Tree<DisplayData>,
+      expandedNodes: Set<NodeIndex | null>,
+      // Custom (fork-only): include sort state in the memo key so changes to
+      // the sort order invalidate the cached row list.
+      sortedColumns: ColumnSortState
+    ) => {
       function _addVisibleRowsFromNode(
         tree: Tree<DisplayData>,
         expandedNodes: Set<NodeIndex | null>,
@@ -623,13 +770,13 @@ export class TreeView<
         if (!expandedNodes.has(nodeId)) {
           return;
         }
-        const children = tree.getChildren(nodeId);
+        const children = tree.getChildren(nodeId, sortedColumns);
         for (let i = 0; i < children.length; i++) {
           _addVisibleRowsFromNode(tree, expandedNodes, arr, children[i]);
         }
       }
 
-      const roots = tree.getRoots();
+      const roots = tree.getRoots(sortedColumns);
       const allRows: NodeIndex[] = [];
       for (let i = 0; i < roots.length; i++) {
         _addVisibleRowsFromNode(tree, expandedNodes, allRows, roots[i]);
@@ -721,7 +868,11 @@ export class TreeView<
 
   _getAllVisibleRows(): NodeIndex[] {
     const { tree } = this.props;
-    return this._computeAllVisibleRowsMemoized(tree, this._getExpandedNodes());
+    return this._computeAllVisibleRowsMemoized(
+      tree,
+      this._getExpandedNodes(),
+      this.state.sortedColumns
+    );
   }
 
   _getSpecialItems(): [NodeIndex | void, NodeIndex | void] {
@@ -952,8 +1103,10 @@ export class TreeView<
       maxNodeDepth,
       rowHeight,
       selectedNodeId,
+      sortableColumns,
     } = this.props;
-    const { isResizingColumns } = this.state;
+    const { isResizingColumns, sortedColumns } = this.state;
+    const currentSortedColumn = sortedColumns.current();
     return (
       <div className={classNames('treeView', { isResizingColumns })}>
         <TreeViewHeader
@@ -962,6 +1115,9 @@ export class TreeView<
           viewOptions={this._getCurrentViewOptions()}
           onColumnWidthChangeStart={this._onColumnWidthChangeStart}
           onColumnWidthReset={this._onColumnWidthReset}
+          onSort={this._onSort}
+          currentSortedColumn={currentSortedColumn}
+          sortableColumns={sortableColumns}
         />
         <ContextMenuTrigger
           id={contextMenuId ?? 'unknown'}

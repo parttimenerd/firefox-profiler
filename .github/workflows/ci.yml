@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - production
+      - jfrtofp
   pull_request:
 
 jobs:

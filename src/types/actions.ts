@@ -133,13 +133,16 @@ export type RequestedLib = {
 };
 export type ImplementationFilter = 'combined' | 'js' | 'cpp';
 // Change the strategy for computing the summarizing information for the call tree.
+// Custom (fork-only): the `marker:${string}` variant is a tagged form referring
+// to a SampleLikeMarkerConfig.name on the current thread.
 export type CallTreeSummaryStrategy =
   | 'timing'
   | 'js-allocations'
   | 'native-retained-allocations'
   | 'native-allocations'
   | 'native-deallocations-memory'
-  | 'native-deallocations-sites';
+  | 'native-deallocations-sites'
+  | `marker:${string}`;
 
 /**
  * This type determines what kind of information gets sanitized from published profiles.

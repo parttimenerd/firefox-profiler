@@ -23,6 +23,7 @@ import { EditorState, Compartment } from '@codemirror/state';
 import { type LanguageSupport, syntaxHighlighting } from '@codemirror/language';
 import { classHighlighter } from '@lezer/highlight';
 import { cpp } from '@codemirror/lang-cpp';
+import { java } from '@codemirror/lang-java';
 import { rust } from '@codemirror/lang-rust';
 import { javascript } from '@codemirror/lang-javascript';
 import clamp from 'clamp';
@@ -52,6 +53,10 @@ function _languageExtForPath(path: string | null): LanguageSupport | [] {
   }
   if (path.endsWith('.rs')) {
     return rust();
+  }
+  // Custom (fork-only): JFR profiles surface Java source paths.
+  if (path.endsWith('.java')) {
+    return java();
   }
   if (
     path.endsWith('.js') ||
