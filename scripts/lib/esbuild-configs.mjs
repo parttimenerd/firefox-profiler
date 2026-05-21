@@ -27,13 +27,13 @@ const publicPath = process.env.PUBLIC_PATH ?? '/';
 // The JFR converter is optional. It is only included when the WASM asset is present.
 // See src/profile-logic/import/jfr-wasm/README.md for build instructions.
 const JFR_CONVERTER_ENABLED = fs.existsSync(
-  path.join(projectRoot, 'src/profile-logic/import/jfr-wasm/jafar.js.wasm')
+  path.join(projectRoot, 'src/profile-logic/import/jfr-wasm/jfrtofp.js.wasm')
 );
 if (JFR_CONVERTER_ENABLED) {
-  console.log('JFR converter: enabled (jafar.js.wasm found)');
+  console.log('JFR converter: enabled (jfrtofp.js.wasm found)');
 } else {
   console.log(
-    'JFR converter: disabled (jafar.js.wasm not found — see src/profile-logic/import/jfr-wasm/README.md)'
+    'JFR converter: disabled (jfrtofp.js.wasm not found — see src/profile-logic/import/jfr-wasm/README.md)'
   );
 }
 
@@ -130,11 +130,11 @@ export const mainBundleConfig = {
         ...(JFR_CONVERTER_ENABLED
           ? [
               {
-                from: ['src/profile-logic/import/jfr-wasm/jafar.js'],
+                from: ['src/profile-logic/import/jfr-wasm/jfrtofp.js'],
                 to: ['dist'],
               },
               {
-                from: ['src/profile-logic/import/jfr-wasm/jafar.js.wasm'],
+                from: ['src/profile-logic/import/jfr-wasm/jfrtofp.js.wasm'],
                 to: ['dist'],
               },
             ]

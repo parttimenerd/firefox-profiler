@@ -132,18 +132,18 @@ export function generateHtmlPlugin(options) {
 
         const headTags = [];
 
-        // Eagerly load jafar.js as a classic script when the JFR converter is
-        // enabled. The GraalVM-emitted WASM bootstrap depends on classic-script
+        // Eagerly load jfrtofp.js as a classic script when the JFR converter
+        // is enabled. The GraalVM-emitted WASM bootstrap depends on classic-script
         // semantics; lazy ES-module dynamic-import causes "import object field
         // … is not a Function" LinkErrors.
         //
-        // jafar.js resolves jafar.js.wasm via document.currentScript.src + ".wasm",
+        // jfrtofp.js resolves jfrtofp.js.wasm via document.currentScript.src + ".wasm",
         // so as long as both files are served from the same path (the copy
         // plugin places them side by side under publicPath) no path override
         // is needed. Avoiding an inline <script> here is what keeps us inside
         // the firefox-profiler CSP (script-src 'self').
         if (jfrConverterEnabled) {
-          const jafarPath = (publicPath || '/') + 'jafar.js';
+          const jafarPath = (publicPath || '/') + 'jfrtofp.js';
           headTags.push(`<script src="${jafarPath}"></script>`);
         }
 

@@ -1,13 +1,15 @@
 # jfr-wasm
 
 This directory holds the GraalVM-compiled WASM assets used by the in-browser
-JFR importer. The Java sources and Maven build live in [`jafar/`](./jafar)
-inside this same directory.
+JFR importer ("jfrtofp"). The Java sources and Maven build live in
+[`jafar/`](./jafar) inside this same directory — that module is a thin wrapper
+around the [jafar JFR parser](https://github.com/btraceio/jafar) that adds the
+event-stream → Firefox Profiler conversion and the JS/WASM glue.
 
 **Required artifacts (not committed):**
 
-- `jafar.js` — GraalVM bootstrap JS (~100 KB)
-- `jafar.js.wasm` — compiled WASM binary (~12 MB)
+- `jfrtofp.js` — GraalVM bootstrap JS (~100 KB)
+- `jfrtofp.js.wasm` — compiled WASM binary (~12 MB)
 
 **How to build locally:**
 
@@ -16,17 +18,38 @@ yarn build-jfr-wasm
 ```
 
 This runs `mvn package -DskipTests` inside `jafar/` and copies the produced
-`jafar/web/jafar.js` and `jafar/web/jafar.js.wasm` into this directory.
+`jafar/web/jfrtofp.js` and `jafar/web/jfrtofp.js.wasm` into this directory.
 
 Requires GraalVM 25 with the `native-image` and `svm-wasm` tools installed
 (`gu install native-image` and `gu install wasm` on a GraalVM JDK).
 
-When `jafar.js.wasm` is present, `yarn build-prod` includes the JFR converter
+When `jfrtofp.js.wasm` is present, `yarn build-prod` includes the JFR converter
 (`JFR_CONVERTER_ENABLED=true`). Without it the build still succeeds — `.jfr`
 files show a clear error message pointing here.
 
 The CI `deploy-pages` job runs `yarn build-jfr-wasm` automatically before
 deploying to GitHub Pages.
+
+## Debug build (opt-in)
+
+```sh
+yarn build-jfr-wasm-debug
+```
+
+Produces a ~22 MB WASM (vs ~12 MB) that keeps DWARF info + the WASM `name`
+section + parameter/local names. Browser profilers and debuggers can then
+show readable Java method names like `Tables.processFrames` instead of
+`func$3429`. Runtime speed is unchanged — only the binary is larger.
+
+Use this when profiling or debugging the converter itself. The default
+`yarn build-jfr-wasm` (and CI) keep the symbol-stripped binary.
+
+## Credits
+
+The JFR binary parsing is provided by [jafar](https://github.com/btraceio/jafar)
+(BTrace project). The `jafar/` Maven module here is the wrapper that exposes
+jafar to the browser via GraalVM Web Image and runs the
+event-stream → Firefox Profiler conversion in-process, in a single WASM call.
 
 ## Notes for future maintainers
 

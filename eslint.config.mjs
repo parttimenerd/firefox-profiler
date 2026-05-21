@@ -16,7 +16,7 @@ export default defineConfig(
   {
     ignores: [
       'src/profile-logic/import/proto/**',
-      'src/profile-logic/import/jfr-wasm/jafar.js',
+      'src/profile-logic/import/jfr-wasm/jfrtofp.js',
       'src/profile-logic/import/jfr-wasm/jafar/web/**',
       'src/types/libdef/npm/**',
       'profiler-cli/dist/**',

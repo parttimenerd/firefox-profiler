@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// WASM bridge for the jafar JFR parser + converter.
+// WASM bridge for the in-browser JFR parser + converter (jfrtofp).
 //
-// jafar.js + jafar.js.wasm are loaded eagerly by a classic <script> tag
+// jfrtofp.js + jfrtofp.js.wasm are loaded eagerly by a classic <script> tag
 // injected into index.html by generateHtmlPlugin (only when JFR_CONVERTER is
 // enabled at build time). See jfr-wasm/README.md for build details.
 //
@@ -25,7 +25,7 @@ async function loadWasm(): Promise<JafarWASMModule> {
   if (wasmModule) {
     return wasmModule;
   }
-  // The classic <script src="jafar.js"> tag injected by generateHtmlPlugin
+  // The classic <script src="jfrtofp.js"> tag injected by generateHtmlPlugin
   // bootstraps GraalVM asynchronously and eventually assigns globalThis.JFRParser
   // from inside the WASM module's main(). There is no public Promise we can
   // await on, so poll until JFRParser appears (or time out).
@@ -38,8 +38,8 @@ async function loadWasm(): Promise<JafarWASMModule> {
     }
     if (Date.now() - startedAt > 30_000) {
       throw new Error(
-        'jafar WASM module did not initialize within 30 s. Make sure ' +
-          'jafar.js + jafar.js.wasm are present in src/profile-logic/import/jfr-wasm/.'
+        'jfrtofp WASM module did not initialize within 30 s. Make sure ' +
+          'jfrtofp.js + jfrtofp.js.wasm are present in src/profile-logic/import/jfr-wasm/.'
       );
     }
     await new Promise((r) => setTimeout(r, 50));

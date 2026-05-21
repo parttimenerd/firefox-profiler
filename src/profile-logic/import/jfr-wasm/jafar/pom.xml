@@ -48,7 +48,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <imageName>jafar</imageName>
+                    <imageName>jfrtofp</imageName>
                     <outputDirectory>${project.basedir}/web</outputDirectory>
                     <mainClass>me.bechberger.jafar.web.WebMain</mainClass>
                     <buildArgs>
@@ -113,4 +113,30 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <!-- Activate with: mvn package -DskipTests -Pdebug
+         (or: yarn build-jfr-wasm-debug)
+         Adds DWARF + WASM `name` section + parameter/local-variable info so
+         browser profilers and debuggers show Java method names. WASM grows
+         from ~12 MB to ~22 MB; runtime speed is unaffected. -->
+    <profiles>
+        <profile>
+            <id>debug</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <configuration>
+                            <buildArgs combine.children="append">
+                                <buildArg>-g</buildArg>
+                                <buildArg>-H:+SourceLevelDebug</buildArg>
+                                <buildArg>-H:-DeleteLocalSymbols</buildArg>
+                            </buildArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
