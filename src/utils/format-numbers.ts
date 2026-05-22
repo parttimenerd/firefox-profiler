@@ -63,7 +63,7 @@ export function formatNumber(
     const numberFormat = _memoizedGetNumberFormat({ places: 0, style });
     return numberFormat.format(value);
   }
-  if (isNaN(value)) {
+  if (!isFinite(value)) {
     return '<invalid>';
   }
 

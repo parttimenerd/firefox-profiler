@@ -20,6 +20,11 @@ describe('formatNumber', () => {
   it('does not fail when called with NaN', () => {
     expect(formatNumber(NaN)).toBe('<invalid>');
   });
+
+  it('does not fail when called with Infinity', () => {
+    expect(formatNumber(Infinity)).toBe('<invalid>');
+    expect(formatNumber(-Infinity)).toBe('<invalid>');
+  });
 });
 
 describe('formatGigaBytes', () => {
