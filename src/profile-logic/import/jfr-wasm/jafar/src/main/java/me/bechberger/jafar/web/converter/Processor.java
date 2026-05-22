@@ -413,7 +413,6 @@ public final class Processor {
     private static boolean isSystemThread(String javaName, String osName) {
         if (javaName == null || javaName.isEmpty()) return false;
         switch (javaName) {
-            case "JFR Periodic Tasks":
             case "JFR Shutdown Hook":
             case "Permissionless thread":
             case "Thread Monitor CTRL-C":
@@ -421,10 +420,29 @@ public final class Processor {
             case "Notification Thread":
             case "Finalizer":
             case "Attach Listener":
+            case "Signal Dispatcher":
+            case "Reference Handler":
+            case "Common-Cleaner":
+            case "VM Thread":
+            case "VM Periodic Task Thread":
+            case "Sweeper thread":
+            case "Service Thread":
+            case "Watcher Thread":
+            case "DestroyJavaVM":
                 return true;
         }
         if (javaName.startsWith("JFR ")) return true;
-        if (javaName.startsWith("GC Thread") || javaName.contains("CompilerThread")) return true;
+        if (javaName.startsWith("GC Thread")) return true;
+        if (javaName.startsWith("G1 ")) return true;
+        if (javaName.startsWith("ZGC ")) return true;
+        if (javaName.startsWith("Shenandoah ")) return true;
+        if (javaName.startsWith("ParGC ")) return true;
+        if (javaName.startsWith("CMS ")) return true;
+        if (javaName.startsWith("C1 CompilerThread")) return true;
+        if (javaName.startsWith("C2 CompilerThread")) return true;
+        if (javaName.startsWith("Graal Compiler Thread")) return true;
+        if (javaName.startsWith("JVMCI CompilerThread")) return true;
+        if (javaName.contains("CompilerThread")) return true;
         return false;
     }
 
