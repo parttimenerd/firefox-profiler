@@ -25,4 +25,5 @@ src/profile-logic/import/jfr-wasm/jafar/target/
 src/profile-logic/import/jfr-wasm/jafar/web/jafar.js
 src/profile-logic/import/jfr-wasm/jafar/web/jafar.js.wasm
 src/profile-logic/import/jfr-wasm/jafar/web/jafar.js.wat
+src/profile-logic/import/jfr-wasm/jafar/web/jfrtofp.js.wat
 src/profile-logic/import/jfr-wasm/jafar/web/lib/

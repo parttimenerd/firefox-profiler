@@ -493,7 +493,22 @@ public final class JFRParser {
 
     private static String getStr(Map<String, Object> m, String key) {
         Object v = m.get(key);
-        return v != null ? v.toString() : null;
+        if (v == null) return null;
+        // ComplexType string constants come back as Map{"string" -> actualValue}
+        // after unwrap(). Extract the inner value rather than calling toString().
+        if (v instanceof Map<?, ?> inner) {
+            Object s = inner.get("string");
+            if (s != null) return s.toString();
+        }
+        if (v instanceof ComplexType ct) {
+            Object inner = ct.getValue();
+            if (inner instanceof Map<?, ?> innerMap) {
+                Object s = innerMap.get("string");
+                if (s != null) return s.toString();
+            }
+            return inner != null ? inner.toString() : null;
+        }
+        return v.toString();
     }
 
     private static Long getLong(Map<String, Object> m, String key) {
@@ -529,8 +544,13 @@ public final class JFRParser {
     }
 
     private static Object unwrap(Object v) {
-        if (v instanceof ComplexType ct) return ct.getValue();
+        if (v instanceof ComplexType ct) v = ct.getValue();
         if (v instanceof ArrayType at) return at.getArray();
+        // String constant-pool entries surface as Map{"string" -> actualValue} —
+        // unwrap to the plain string so callers don't see the wrapper map.
+        if (v instanceof Map<?, ?> m && m.size() == 1 && m.containsKey("string")) {
+            return m.get("string");
+        }
         return v;
     }
 }

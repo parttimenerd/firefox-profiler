@@ -525,8 +525,29 @@ export function stateFromLocation(
   // https://profiler.firefox.com/from-url/{url}/calltree/
   const hasProfileUrl = ['from-url'].includes(dataSource);
 
+  // For from-url the profile URL may contain slashes when not percent-encoded
+  // by the caller. Detect whether the last path segment is a known tab slug;
+  // if so, the profile URL is everything between index 1 and that segment,
+  // otherwise the profile URL is everything after index 0.
+  const lastPart = pathParts[pathParts.length - 1];
+  const lastPartIsTabSlug =
+    hasProfileUrl &&
+    pathParts.length >= 3 &&
+    (tabSlugs as readonly string[]).includes(lastPart);
+  const fromUrlTabIndex = lastPartIsTabSlug ? pathParts.length - 1 : -1;
+
   // The selected tab is the last path part in the URL.
-  const selectedTabPathPart = hasProfileHash || hasProfileUrl ? 2 : 1;
+  let selectedTabPathPart: number;
+  if (hasProfileUrl) {
+    // out-of-bounds index → toValidTabSlug returns null → defaults to 'calltree'
+    selectedTabPathPart = lastPartIsTabSlug
+      ? fromUrlTabIndex
+      : pathParts.length;
+  } else if (hasProfileHash) {
+    selectedTabPathPart = 2;
+  } else {
+    selectedTabPathPart = 1;
+  }
 
   let implementation: 'combined' | 'js' | 'cpp' = 'combined';
   // Don't trust the implementation values from the user. Make sure it conforms
@@ -598,7 +619,14 @@ export function stateFromLocation(
   return {
     dataSource,
     hash: hasProfileHash ? pathParts[1] : '',
-    profileUrl: hasProfileUrl ? decodeURIComponent(pathParts[1]) : '',
+    profileUrl: hasProfileUrl
+      ? (() => {
+          const raw = pathParts.slice(1, selectedTabPathPart).join('/');
+          const decoded = decodeURIComponent(raw);
+          // Restore `://` that was collapsed when splitting on '/' (unencoded URLs only).
+          return decoded.replace(/^([a-z][a-z0-9+.-]*):\/([^/])/, '$1://$2');
+        })()
+      : '',
     profilesToCompare: query.profiles || null,
     selectedTab,
     pathInZipFile: query.file || null,
