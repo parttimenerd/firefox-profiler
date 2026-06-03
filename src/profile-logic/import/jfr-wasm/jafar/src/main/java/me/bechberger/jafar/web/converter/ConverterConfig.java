@@ -112,10 +112,11 @@ public final class ConverterConfig {
             ignoredEvents);
     }
 
-    /** Equivalent of the TS regex `jdk\.ExecutionSample|jdk\.NativeMethodSample` */
+    /** Equivalent of the TS regex `jdk\.ExecutionSample|jdk\.NativeMethodSample|jdk\.CPUTimeSample` */
     public boolean isExecutionSample(String eventType) {
         return "jdk.ExecutionSample".equals(eventType)
-            || "jdk.NativeMethodSample".equals(eventType);
+            || "jdk.NativeMethodSample".equals(eventType)
+            || "jdk.CPUTimeSample".equals(eventType);
     }
 
     public boolean isNonProjectPackage(String packageName) {
