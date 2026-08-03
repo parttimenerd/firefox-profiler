@@ -218,7 +218,13 @@ Chrome performance panel,
           >
             JDK Flight Recorder
           </a>
-          , or
+           (.jfr and 
+          <a
+            href="https://github.com/parttimenerd/condensed-data"
+          >
+            .cjfr condensed
+          </a>
+          ), or
 any file using the 
           <a
             href="https://valgrind.org/docs/manual/dh-manual.html"
@@ -548,7 +554,13 @@ Chrome performance panel,
           >
             JDK Flight Recorder
           </a>
-          , or
+           (.jfr and 
+          <a
+            href="https://github.com/parttimenerd/condensed-data"
+          >
+            .cjfr condensed
+          </a>
+          ), or
 any file using the 
           <a
             href="https://valgrind.org/docs/manual/dh-manual.html"
@@ -818,7 +830,13 @@ Chrome performance panel,
           >
             JDK Flight Recorder
           </a>
-          , or
+           (.jfr and 
+          <a
+            href="https://github.com/parttimenerd/condensed-data"
+          >
+            .cjfr condensed
+          </a>
+          ), or
 any file using the 
           <a
             href="https://valgrind.org/docs/manual/dh-manual.html"
@@ -1088,7 +1106,13 @@ Chrome performance panel,
           >
             JDK Flight Recorder
           </a>
-          , or
+           (.jfr and 
+          <a
+            href="https://github.com/parttimenerd/condensed-data"
+          >
+            .cjfr condensed
+          </a>
+          ), or
 any file using the 
           <a
             href="https://valgrind.org/docs/manual/dh-manual.html"
