@@ -30,6 +30,7 @@ public class WebMain {
         // Always register the JS-callable parse API. This is the only thing
         // firefox-profiler needs.
         JFRParser.register();
+        CJFRParser.register();
 
         // The drag-drop UI is only useful when the standalone jafar/index.html
         // is the host page. If the elements aren't present (firefox-profiler

@@ -727,6 +727,9 @@ class HomeImpl extends React.PureComponent<HomeProps, HomeState> {
                     <a href="https://docs.oracle.com/en/java/javase/21/docs/specs/jfr/jfr-api.html" />
                   ),
                   jfrexample: <a href="#" onClick={this._onLoadExampleJFR} />,
+                  cjfr: (
+                    <a href="https://github.com/parttimenerd/condensed-data" />
+                  ),
                   dhat: (
                     <a href="https://valgrind.org/docs/manual/dh-manual.html" />
                   ),

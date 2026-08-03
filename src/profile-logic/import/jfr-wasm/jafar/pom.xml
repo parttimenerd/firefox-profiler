@@ -16,6 +16,8 @@
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jafar.version>0.25.1</jafar.version>
+        <condensed-data.version>0.1.1-SNAPSHOT</condensed-data.version>
+        <lz4.version>1.11.1</lz4.version>
     </properties>
 
     <build>
@@ -74,6 +76,8 @@
                             <arguments>
                                 <argument>${settings.localRepository}/io/btrace/jafar-parser/${jafar.version}/jafar-parser-${jafar.version}.jar</argument>
                                 <argument>${project.build.directory}</argument>
+                                <argument>${settings.localRepository}/me/bechberger/condensed-data/${condensed-data.version}/condensed-data-${condensed-data.version}-reader.jar</argument>
+                                <argument>${settings.localRepository}/at/yawk/lz4/lz4-java/${lz4.version}/lz4-java-${lz4.version}.jar</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -105,6 +109,17 @@
             <groupId>io.btrace</groupId>
             <artifactId>jafar-parser</artifactId>
             <version>${jafar.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.bechberger</groupId>
+            <artifactId>condensed-data</artifactId>
+            <version>${condensed-data.version}</version>
+            <classifier>reader</classifier>
+        </dependency>
+        <dependency>
+            <groupId>at.yawk.lz4</groupId>
+            <artifactId>lz4-java</artifactId>
+            <version>${lz4.version}</version>
         </dependency>
         <dependency>
             <groupId>org.graalvm.sdk</groupId>

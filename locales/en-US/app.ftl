@@ -406,7 +406,7 @@ Home--load-files-from-other-tools2 =
     The { -profiler-brand-name } can also import profiles from other profilers, such as
     <perf>Linux perf</perf>, <simpleperf>Android SimplePerf</simpleperf>, the
     Chrome performance panel, <androidstudio>Android Studio</androidstudio>,
-    <jfr>JDK Flight Recorder</jfr>, or
+    <jfr>JDK Flight Recorder</jfr> (.jfr and <cjfr>.cjfr condensed</cjfr>), or
     any file using the <dhat>dhat format</dhat> or <traceevent>Google’s Trace Event
     Format</traceevent>. <write>Learn how to write your
     own importer</write>.
@@ -418,7 +418,7 @@ Home--load-files-from-other-tools2-with-jfr-example =
     The { -profiler-brand-name } can also import profiles from other profilers, such as
     <perf>Linux perf</perf>, <simpleperf>Android SimplePerf</simpleperf>, the
     Chrome performance panel, <androidstudio>Android Studio</androidstudio>,
-    <jfr>JDK Flight Recorder</jfr> (<jfrexample>example</jfrexample>), or
+    <jfr>JDK Flight Recorder</jfr> (.jfr (<jfrexample>example</jfrexample>) and <cjfr>.cjfr condensed</cjfr>), or
     any file using the <dhat>dhat format</dhat> or <traceevent>Google’s Trace Event
     Format</traceevent>. <write>Learn how to write your
     own importer</write>.

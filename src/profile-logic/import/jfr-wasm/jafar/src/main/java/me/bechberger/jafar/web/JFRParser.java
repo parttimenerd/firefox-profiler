@@ -16,11 +16,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import me.bechberger.jafar.web.converter.ConverterConfig;
 import me.bechberger.jafar.web.converter.JsonWriter;
 import me.bechberger.jafar.web.converter.MarkerSchemas;
 import me.bechberger.jafar.web.converter.Processor;
-import me.bechberger.jafar.web.converter.Tables;
 import org.graalvm.webimage.api.JS;
 import org.graalvm.webimage.api.JSObject;
 
@@ -51,8 +49,6 @@ public final class JFRParser {
                 fos.write(bytes);
             }
             PendingBytes.set(bytes);
-
-            ConverterConfig config = ConverterConfig.defaults();
 
             // Metadata accumulators — populated from special metadata events as
             // they appear in the parser stream.
@@ -87,7 +83,7 @@ public final class JFRParser {
             Processor[] procRef = { null };
             // Tiny prebuffer for events seen before we have meta start time.
             // In practice only a handful of events appear before jdk.JVMInformation.
-            ArrayList<PrebufferedEvent> prebuffer = new ArrayList<>();
+            ArrayList<ParserShared.PrebufferedEvent> prebuffer = new ArrayList<>();
 
             try (UntypedJafarParser p = UntypedJafarParser.open(
                     Path.of(tmpPath), ParsingContext.create(),
@@ -146,12 +142,18 @@ public final class JFRParser {
                                 || "jdk.OSInformation".equals(typeName)) {
                             // If we have any candidate start time, build now.
                             if (startNanos[0] != 0L) {
-                                buildProcessorAndDrain(procRef, prebuffer, scratch, scratchFields,
-                                    seenTypes, config,
+                                ParserShared.buildProcessorAndDrain(procRef, prebuffer, scratch,
+                                    () -> seenTypes.forEach((n, t) -> procRef[0].registerEventTypeInfo(buildEventTypeInfo(n, t))),
                                     jvmVersion, jvmArgs, javaArgs,
                                     startNanos, endNanos,
                                     cpuModel, cpuCores, cpuHwThreads,
                                     osVersion, pid);
+                                scratch.frameClassNames = null;
+                                scratch.frameMethodNames = null;
+                                scratch.frameDescriptors = null;
+                                scratch.frameLineNumbers = null;
+                                scratch.frameIsJava = null;
+                                scratch.stackDepth = 0;
                             }
                         }
                         return;
@@ -165,8 +167,8 @@ public final class JFRParser {
 
             // If still no Processor, build with whatever we have and drain.
             if (procRef[0] == null) {
-                buildProcessorAndDrain(procRef, prebuffer, scratch, scratchFields,
-                    seenTypes, config,
+                ParserShared.buildProcessorAndDrain(procRef, prebuffer, scratch,
+                    () -> seenTypes.forEach((n, t) -> procRef[0].registerEventTypeInfo(buildEventTypeInfo(n, t))),
                     jvmVersion, jvmArgs, javaArgs,
                     startNanos, endNanos,
                     cpuModel, cpuCores, cpuHwThreads,
@@ -182,76 +184,9 @@ public final class JFRParser {
         }
     }
 
-    private static void buildProcessorAndDrain(
-            Processor[] procRef,
-            ArrayList<PrebufferedEvent> prebuffer,
-            Processor.ParsedEvent scratch,
-            HashMap<String, Object> scratchFields,
-            LinkedHashMap<String, MetadataClass> seenTypes,
-            ConverterConfig config,
-            String[] jvmVersion, String[] jvmArgs, String[] javaArgs,
-            long[] startNanos, long[] endNanos,
-            String[] cpuModel, int[] cpuCores, int[] cpuHwThreads,
-            String[] osVersion, long[] pid) {
-        Processor.JFRMetadata meta = new Processor.JFRMetadata(
-            jvmVersion[0], jvmArgs[0], javaArgs[0],
-            startNanos[0] / 1_000_000.0,
-            endNanos[0]   / 1_000_000.0,
-            cpuModel[0],
-            cpuCores[0] != 0 ? cpuCores[0] : null,
-            cpuHwThreads[0] != 0 ? cpuHwThreads[0] : null,
-            osVersion[0], pid[0]);
-        procRef[0] = new Processor(config, meta);
-
-        // Register all type infos seen so far.
-        for (Map.Entry<String, MetadataClass> e : seenTypes.entrySet()) {
-            procRef[0].registerEventTypeInfo(buildEventTypeInfo(e.getKey(), e.getValue()));
-        }
-        // Drain the prebuffer.
-        for (PrebufferedEvent e : prebuffer) {
-            scratch.type = e.typeName;
-            scratch.startMs = e.startMs;
-            scratch.endMs = e.endMs;
-            scratch.fields = e.fields;
-            scratch.thread = e.thread;
-            scratch.stackDepth = e.stackDepth;
-            scratch.frameClassNames  = e.frameClassNames;
-            scratch.frameMethodNames = e.frameMethodNames;
-            scratch.frameDescriptors = e.frameDescriptors;
-            scratch.frameLineNumbers = e.frameLineNumbers;
-            scratch.frameIsJava      = e.frameIsJava;
-            procRef[0].process(scratch);
-        }
-        prebuffer.clear();
-        // The drain re-pointed scratch at prebuffer-owned arrays; null them so
-        // the next fillScratch grows fresh arrays for the streaming path
-        // instead of mutating the prebuffer's arrays.
-        scratch.frameClassNames = null;
-        scratch.frameMethodNames = null;
-        scratch.frameDescriptors = null;
-        scratch.frameLineNumbers = null;
-        scratch.frameIsJava = null;
-        scratch.stackDepth = 0;
-    }
-
-    /** Lightweight snapshot of a parsed event for the prebuffer. */
-    private static final class PrebufferedEvent {
-        String typeName;
-        double startMs;
-        double endMs;
-        HashMap<String, Object> fields;
-        Processor.JFRThread thread;
-        int stackDepth;
-        String[] frameClassNames;
-        String[] frameMethodNames;
-        String[] frameDescriptors;
-        int[]    frameLineNumbers;
-        boolean[] frameIsJava;
-    }
-
-    private static PrebufferedEvent snapshotEvent(
+    private static ParserShared.PrebufferedEvent snapshotEvent(
             String typeName, Map<String, Object> value, Long rawStartNs) {
-        PrebufferedEvent pe = new PrebufferedEvent();
+        ParserShared.PrebufferedEvent pe = new ParserShared.PrebufferedEvent();
         pe.typeName = typeName;
         double sm = rawStartNs != null ? rawStartNs / 1_000_000.0 : 0.0;
         Long rawDuration = getLong(value, "duration");

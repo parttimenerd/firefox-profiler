@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 import { attemptToConvertChromeProfile } from './import/chrome';
 import { attemptToConvertDhat } from './import/dhat';
-import { isJFRFormat } from './import/jfr';
+import { isJFRFormat, isCJFRFormat } from './import/jfr';
 import { GlobalDataCollector } from './global-data-collector';
 import { AddressLocator } from './address-locator';
 import {
@@ -2112,6 +2112,16 @@ export async function unserializeProfileOfArbitraryFormat(
         }
         throw new Error(
           'This .jfr file requires the JFR converter, which was not included in this build. ' +
+            'See src/profile-logic/import/jfr-wasm/README.md for build instructions.'
+        );
+      } else if (isCJFRFormat(profileBytes)) {
+        const { convertCJFRProfile } = await import('./import/jfr');
+        const cjfrProfile = await convertCJFRProfile(profileBytes);
+        if (cjfrProfile !== null) {
+          return cjfrProfile;
+        }
+        throw new Error(
+          'This .cjfr file requires the JFR converter, which was not included in this build. ' +
             'See src/profile-logic/import/jfr-wasm/README.md for build instructions.'
         );
       } else if (verifyMagic(SIMPLEPERF_MAGIC, profileBytes)) {

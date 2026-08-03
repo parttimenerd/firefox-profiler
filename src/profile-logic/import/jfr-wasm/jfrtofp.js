@@ -1311,6 +1311,21 @@ wasmImports.interop = {
 }
 ;
 wasmImports.jsbody = {
+	'_CJFRParser.attachToGlobal___CJFRParser$ParseHandler_V' : (...args) => (function(parseHandler){
+		try{
+			globalThis.CJFRParser = {
+			    parseToProfileJSON: (bs) => {
+			        var r = parseHandler.parse({ value: bs });
+			        return (typeof r === 'string') ? r : (r == null ? '' : String(r));
+			    }
+			};
+		}catch( e ) {
+			conversion.handleJSError(e);}}).call(...args),
+	'_CJFRParser.getStringProperty___JSObject_String_String' : (...args) => (function(obj,prop){
+		try{
+			return obj[prop];
+		}catch( e ) {
+			conversion.handleJSError(e);}}).call(...args),
 	'_JFRParser.attachToGlobal___JFRParser$ParseHandler_V' : (...args) => (function(parseHandler){
 		try{
 			globalThis.JFRParser = {
@@ -1457,6 +1472,11 @@ wasmImports.jsbody = {
 	'_JSSymbol.referenceEquals___JSSymbol_JSSymbol_JSBoolean' : (...args) => (function(sym0,sym1){
 		try{
 			return sym0 === sym1;
+		}catch( e ) {
+			conversion.handleJSError(e);}}).call(...args),
+	'_WebImageNativeLibrarySupport.loadPrefetchedJSLibrary___JSString_JSObject' : (...args) => (function(content){
+		try{
+			return loadPrefetchedJSLibrary(content);
 		}catch( e ) {
 			conversion.handleJSError(e);}}).call(...args),
 	'_WebImageUtil.random___D' : (...args) => (function(){

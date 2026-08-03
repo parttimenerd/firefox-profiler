@@ -17,6 +17,9 @@ interface JafarWASMModule {
   JFRParser: {
     parseToProfileJSON(binaryString: string): string;
   };
+  CJFRParser: {
+    parseToProfileJSON(binaryString: string): string;
+  };
 }
 
 let wasmModule: JafarWASMModule | null = null;
@@ -27,13 +30,18 @@ async function loadWasm(): Promise<JafarWASMModule> {
   }
   // The classic <script src="jfrtofp.js"> tag injected by generateHtmlPlugin
   // bootstraps GraalVM asynchronously and eventually assigns globalThis.JFRParser
-  // from inside the WASM module's main(). There is no public Promise we can
-  // await on, so poll until JFRParser appears (or time out).
+  // and globalThis.CJFRParser from inside the WASM module's main(). There is no
+  // public Promise we can await on, so poll until both parsers appear (or time out).
   const startedAt = Date.now();
   while (true) {
-    const mod = (globalThis as unknown as Record<string, unknown>).JFRParser;
-    if (mod) {
-      wasmModule = { JFRParser: mod as JafarWASMModule['JFRParser'] };
+    const g = globalThis as unknown as Record<string, unknown>;
+    const jfrParser = g.JFRParser;
+    const cjfrParser = g.CJFRParser;
+    if (jfrParser && cjfrParser) {
+      wasmModule = {
+        JFRParser: jfrParser as JafarWASMModule['JFRParser'],
+        CJFRParser: cjfrParser as JafarWASMModule['CJFRParser'],
+      };
       return wasmModule;
     }
     if (Date.now() - startedAt > 30_000) {
@@ -58,6 +66,14 @@ export async function parseJFRToProfile(
   // naive loop is O(n²) (each `s += c` allocates a new string of length n)
   // and gets unusably slow past a few MB. 16 KB chunks keep us well under the
   // engine's argument-count limit while only allocating ~n/16384 strings.
+  const binaryString = toBinaryString(fileBytes);
+
+  const json = wasm.JFRParser.parseToProfileJSON(binaryString);
+  return parseJsonResult(json, 'JFR');
+}
+
+/** Shared binary-string builder + JSON parse. */
+function toBinaryString(fileBytes: Uint8Array): string {
   const CHUNK = 16 * 1024;
   const parts: string[] = [];
   for (let i = 0; i < fileBytes.length; i += CHUNK) {
@@ -69,13 +85,12 @@ export async function parseJFRToProfile(
       )
     );
   }
-  const binaryString = parts.join('');
+  return parts.join('');
+}
 
-  const json = wasm.JFRParser.parseToProfileJSON(binaryString);
+function parseJsonResult(json: unknown, format: string): unknown {
   // GraalVM Web Image sometimes hands back a Java-string proxy rather than a
-  // primitive JS string; coerce explicitly. Also surface the first few bytes
-  // when JSON.parse fails so we can tell whether the converter emitted nothing,
-  // an exception text, or a wrapped object instead of JSON.
+  // primitive JS string; coerce explicitly.
   const jsonStr = typeof json === 'string' ? json : String(json);
   try {
     return JSON.parse(jsonStr);
@@ -83,9 +98,18 @@ export async function parseJFRToProfile(
     const head = jsonStr.slice(0, 200);
     const tail = jsonStr.slice(-100);
     throw new Error(
-      `JFR converter returned non-JSON (length=${jsonStr.length}, ` +
+      `${format} converter returned non-JSON (length=${jsonStr.length}, ` +
         `type=${typeof json}). Head: ${JSON.stringify(head)} ` +
         `Tail: ${JSON.stringify(tail)}. Original: ${(e as Error).message}`
     );
   }
+}
+
+export async function parseCJFRToProfile(
+  fileBytes: Uint8Array
+): Promise<unknown> {
+  const wasm = await loadWasm();
+  const binaryString = toBinaryString(fileBytes);
+  const json = wasm.CJFRParser.parseToProfileJSON(binaryString);
+  return parseJsonResult(json, 'CJFR');
 }
