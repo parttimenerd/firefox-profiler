@@ -197,6 +197,13 @@ jobs:
       - name: Setup Node.js and install dependencies
         uses: ./.github/actions/setup-node-and-install
 
+      - name: Build and install condensed-data reader JAR
+        run: |
+          set -euo pipefail
+          git clone --depth=1 https://github.com/parttimenerd/condensed-data.git /tmp/condensed-data
+          cd /tmp/condensed-data
+          python3 bin/build-reader-jar.py --install
+
       - name: Build jafar WASM
         run: yarn build-jfr-wasm
 
