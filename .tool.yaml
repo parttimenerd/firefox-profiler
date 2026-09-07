@@ -1,0 +1,29 @@
+tag: experimental
+github_url: https://github.com/parttimenerd/firefox-profiler
+github_pages: https://parttimenerd.github.io/firefox-profiler/
+tagline: Fork of the Firefox Profiler web app with patches that add native JFR and condensed-data
+  (.cjfr) loading and JFR-specific UI improvements — custom marker tracks, marker-based call trees,
+  Java syntax highlighting, and an in-browser converter (drag-and-drop a .jfr or .cjfr file, no
+  server needed). Used as the embedded viewer in jfrtofp-server.
+tagline_short: Fork of Firefox Profiler that opens JFR and .cjfr recordings natively in the browser — drag-and-drop, no server.
+when_to_use:
+- You want to open a JFR or condensed-data (.cjfr) recording directly in the browser without running a local server
+- You are using jfrtofp-server and want the embedded profiler viewer
+- You need JFR-specific UI features (custom marker tracks, Java syntax highlighting, function table)
+when_not_to_use:
+- You want the upstream Firefox Profiler without JFR customisations
+- You need a stable, production-ready viewer (this is an experimental fork, rebased irregularly)
+related:
+- label: jfrtofp
+  url: https://github.com/parttimenerd/jfrtofp
+- label: jfrtofp-server
+  url: https://github.com/parttimenerd/jfrtofp-server
+- label: condensed-data
+  url: https://github.com/parttimenerd/condensed-data
+links:
+- label: Upstream Firefox Profiler ↗
+  url: https://profiler.firefox.com
+no_release: true
+
+note: Used by jfrtofp-server as the embedded viewer. The jfrtofp branch is rebased onto upstream
+  periodically; the fork is squashed into one commit on top so the diff stays minimal.
