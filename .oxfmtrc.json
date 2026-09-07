@@ -18,6 +18,7 @@
     "profiler-cli/dist",
     "coverage",
     "taskcluster/",
-    ".taskcluster.yml"
+    ".taskcluster.yml",
+    ".tool.yaml"
   ]
 }
