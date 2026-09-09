@@ -1,4 +1,4 @@
-tag: experimental
+tag: ready
 github_url: https://github.com/parttimenerd/firefox-profiler
 github_pages: https://parttimenerd.github.io/firefox-profiler/
 tagline: Fork of the Firefox Profiler web app with patches that add native JFR and condensed-data
