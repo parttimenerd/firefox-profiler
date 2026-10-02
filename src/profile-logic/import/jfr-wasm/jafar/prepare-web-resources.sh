@@ -70,8 +70,18 @@ CONDENSER_EXCLUDES = (
     "me.bechberger.jfr.WritingJFRReader",
     "me.bechberger.jfr.TypeUtil",
     "me.bechberger.jfr.TypedValueUtil",
+    "me.bechberger.jfr.FooterCollector",
 )
+# Classes with double/float instance fields that are still needed by the reader.
+# Register constructors+fields only — NOT allDeclaredMethods — to avoid pulling
+# in VarHandleDoubles/Floats CAS entry points that GraalVM WASM cannot compile.
+CTORS_FIELDS_ONLY = (
+    "me.bechberger.condensed.CJFRFooter",
+)
+
 classes = [c for c in classes if not any(c == ex or c.startswith(ex + "$") for ex in CONDENSER_EXCLUDES)]
+restricted = [c for c in classes if any(c == ex or c.startswith(ex + "$") for ex in CTORS_FIELDS_ONLY)]
+classes = [c for c in classes if c not in restricted]
 
 full_entry = {
     "allDeclaredConstructors": True,
@@ -83,19 +93,23 @@ full_entry = {
 }
 config = [{"name": c, **full_entry} for c in classes]
 
-# lz4-java (net.jpountz.*) classes are loaded reflectively by LZ4Factory/XXHashFactory.
-# Register constructors+fields only — NOT allDeclaredMethods, which would make
-# VarHandleDoubles/Floats CAS entry points reachable and break the WASM compiler.
-lz4_entry = {
+# Classes that need constructors+fields only — NOT allDeclaredMethods, which
+# would make VarHandleDoubles/Floats CAS entry points reachable and break the WASM compiler.
+ctors_fields_entry = {
     "allDeclaredConstructors": True,
     "allPublicConstructors": True,
     "allDeclaredFields": True,
     "allPublicFields": True,
 }
+config.extend({"name": c, **ctors_fields_entry} for c in restricted)
+
+# lz4-java (net.jpountz.*) classes are loaded reflectively by LZ4Factory/XXHashFactory.
+# Register constructors+fields only — NOT allDeclaredMethods, which would make
+# VarHandleDoubles/Floats CAS entry points reachable and break the WASM compiler.
 lz4_classes_file = sys.argv[3]
 with open(lz4_classes_file) as f:
     lz4_classes = sorted({l.strip() for l in f if l.strip()})
-config.extend({"name": c, **lz4_entry} for c in lz4_classes)
+config.extend({"name": c, **ctors_fields_entry} for c in lz4_classes)
 
 with open(out_path, "w") as f:
     json.dump(config, f, indent=2)
