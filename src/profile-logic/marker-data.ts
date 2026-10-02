@@ -1,12 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-// @flow
-
 import { getEmptyRawMarkerTable } from './data-structures';
 import { getFriendlyThreadName } from './profile-data';
-import { removeFilePath, removeURLs } from '../utils/string';
-import { ensureExists, assertExhaustiveCheck } from '../utils/flow';
+import { removeFilePath, removeURLs, stringsToRegExp } from '../utils/string';
+import { StringTable } from '../utils/string-table';
+import { ensureExists, assertExhaustiveCheck } from '../utils/types';
 import {
   INSTANT,
   INTERVAL,
@@ -14,20 +13,19 @@ import {
   INTERVAL_END,
 } from 'firefox-profiler/app-logic/constants';
 import {
-  getMarkerSchemaName,
   getSchemaFromMarker,
   markerPayloadMatchesSearch,
 } from './marker-schema';
 
 import type {
-  Thread,
   SamplesTable,
+  RawThread,
+  RawProfileSharedData,
   RawMarkerTable,
   IndexIntoStringTable,
   IndexIntoRawMarkerTable,
   IndexIntoCategoryList,
   CategoryList,
-  InnerWindowID,
   Marker,
   MarkerIndex,
   MarkerPayload,
@@ -43,9 +41,8 @@ import type {
   MarkerSchemaByName,
   MarkerDisplayLocation,
   Tid,
+  LogMarkerPayload,
 } from 'firefox-profiler/types';
-
-import type { UniqueStringArray } from '../utils/unique-string-array';
 
 /**
  * Jank instances are created from responsiveness values. Responsiveness is a profiler
@@ -116,113 +113,190 @@ export function deriveJankMarkers(
 }
 
 export function getSearchFilteredMarkerIndexes(
-  getMarker: (MarkerIndex) => Marker,
+  getMarker: (markerIndex: MarkerIndex) => Marker,
   markerIndexes: MarkerIndex[],
   markerSchemaByName: MarkerSchemaByName,
-  searchRegExp: RegExp | null,
+  searchRegExps: MarkerRegExps | null,
+  stringTable: StringTable,
   categoryList: CategoryList
 ): MarkerIndex[] {
-  if (!searchRegExp) {
+  if (!searchRegExps) {
     return markerIndexes;
   }
-  console.log('searchRegExp', searchRegExp);
-  // Need to assign it to a constant variable so Flow doesn't complain about
-  // passing it inside a function below.
-  const regExp = searchRegExp;
+
+  let hasPositiveRegexps = Boolean(searchRegExps.generic);
+  let hasNegativeRegexps = false;
+
+  for (const val of searchRegExps.fieldMap.values()) {
+    hasPositiveRegexps = hasPositiveRegexps || val.positive !== null;
+    hasNegativeRegexps = hasNegativeRegexps || val.negative !== null;
+  }
+
   const newMarkers: MarkerIndex[] = [];
   for (const markerIndex of markerIndexes) {
     const marker = getMarker(markerIndex);
-    const { data, name, category } = marker;
+    // Starting includeMarker with true in case `hasPositiveRegexps` is false.
+    // Otherwise it will be overwritten inside the next if branch.
+    let includeMarker = true;
+    // If there are positive RegExps, then check if the marker will be included.
+    if (hasPositiveRegexps) {
+      includeMarker = positiveFilterMarker(
+        marker,
+        markerSchemaByName,
+        searchRegExps,
+        stringTable,
+        categoryList
+      );
+    }
+
+    // If the marker marked as `included` so far by the positive regexps, check
+    // for negative RegExps and filter if there are any. If `includeMarker` is
+    // false here it means that it's already excluded so there is no point of
+    // checking it for negative filtering.
+    if (includeMarker && hasNegativeRegexps) {
+      includeMarker = negativeFilterMarker(
+        marker,
+        markerSchemaByName,
+        searchRegExps,
+        stringTable,
+        categoryList
+      );
+    }
+
+    if (includeMarker) {
+      newMarkers.push(markerIndex);
+    }
+  }
+
+  return newMarkers;
+}
+
+function positiveFilterMarker(
+  marker: Marker,
+  markerSchemaByName: MarkerSchemaByName,
+  searchRegExps: MarkerRegExps,
+  stringTable: StringTable,
+  categoryList: CategoryList
+): boolean {
+  // Need to assign it to a constant variable so Flow doesn't complain about
+  // passing it inside a function below.
+  const regExps = searchRegExps;
+
+  function test(value: string, key: string) {
+    key = key.toLowerCase();
+    const fieldRegexp = regExps.fieldMap.get(key);
+    const found =
+      (regExps.generic ? regExps.generic.test(value) : false) ||
+      (fieldRegexp && fieldRegexp.positive
+        ? fieldRegexp.positive.test(value)
+        : false);
 
     // Reset regexp for each iteration. Otherwise state from previous
     // iterations can cause matches to fail if the search is global or
     // sticky.
-
-    regExp.lastIndex = 0;
-
-    if (categoryList[category] !== undefined) {
-      const markerCategory = categoryList[category].name;
-      console.log('name', markerCategory);
-      console.log('regExp.test(markerCategory)', regExp.test(markerCategory));
-      if (regExp.test(markerCategory)) {
-        newMarkers.push(markerIndex);
-        continue;
-      }
+    if (regExps.generic) {
+      regExps.generic.lastIndex = 0;
     }
-    console.log('name', name);
-    console.log('regExp.test(name)', regExp.test(name));
-    if (regExp.test(name)) {
-      newMarkers.push(markerIndex);
-      continue;
+    if (fieldRegexp && fieldRegexp.positive) {
+      fieldRegexp.positive.lastIndex = 0;
     }
+    return found;
+  }
 
-    if (data && typeof data === 'object') {
-      if (regExp.test(data.type)) {
-        // Check the type of the marker payload first.
-        newMarkers.push(markerIndex);
-        continue;
-      }
+  const { data, name, category } = marker;
 
-      // Now check the schema for the marker payload for searchable
-      const markerSchema = getSchemaFromMarker(
-        markerSchemaByName,
-        marker.name,
-        marker.data
-      );
-      if (
-        markerSchema &&
-        markerPayloadMatchesSearch(markerSchema, marker, regExp)
-      ) {
-        newMarkers.push(markerIndex);
-        continue;
-      }
+  if (categoryList[category] !== undefined) {
+    const markerCategory = categoryList[category].name;
+    if (test(markerCategory, 'cat')) {
+      return true;
     }
   }
-  return newMarkers;
+
+  if (test(name, 'name')) {
+    return true;
+  }
+
+  if (data && typeof data === 'object') {
+    if (test(data.type, 'type')) {
+      // Check the type of the marker payload first.
+      return true;
+    }
+
+    // Now check the schema for the marker payload for field matches
+    const markerSchema = getSchemaFromMarker(markerSchemaByName, marker.data);
+    if (
+      markerSchema &&
+      markerPayloadMatchesSearch(markerSchema, marker, stringTable, test)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
-/**
- * Gets the markers and the web pages that are relevant to the current active tab
- * and filters out the markers that don't belong to those revelant pages.
- * If we don't have any item in relevantPages, return the whole marker list.
- */
-export function getTabFilteredMarkerIndexes(
-  getMarker: (MarkerIndex) => Marker,
-  markerIndexes: MarkerIndex[],
-  relevantPages: Set<InnerWindowID>,
-  includeGlobalMarkers: boolean = true
-): MarkerIndex[] {
-  if (relevantPages.size === 0) {
-    return markerIndexes;
-  }
+function negativeFilterMarker(
+  marker: Marker,
+  markerSchemaByName: MarkerSchemaByName,
+  searchRegExps: MarkerRegExps,
+  stringTable: StringTable,
+  categoryList: CategoryList
+): boolean {
+  // Need to assign it to a constant variable so Flow doesn't complain about
+  // passing it inside a function below.
+  const regExps = searchRegExps;
 
-  const newMarkers: MarkerIndex[] = [];
-  for (const markerIndex of markerIndexes) {
-    const { name, data } = getMarker(markerIndex);
-
-    // We want to retain some markers even though they do not belong to a specific tab.
-    // We are checking those before and pushing those markers to the new array.
-    // As of now, those markers are:
-    // - Jank markers
-    if (includeGlobalMarkers) {
-      if (name === 'Jank') {
-        newMarkers.push(markerIndex);
-        continue;
-      }
-    } else {
-      if (data && data.type === 'Network') {
-        // Now network markers have innerWindowIDs inside their payloads but those markers
-        // can be inside the main thread and not be related to that specific thread.
-        continue;
-      }
+  function test(value: string, key: string) {
+    key = key.toLowerCase();
+    const fieldRegexp = regExps.fieldMap.get(key);
+    const negativeRegexp = fieldRegexp?.negative;
+    if (!negativeRegexp) {
+      return false;
     }
 
-    if (data && data.innerWindowID && relevantPages.has(data.innerWindowID)) {
-      newMarkers.push(markerIndex);
+    const found = negativeRegexp.test(value);
+
+    // Reset regexp for each iteration. Otherwise state from previous
+    // iterations can cause matches to fail if the search is global or
+    // sticky.
+    negativeRegexp.lastIndex = 0;
+    return found;
+  }
+
+  const { data, name, category } = marker;
+
+  if (categoryList[category] !== undefined) {
+    const markerCategory = categoryList[category].name;
+    if (test(markerCategory, 'cat')) {
+      // Found the category in the negative filters, do not include it.
+      return false;
     }
   }
 
-  return newMarkers;
+  if (test(name, 'name')) {
+    // Found the name in the negative filters, do not include it.
+    return false;
+  }
+
+  if (data && typeof data === 'object') {
+    if (test(data.type, 'type')) {
+      // Found the type of the payload in the negative filters, do not include it.
+      return false;
+    }
+
+    // Now check the schema for the marker payload for field matches
+    const markerSchema = getSchemaFromMarker(markerSchemaByName, marker.data);
+
+    if (
+      markerSchema &&
+      markerPayloadMatchesSearch(markerSchema, marker, stringTable, test)
+    ) {
+      // Found the field in the negative filters, do not include it.
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -246,7 +320,7 @@ export class IPCMarkerCorrelations {
     threadData.set(index, data);
   }
 
-  get(tid: Tid, index: number): ?IPCSharedData {
+  get(tid: Tid, index: number): IPCSharedData | undefined {
     const threadData = this._correlations.get(tid);
     if (!threadData) {
       return undefined;
@@ -280,12 +354,15 @@ export class IPCMarkerCorrelations {
  *        endpoint   (receiver or background thread)
  *                   (or main thread in receiver process if they are not profiled)
  */
-export function correlateIPCMarkers(threads: Thread[]): IPCMarkerCorrelations {
+export function correlateIPCMarkers(
+  threads: RawThread[],
+  shared: RawProfileSharedData
+): IPCMarkerCorrelations {
   // Create a unique ID constructed from the source PID, destination PID,
   // message seqno, and message type. Since the seqno is only unique for each
   // message channel pair, we use the PIDs and message type as a way of
   // identifying which channel pair generated this message.
-  function makeIPCMessageID(thread, data): string {
+  function makeIPCMessageID(thread: RawThread, data: IPCMarkerPayload): string {
     let pids;
     if (data.direction === 'sending') {
       pids = `${thread.pid},${data.otherPid}`;
@@ -295,7 +372,7 @@ export function correlateIPCMarkers(threads: Thread[]): IPCMarkerCorrelations {
     return pids + `,${data.messageSeqno},${data.messageType}`;
   }
 
-  function formatThreadName(tid: ?number): string | void {
+  function formatThreadName(tid: number | undefined): string | undefined {
     if (tid !== null && tid !== undefined) {
       const name = threadNames.get(tid);
       if (name !== undefined) {
@@ -344,22 +421,24 @@ export function correlateIPCMarkers(threads: Thread[]): IPCMarkerCorrelations {
     }
   }
 
+  // Don't bother checking for IPC markers if the profile's string table
+  // doesn't have the string "IPC". This lets us avoid looping over all the
+  // markers when we don't have to.
+  const stringTable = StringTable.withBackingArray(shared.stringArray);
+  if (!stringTable.hasString('IPC')) {
+    return new IPCMarkerCorrelations();
+  }
+
   // First, construct a mapping of marker IDs to an array of markers with that
   // ID for faster lookup. We also collect the friendly thread names while we
   // have access to all the threads. It's considerably more difficult to do
   // this processing later.
   const markersByKey: Map<
     string,
-    Array<{ tid: number, index: number, data: IPCMarkerPayload } | void>
+    Array<{ tid: number; index: number; data: IPCMarkerPayload } | void>
   > = new Map();
   const threadNames: Map<number, string> = new Map();
   for (const thread of threads) {
-    // Don't bother checking for IPC markers if this thread's string table
-    // doesn't have the string "IPC". This lets us avoid looping over all the
-    // markers when we don't have to.
-    if (!thread.stringTable.hasString('IPC')) {
-      continue;
-    }
     if (typeof thread.tid === 'number') {
       const tid: number = thread.tid;
       threadNames.set(tid, getFriendlyThreadName(threads, thread));
@@ -406,7 +485,7 @@ export function correlateIPCMarkers(threads: Thread[]): IPCMarkerCorrelations {
       recvThreadName: formatThreadName(recvTid),
     };
 
-    const addedThreadIds = new Set();
+    const addedThreadIds = new Set<number>();
     if (startEndpointMarker) {
       addedThreadIds.add(startEndpointMarker.tid);
       correlations.set(
@@ -435,10 +514,17 @@ export function correlateIPCMarkers(threads: Thread[]): IPCMarkerCorrelations {
       // make the main thread crowded. It's important to add all the threads to
       // the marker.
       for (const m of markers.slice(1, 4)) {
-        if (m !== undefined && !addedThreadIds.has(m.tid)) {
-          // Add the marker to a thread only if it's not already added.
-          correlations.set(m.tid, m.index, sharedData);
-          addedThreadIds.add(m.tid);
+        if (m !== undefined) {
+          const marker = m as {
+            tid: number;
+            index: number;
+            data: IPCMarkerPayload;
+          };
+          if (!addedThreadIds.has(marker.tid)) {
+            // Add the marker to a thread only if it's not already added.
+            correlations.set(marker.tid, marker.index, sharedData);
+            addedThreadIds.add(marker.tid);
+          }
         }
       }
     }
@@ -471,7 +557,7 @@ export function correlateIPCMarkers(threads: Thread[]): IPCMarkerCorrelations {
  */
 export function deriveMarkersFromRawMarkerTable(
   rawMarkers: RawMarkerTable,
-  stringTable: UniqueStringArray,
+  stringArray: ReadonlyArray<string>,
   threadId: Tid,
   threadRange: StartEndRange,
   ipcCorrelations: IPCMarkerCorrelations
@@ -506,13 +592,16 @@ export function deriveMarkersFromRawMarkerTable(
     startData: MarkerPayload | null,
     endData: MarkerPayload | null
   ): MarkerPayload | null {
-    if (!startData && !endData) {
-      return null;
+    if (startData === null) {
+      return endData;
     }
-    return ({
+    if (endData === null) {
+      return startData;
+    }
+    return {
       ...startData,
       ...endData,
-    }: any);
+    };
   }
 
   // We don't add a screenshot marker as we find it, because to know its
@@ -573,9 +662,7 @@ export function deriveMarkersFromRawMarkerTable(
               openNetworkMarkers.delete(data.id);
 
               // We know this startIndex points to a Network marker.
-              const startData: NetworkPayload = (rawMarkers.data[
-                startIndex
-              ]: any);
+              const startData = rawMarkers.data[startIndex] as NetworkPayload;
 
               const startStartTime = ensureExists(
                 rawMarkers.startTime[startIndex],
@@ -587,7 +674,7 @@ export function deriveMarkersFromRawMarkerTable(
               addMarker([startIndex, rawMarkerIndex], {
                 start: startStartTime,
                 end: endEndTime,
-                name: stringTable.getString(name),
+                name: stringArray[name],
                 category,
                 threadId: markerThreadId,
                 data: {
@@ -611,7 +698,7 @@ export function deriveMarkersFromRawMarkerTable(
               addMarker([rawMarkerIndex], {
                 start,
                 end,
-                name: stringTable.getString(name),
+                name: stringArray[name],
                 category,
                 threadId: markerThreadId,
                 data: {
@@ -660,10 +747,7 @@ export function deriveMarkersFromRawMarkerTable(
               data,
             });
           }
-          if (
-            stringTable.getString(name) ===
-            'CompositorScreenshotWindowDestroyed'
-          ) {
+          if (stringArray[name] === 'CompositorScreenshotWindowDestroyed') {
             // This marker is added when a window is destroyed. In this case we
             // don't want to store it as the start of the next compositor
             // marker. But we do want to keep it, so we break out of the
@@ -758,7 +842,7 @@ export function deriveMarkersFromRawMarkerTable(
             'An Instant marker did not have a startTime.'
           ),
           end: null,
-          name: stringTable.getString(name),
+          name: stringArray[name],
           category,
           threadId: markerThreadId,
           data,
@@ -778,7 +862,7 @@ export function deriveMarkersFromRawMarkerTable(
           addMarker([rawMarkerIndex], {
             start: startTime,
             end: endTime,
-            name: stringTable.getString(name),
+            name: stringArray[name],
             category,
             threadId: markerThreadId,
             data,
@@ -818,7 +902,7 @@ export function deriveMarkersFromRawMarkerTable(
             );
             addMarker([startIndex, rawMarkerIndex], {
               start,
-              name: stringTable.getString(name),
+              name: stringArray[name],
               end: endTime,
               category,
               threadId: markerThreadId,
@@ -840,7 +924,7 @@ export function deriveMarkersFromRawMarkerTable(
 
             addMarker([rawMarkerIndex], {
               start,
-              name: stringTable.getString(name),
+              name: stringArray[name],
               end: endTime,
               category,
               threadId: markerThreadId,
@@ -868,7 +952,7 @@ export function deriveMarkersFromRawMarkerTable(
       addMarker([startIndex], {
         start,
         end: Math.max(endOfThread, start),
-        name: stringTable.getString(rawMarkers.name[startIndex]),
+        name: stringArray[rawMarkers.name[startIndex]],
         data: rawMarkers.data[startIndex],
         category: rawMarkers.category[startIndex],
         threadId: rawMarkers.threadId ? rawMarkers.threadId[startIndex] : null,
@@ -885,7 +969,7 @@ export function deriveMarkersFromRawMarkerTable(
     addMarker([startIndex], {
       start: startTime,
       end: Math.max(endOfThread, startTime),
-      name: stringTable.getString(rawMarkers.name[startIndex]),
+      name: stringArray[rawMarkers.name[startIndex]],
       category: rawMarkers.category[startIndex],
       threadId: rawMarkers.threadId ? rawMarkers.threadId[startIndex] : null,
       data: rawMarkers.data[startIndex],
@@ -926,9 +1010,8 @@ export function filterRawMarkerTableToRange(
   rangeEnd: number
 ): RawMarkerTable {
   const newMarkerTable = getEmptyRawMarkerTable();
-  const newThreadId = [];
   if (markerTable.threadId) {
-    newMarkerTable.threadId = newThreadId;
+    newMarkerTable.threadId = [];
   }
 
   const filteredMarkerIndexes = filterRawMarkerTableIndexesToRange(
@@ -945,8 +1028,8 @@ export function filterRawMarkerTableToRange(
     newMarkerTable.name.push(markerTable.name[index]);
     newMarkerTable.data.push(markerTable.data[index]);
     newMarkerTable.category.push(markerTable.category[index]);
-    if (markerTable.threadId) {
-      newThreadId.push(markerTable.threadId[index]);
+    if (markerTable.threadId && newMarkerTable.threadId) {
+      newMarkerTable.threadId.push(markerTable.threadId[index]);
     }
     newMarkerTable.length++;
   }
@@ -960,7 +1043,7 @@ export function filterRawMarkerTableToRange(
  * that make up that marker.
  */
 export function filterRawMarkerTableIndexesToRange(
-  markerTable: RawMarkerTable,
+  _markerTable: RawMarkerTable,
   derivedMarkerInfo: DerivedMarkerInfo,
   rangeStart: number,
   rangeEnd: number
@@ -1000,11 +1083,11 @@ export function filterRawMarkerTableToRangeWithMarkersToDelete(
   markersToDelete: Set<IndexIntoRawMarkerTable>,
   filterRange: StartEndRange | null
 ): {
-  rawMarkerTable: RawMarkerTable,
-  oldMarkerIndexToNew: Map<IndexIntoRawMarkerTable, IndexIntoRawMarkerTable>,
+  rawMarkerTable: RawMarkerTable;
+  oldMarkerIndexToNew: Map<IndexIntoRawMarkerTable, IndexIntoRawMarkerTable>;
 } {
   const newMarkerTable = getEmptyRawMarkerTable();
-  const newThreadId = [];
+  const newThreadId: (Tid | null)[] = [];
   if (oldMarkerTable.threadId) {
     newMarkerTable.threadId = newThreadId;
   }
@@ -1061,9 +1144,9 @@ export function filterRawMarkerTableToRangeWithMarkersToDelete(
  * markers, with marker indexes both as input and output.
  */
 export function filterMarkerIndexes(
-  getMarker: (MarkerIndex) => Marker,
+  getMarker: (markerIndex: MarkerIndex) => Marker,
   markerIndexes: MarkerIndex[],
-  filterFunc: (Marker) => boolean
+  filterFunc: (marker: Marker) => boolean
 ): MarkerIndex[] {
   return markerIndexes.filter((markerIndex) => {
     return filterFunc(getMarker(markerIndex));
@@ -1071,7 +1154,7 @@ export function filterMarkerIndexes(
 }
 
 export function filterMarkerIndexesToRange(
-  getMarker: (MarkerIndex) => Marker,
+  getMarker: (markerIndex: MarkerIndex) => Marker,
   markerIndexes: MarkerIndex[],
   rangeStart: number,
   rangeEnd: number
@@ -1097,19 +1180,29 @@ export function isNavigationMarker({ name, data }: Marker) {
     // TTI is only selectable by name, as it doesn't have a structured payload.
     return true;
   }
+
+  if (
+    name === 'FirstContentfulPaint' ||
+    name === 'FirstContentfulComposite' ||
+    name === 'LargestContentfulPaint'
+  ) {
+    // Add the performance metric markers.
+    return true;
+  }
+
   if (!data) {
-    // This marker has no payload, only consider the name.
-    if (name === 'Navigation::Start') {
-      return true;
-    }
-    if (name.startsWith('Contentful paint ')) {
-      // This is a long plaintext marker.
-      // e.g. "Contentful paint after 322ms for URL https://developer.mozilla.org/en-US/, foreground tab"
-      return true;
-    }
     return false;
   }
-  if (data.category === 'Navigation') {
+
+  if (
+    'innerWindowID' in data &&
+    data.innerWindowID &&
+    name === 'Navigation::Start'
+  ) {
+    return true;
+  }
+
+  if ('category' in data && data.category === 'Navigation') {
     // Filter by payloads.
     if (name === 'Load' || name === 'DOMContentLoaded') {
       return true;
@@ -1147,19 +1240,17 @@ export function isOnThreadFileIoMarker(marker: Marker): boolean | void {
  */
 export function getAllowMarkersWithNoSchema(
   markerSchemaByName: MarkerSchemaByName
-): (Marker) => boolean | void {
+): (marker: Marker) => boolean | void {
   return (marker) => {
     const { data } = marker;
 
     if (!data) {
-      // Keep the marker if there is payload.
+      // Keep the marker if there is no payload.
       return true;
     }
 
     if (!markerSchemaByName[data.type]) {
-      // Keep the marker if there is no schema. Note that this function doesn't use
-      // the getMarkerSchemaName function, as that function attempts to find a
-      // marker schema name in a very permissive manner. In the marker chart
+      // Keep the marker if there is no schema. In the marker chart
       // and marker table, most likely we want to show everything.
       return true;
     }
@@ -1174,7 +1265,7 @@ export function guessMimeTypeFromNetworkMarker(
   let uri;
   try {
     uri = new URL(payload.URI);
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 
@@ -1238,10 +1329,10 @@ export function getColorClassNameForMimeType(
 }
 
 export function groupScreenshotsById(
-  getMarker: (MarkerIndex) => Marker,
+  getMarker: (markerIndex: MarkerIndex) => Marker,
   markerIndexes: MarkerIndex[]
 ): Map<string, Marker[]> {
-  const idToScreenshotMarkers = new Map();
+  const idToScreenshotMarkers = new Map<string, Marker[]>();
   for (const markerIndex of markerIndexes) {
     const marker = getMarker(markerIndex);
     const { data } = marker;
@@ -1311,31 +1402,29 @@ export function sanitizeFromMarkerSchema(
   markerSchema: MarkerSchema,
   markerPayload: MarkerPayload
 ): MarkerPayload {
-  for (const propertyDescription of markerSchema.data) {
-    if (
-      propertyDescription.key !== undefined &&
-      propertyDescription.format !== undefined
-    ) {
-      const key = propertyDescription.key;
-      const format = propertyDescription.format;
-      if (!(key in markerPayload)) {
-        continue;
-      }
+  for (const { key, format } of markerSchema.fields) {
+    if (!(key in markerPayload)) {
+      continue;
+    }
 
-      // We're typing the result of the sanitization with `any` because Flow
-      // doesn't like much our enormous enum of non-exact objects that's used as
-      // MarkerPayload type, and this code is too generic for Flow in this context.
-      if (format === 'url') {
-        markerPayload = ({
-          ...markerPayload,
-          [key]: removeURLs(markerPayload[key]),
-        }: any);
-      } else if (format === 'file-path') {
-        markerPayload = ({
-          ...markerPayload,
-          [key]: removeFilePath(markerPayload[key]),
-        }: any);
-      }
+    // We're typing the result of the sanitization with `any` because Flow
+    // doesn't like much our enormous enum of non-exact objects that's used as
+    // MarkerPayload type, and this code is too generic for Flow in this context.
+    if (format === 'url') {
+      markerPayload = {
+        ...markerPayload,
+        [key]: removeURLs((markerPayload as any)[key]),
+      } as any;
+    } else if (format === 'file-path') {
+      markerPayload = {
+        ...markerPayload,
+        [key]: removeFilePath((markerPayload as any)[key]),
+      } as any;
+    } else if (format === 'sanitized-string') {
+      markerPayload = {
+        ...markerPayload,
+        [key]: '<sanitized>',
+      } as any;
     }
   }
 
@@ -1348,9 +1437,9 @@ export function sanitizeFromMarkerSchema(
  */
 export function getMarkerTypesForDisplay(
   markerSchema: MarkerSchema[],
-  displayArea: string
+  displayArea: MarkerDisplayLocation
 ): Set<string> {
-  const types = new Set();
+  const types = new Set<string>();
   for (const { display, name } of markerSchema) {
     if (display.includes(displayArea)) {
       types.add(name);
@@ -1359,7 +1448,7 @@ export function getMarkerTypesForDisplay(
   return types;
 }
 
-function _doNotAutomaticallyAdd(_data: Marker) {
+function _doNotAutomaticallyAdd(_data: Marker): boolean | void {
   return undefined;
 }
 
@@ -1367,30 +1456,29 @@ function _doNotAutomaticallyAdd(_data: Marker) {
  * Filter markers to a smaller set based on the location.
  */
 export function filterMarkerByDisplayLocation(
-  getMarker: (MarkerIndex) => Marker,
+  getMarker: (markerIndex: MarkerIndex) => Marker,
   markerIndexes: MarkerIndex[],
   markerSchema: MarkerSchema[],
-  markerSchemaByName: MarkerSchemaByName,
+  _markerSchemaByName: MarkerSchemaByName,
   displayLocation: MarkerDisplayLocation,
   // This argument allows a filtering function to customize the result, without having
   // to loop through all of the markers again. Return a boolean if making a decision,
   // or undefined if not.
-  preemptiveFilterFunc?: (
+  preemptiveFilterFunc: (
     data: Marker
   ) => boolean | void = _doNotAutomaticallyAdd
 ): MarkerIndex[] {
   const markerTypes = getMarkerTypesForDisplay(markerSchema, displayLocation);
-  return filterMarkerIndexes(getMarker, markerIndexes, (marker) => {
+  return filterMarkerIndexes(getMarker, markerIndexes, (marker): boolean => {
     const additionalResult = preemptiveFilterFunc(marker);
 
     if (additionalResult !== undefined) {
       // This is a boolean value, use it rather than the schema.
-      return additionalResult;
+      return additionalResult as boolean;
     }
 
-    return markerTypes.has(
-      getMarkerSchemaName(markerSchemaByName, marker.name, marker.data)
-    );
+    const schemaName = marker.data ? (marker.data.type ?? null) : null;
+    return schemaName !== null && markerTypes.has(schemaName);
   });
 }
 
@@ -1398,9 +1486,9 @@ export function filterMarkerByDisplayLocation(
  * Compute the Screenshot image's thumbnail size.
  */
 export function computeScreenshotSize(
-  payload: { windowWidth: number, windowHeight: number },
+  payload: { windowWidth: number; windowHeight: number },
   maximumSize: number
-): {| +width: number, +height: number |} {
+): { readonly width: number; readonly height: number } {
   const { windowWidth, windowHeight } = payload;
 
   // Coefficient should be according to bigger side.
@@ -1418,4 +1506,159 @@ export function computeScreenshotSize(
     width,
     height,
   };
+}
+
+export type MarkerSearchFieldMap = Map<
+  string,
+  { positive: RegExp | null; negative: RegExp | null }
+>;
+
+export type MarkerRegExps = Readonly<{
+  generic: RegExp | null;
+  fieldMap: MarkerSearchFieldMap;
+}>;
+
+/**
+ * Concatenate an array of strings into multiple RegExps that match on all
+ * the marker strings which can include positive and negative field specific search.
+ */
+export const stringsToMarkerRegExps = (
+  strings: string[] | null
+): MarkerRegExps | null => {
+  if (!strings || !strings.length) {
+    return null;
+  }
+
+  // We create this map to group all the field specific search strings and then
+  // we aggregate them to create a single regexp for each field later.
+  const fieldStrings: Map<string, { positive: string[]; negative: string[] }> =
+    new Map();
+  // These are the non-field specific search strings. They have to be positive
+  // as we don't support negative generic filtering.
+  const genericPositiveStrings = [];
+  for (const string of strings) {
+    // Then try to match specific properties.
+    // First capture group is used to determine if it has a "-" in front of the
+    // field to understand if it's a negative filter.
+    // Second capture group is used to get the field name.
+    // Third capture group is to get the filter value.
+    const prefixMatch = string.match(
+      /^(?<maybeNegative>-?)(?<key>\w+):(?<value>.+)/i
+    );
+    if (prefixMatch && prefixMatch.groups) {
+      // This is a key-value pair that will only be matched for a specific field.
+      const { maybeNegative, value } = prefixMatch.groups;
+      const key = prefixMatch.groups.key.toLowerCase();
+      let fieldStrs = fieldStrings.get(key);
+      if (!fieldStrs) {
+        fieldStrs = { positive: [], negative: [] };
+        fieldStrings.set(key, fieldStrs);
+      }
+
+      // First capture group checks if we have "-" in front of the string to see
+      // if it's a negative filtering.
+      if (maybeNegative.length === 0) {
+        fieldStrs.positive.push(value);
+
+        // Always try to match the full string as well.
+        genericPositiveStrings.push(string);
+      } else {
+        fieldStrs.negative.push(value);
+      }
+    } else {
+      genericPositiveStrings.push(string);
+    }
+  }
+
+  // Now we constructed the grouped arrays. Let's convert them into a map of RegExps.
+  const fieldMap: MarkerSearchFieldMap = new Map();
+  for (const [field, strings] of fieldStrings) {
+    fieldMap.set(field, {
+      positive: stringsToRegExp(strings.positive),
+      negative: stringsToRegExp(strings.negative),
+    });
+  }
+
+  return {
+    generic: stringsToRegExp(genericPositiveStrings),
+    fieldMap,
+  };
+};
+
+// In the new Log marker format, the `level` field is a string table index
+// pointing to one of these strings. Map them to the single-letter abbreviations
+// used in MOZ_LOG output (E/W/I/D/V).
+export const LOG_LEVEL_STRING_TO_LETTER: Record<string, string> = {
+  Error: 'E',
+  Warning: 'W',
+  Info: 'I',
+  Debug: 'D',
+  Verbose: 'V',
+};
+
+// Maps MOZ_LOG single-letter level abbreviations to a numeric priority
+// (lower number = higher severity) for filtering comparisons.
+export const LOG_LETTER_TO_LEVEL: Record<string, number> = {
+  E: 1,
+  W: 2,
+  I: 3,
+  D: 4,
+  V: 5,
+};
+
+/**
+ * Format an absolute timestamp (ms since epoch) as a MOZ_LOG date string.
+ * Matches the output format of mozlog: "YYYY-MM-DD HH:MM:SS.mssμs UTC"
+ */
+export function formatLogTimestamp(absoluteMs: number): string {
+  function pad(p: string | number, c: number) {
+    return String(p).padStart(c, '0');
+  }
+  const d = new Date(absoluteMs);
+  // new Date rounds down milliseconds; recover sub-millisecond precision separately.
+  // This will be imperfect because of float rounding errors but still better
+  // than not having them.
+  const ns = Math.trunc((absoluteMs - Math.trunc(absoluteMs)) * 10 ** 6);
+  return (
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1, 2)}-${pad(d.getUTCDate(), 2)} ` +
+    `${pad(d.getUTCHours(), 2)}:${pad(d.getUTCMinutes(), 2)}:${pad(d.getUTCSeconds(), 2)}.` +
+    `${pad(d.getUTCMilliseconds(), 3)}${pad(ns, 6)} UTC`
+  );
+}
+
+/**
+ * Format a Log marker payload into a MOZ_LOG canonical line.
+ *
+ * Returns null if the entry has no message content and should be skipped.
+ *
+ * Two payload formats are supported:
+ *  - New format: { message, level } where `level` is a string table index
+ *    resolving to "Error" / "Warning" / "Info" / "Debug" / "Verbose", and the
+ *    module name is taken from the marker's `name` field (also a string table
+ *    index, passed here as `moduleName`).
+ *  - Legacy format: { name, module } where `module` may include a level prefix
+ *    ("D/nsHttp") or just a bare module name ("nsHttp").
+ */
+export function formatLogStatement(
+  timestampStr: string,
+  processName: string,
+  pid: number | string,
+  threadName: string,
+  data: LogMarkerPayload,
+  moduleName: string,
+  stringArray: string[]
+): string | null {
+  if ('message' in data) {
+    if (!data.message) {
+      return null;
+    }
+    const levelStr = stringArray[data.level] ?? '';
+    const levelLetter = LOG_LEVEL_STRING_TO_LETTER[levelStr] ?? 'D';
+    return `${timestampStr} - [${processName} ${pid}: ${threadName}]: ${levelLetter}/${moduleName} ${data.message.trim()}`;
+  }
+  if (!data.name) {
+    return null;
+  }
+  const prefix = data.module.includes('/') ? '' : 'D/';
+  return `${timestampStr} - [${processName} ${pid}: ${threadName}]: ${prefix}${data.module} ${data.name.trim()}`;
 }
