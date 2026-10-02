@@ -203,6 +203,13 @@ jobs:
           git clone --depth=1 https://github.com/parttimenerd/condensed-data.git /tmp/condensed-data
           python3 /tmp/condensed-data/bin/build-reader-jar.py --install
 
+      - name: Build and install jfrtofp JAR
+        run: |
+          set -euo pipefail
+          git clone --depth=1 https://github.com/parttimenerd/jfrtofp.git /tmp/jfrtofp
+          cd /tmp/jfrtofp
+          ./gradlew publishToMavenLocal -x test
+
       - name: Build jafar WASM
         run: yarn build-jfr-wasm
 
