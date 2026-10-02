@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// @flow
 import type { TabSlug } from '../../app-logic/tabs-handling';
 
 import {
@@ -14,9 +16,9 @@ import {
   getVisualProgressTrackProfile,
   getProfileWithUnbalancedNativeAllocations,
   getProfileWithJsAllocations,
+  addActiveTabInformationToProfile,
   getProfileWithEventDelays,
   getProfileWithThreadCPUDelta,
-  getThreadWithMarkers,
 } from '../fixtures/profiles/processed-profile';
 import {
   getEmptyThread,
@@ -27,11 +29,13 @@ import { withAnalyticsMock } from '../fixtures/mocks/analytics';
 import { getProfileWithNiceTracks } from '../fixtures/profiles/tracks';
 import { blankStore, storeWithProfile } from '../fixtures/stores';
 import { assertSetContainsOnly } from '../fixtures/custom-assertions';
-import { formatTree } from '../fixtures/utils';
 
 import * as App from '../../actions/app';
 import * as ProfileView from '../../actions/profile-view';
-import { viewProfile } from '../../actions/receive-profile';
+import {
+  viewProfile,
+  changeTimelineTrackOrganization,
+} from '../../actions/receive-profile';
 import * as ProfileViewSelectors from '../../selectors/profile';
 import * as UrlStateSelectors from '../../selectors/url-state';
 import { getRightClickedCallNodeInfo } from '../../selectors/right-clicked-call-node';
@@ -42,22 +46,18 @@ import {
   selectedNodeSelectors,
   getThreadSelectors,
 } from '../../selectors/per-thread';
-import { ensureExists } from '../../utils/types';
+import { ensureExists } from '../../utils/flow';
 import {
+  getCallNodeIndexFromPath,
   processCounter,
   type BreakdownByCategory,
 } from '../../profile-logic/profile-data';
-import { getSelfAndTotalForCallNode } from '../../profile-logic/call-tree';
-import { checkBit } from '../../utils/bitset';
 
 import type {
   TrackReference,
   Milliseconds,
-  RawThread,
-  StartEndRange,
-  Marker,
-  MixedObject,
-  CallNodePath,
+  TabID,
+  Thread,
 } from 'firefox-profiler/types';
 
 describe('call node paths on implementation filter change', function () {
@@ -174,13 +174,7 @@ describe('call node paths on implementation filter change', function () {
 });
 
 describe('getJankMarkersForHeader', function () {
-  function setupWithResponsiveness({
-    sampleCount,
-    responsiveness,
-  }: {
-    sampleCount: number;
-    responsiveness: Array<number | null>;
-  }) {
+  function setupWithResponsiveness({ sampleCount, responsiveness }) {
     const { profile } = getProfileFromTextSamples(
       Array(sampleCount).fill('A').join('  ')
     );
@@ -193,7 +187,7 @@ describe('getJankMarkersForHeader', function () {
       .map(getMarker);
   }
 
-  function setupWithEventDelay(eventDelay: number[]) {
+  function setupWithEventDelay(eventDelay) {
     const profile = getProfileWithEventDelays(eventDelay);
     const { getState } = storeWithProfile(profile);
     const getMarker = selectedThreadSelectors.getMarkerGetter(getState());
@@ -219,7 +213,7 @@ describe('getJankMarkersForHeader', function () {
     expect(jankInstances).toEqual([]);
   });
 
-  function getJankInstantDuration(marker: Marker) {
+  function getJankInstantDuration(marker) {
     return (
       ensureExists(marker.end, 'Jank markers are assumed to have an end.') -
       marker.start
@@ -334,13 +328,9 @@ describe('actions/ProfileView', function () {
      *    '  - show [thread Style]',
      *  ]
      */
-    const parentTrackReference = { type: 'global' as const, trackIndex: 0 };
-    const tabTrackReference = { type: 'global' as const, trackIndex: 1 };
-    const workerTrackReference = {
-      type: 'local' as const,
-      trackIndex: 0,
-      pid: '222',
-    };
+    const parentTrackReference = { type: 'global', trackIndex: 0 };
+    const tabTrackReference = { type: 'global', trackIndex: 1 };
+    const workerTrackReference = { type: 'local', trackIndex: 0, pid: 222 };
 
     function storeWithTab(tabSlug: TabSlug) {
       const profile = getProfileWithNiceTracks();
@@ -418,24 +408,22 @@ describe('actions/ProfileView', function () {
       const threadTrack: TrackReference = {
         type: 'local',
         trackIndex: 0,
-        pid: '0',
+        pid: 0,
       };
       const networkTrack: TrackReference = {
         type: 'local',
         trackIndex: 1,
-        pid: '0',
+        pid: 0,
       };
 
-      it('starts out with the thread track and marker chart selected', function () {
+      it('starts out with the thread track and call tree selected', function () {
         const profile = getNetworkTrackProfile();
         const { getState } = storeWithProfile(profile);
         expect(UrlStateSelectors.getSelectedThreadIndexes(getState())).toEqual(
           new Set([0])
         );
-        // The profile contains only markers, so the default tab is the
-        // marker-chart rather than the calltree.
         expect(UrlStateSelectors.getSelectedTab(getState())).toEqual(
-          'marker-chart'
+          'calltree'
         );
       });
 
@@ -479,11 +467,7 @@ describe('actions/ProfileView', function () {
     });
 
     describe('with a memory track', function () {
-      const memoryTrackReference = {
-        type: 'local' as const,
-        trackIndex: 0,
-        pid: '111',
-      };
+      const memoryTrackReference = { type: 'local', trackIndex: 0, pid: 111 };
 
       function setup() {
         const profile = getProfileWithNiceTracks();
@@ -512,8 +496,8 @@ describe('actions/ProfileView', function () {
             store.getState(),
             memoryTrackReference
           );
-          if (memoryTrack.type !== 'counter') {
-            throw new Error('Expected to get counter track.');
+          if (memoryTrack.type !== 'memory') {
+            throw new Error('Expected to get memory track.');
           }
         }
 
@@ -551,22 +535,17 @@ describe('actions/ProfileView', function () {
 
     describe('with a comparison profile', function () {
       it('selects the calltree tab when selecting the diffing track', function () {
-        const firstTrackReference = {
-          type: 'global' as const,
-          trackIndex: 0,
-        };
         const diffingTrackReference = {
-          type: 'global' as const,
+          type: 'global',
           trackIndex: 2,
         };
 
-        const { profile } = getMergedProfileFromTextSamples([
+        const { profile } = getMergedProfileFromTextSamples(
           'A  B  C',
-          'A  B  B',
-        ]);
+          'A  B  B'
+        );
         const { getState, dispatch } = storeWithProfile(profile);
 
-        dispatch(ProfileView.selectTrackWithModifiers(firstTrackReference));
         dispatch(App.changeSelectedTab('flame-graph'));
         expect(UrlStateSelectors.getSelectedThreadIndexes(getState())).toEqual(
           new Set([0])
@@ -594,7 +573,7 @@ describe('actions/ProfileView', function () {
         );
 
         for (const thread of profile.threads) {
-          thread.pid = '0';
+          thread.pid = 0;
         }
 
         // Create some references in the same order that the threads were created
@@ -602,17 +581,17 @@ describe('actions/ProfileView', function () {
         const nativeAllocationsThread: TrackReference = {
           type: 'local',
           trackIndex: 0,
-          pid: '0',
+          pid: 0,
         };
         const jsAllocationsThread: TrackReference = {
           type: 'local',
           trackIndex: 1,
-          pid: '0',
+          pid: 0,
         };
         const timingOnlyThread: TrackReference = {
           type: 'local',
           trackIndex: 2,
-          pid: '0',
+          pid: 0,
         };
 
         return {
@@ -752,260 +731,6 @@ describe('actions/ProfileView', function () {
         });
       });
     });
-
-    function setup() {
-      // Create a profile which has more than 32 stacks, so that, if any parts of the implementation
-      // use a BitSet to keep track of something that's per-stack (such as whether a stack matches
-      // the search filter), the BitSet needs at least two 32-bit slots.
-      const { profile } = getProfileFromTextSamples(`
-        A[lib:K][file:S]  A[lib:K][file:S]     A[lib:K][file:S]   D[lib:nNn][file:uV]  C[lib:m][file:t]
-        B[lib:L][file:t]  B[lib:L][file:t]     E[lib:O][file:Pq]
-        A[lib:K][file:S]  C[lib:m][file:t]
-        B[lib:L][file:t]  D[lib:nNn][file:uV]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-        B[lib:L][file:t]
-      `);
-
-      const { dispatch, getState } = storeWithProfile(profile);
-      return { dispatch, getState, profile };
-    }
-
-    it('starts as an unfiltered call tree', function () {
-      const { getState } = setup();
-      const originalCallTree = selectedThreadSelectors.getCallTree(getState());
-      expect(formatTree(originalCallTree)).toEqual([
-        '- A (total: 3, self: —)',
-        '  - B (total: 2, self: —)',
-        '    - A (total: 1, self: —)',
-        '      - B (total: 1, self: —)',
-        '        - B (total: 1, self: —)',
-        '          - B (total: 1, self: —)',
-        '            - B (total: 1, self: —)',
-        '              - B (total: 1, self: —)',
-        '                - B (total: 1, self: —)',
-        '                  - B (total: 1, self: —)',
-        '                    - B (total: 1, self: —)',
-        '                      - B (total: 1, self: —)',
-        '                        - B (total: 1, self: —)',
-        '                          - B (total: 1, self: —)',
-        '                            - B (total: 1, self: —)',
-        '                              - B (total: 1, self: —)',
-        '                                - B (total: 1, self: —)',
-        '                                  - B (total: 1, self: —)',
-        '                                    - B (total: 1, self: —)',
-        '                                      - B (total: 1, self: —)',
-        '                                        - B (total: 1, self: —)',
-        '                                          - B (total: 1, self: —)',
-        '                                            - B (total: 1, self: —)',
-        '                                              - B (total: 1, self: —)',
-        '                                                - B (total: 1, self: —)',
-        '                                                  - B (total: 1, self: —)',
-        '                                                    - B (total: 1, self: —)',
-        '                                                      - B (total: 1, self: —)',
-        '                                                        - B (total: 1, self: —)',
-        '                                                          - B (total: 1, self: —)',
-        '                                                            - B (total: 1, self: —)',
-        '                                                              - B (total: 1, self: —)',
-        '                                                                - B (total: 1, self: —)',
-        '                                                                  - B (total: 1, self: 1)',
-        '    - C (total: 1, self: —)',
-        '      - D (total: 1, self: 1)',
-        '  - E (total: 1, self: 1)',
-        '- C (total: 1, self: 1)',
-        '- D (total: 1, self: 1)',
-      ]);
-    });
-
-    it('filters out all samples if there is no match', function () {
-      const { dispatch, getState } = setup();
-      dispatch(ProfileView.changeCallTreeSearchString('F'));
-      const callTree = selectedThreadSelectors.getCallTree(getState());
-      expect(formatTree(callTree)).toEqual([]);
-    });
-
-    it('filters based on function names', function () {
-      const { dispatch, getState } = setup();
-      dispatch(ProfileView.changeCallTreeSearchString('c'));
-      const callTree = selectedThreadSelectors.getCallTree(getState());
-      // Keep all stacks which include function C
-      expect(formatTree(callTree)).toEqual([
-        '- A (total: 1, self: —)',
-        '  - B (total: 1, self: —)',
-        '    - C (total: 1, self: —)',
-        '      - D (total: 1, self: 1)',
-        '- C (total: 1, self: 1)',
-      ]);
-
-      // Also test with uppercase 'C'
-      dispatch(ProfileView.changeCallTreeSearchString('C'));
-      const callTree2 = selectedThreadSelectors.getCallTree(getState());
-      // Keep all stacks which include function C
-      expect(formatTree(callTree2)).toEqual([
-        '- A (total: 1, self: —)',
-        '  - B (total: 1, self: —)',
-        '    - C (total: 1, self: —)',
-        '      - D (total: 1, self: 1)',
-        '- C (total: 1, self: 1)',
-      ]);
-    });
-
-    it('filters based on filenames', function () {
-      const { dispatch, getState } = setup();
-      dispatch(ProfileView.changeCallTreeSearchString('u'));
-      const callTree_u = selectedThreadSelectors.getCallTree(getState());
-      // Keep all stacks which include function D, which has filename uV
-      expect(formatTree(callTree_u)).toEqual([
-        '- A (total: 1, self: —)',
-        '  - B (total: 1, self: —)',
-        '    - C (total: 1, self: —)',
-        '      - D (total: 1, self: 1)',
-        '- D (total: 1, self: 1)',
-      ]);
-      dispatch(ProfileView.changeCallTreeSearchString('pQ'));
-      const callTree_pQ = selectedThreadSelectors.getCallTree(getState());
-      // Keep all stacks which include function E, which has filename Pq
-      expect(formatTree(callTree_pQ)).toEqual([
-        '- A (total: 1, self: —)',
-        '  - E (total: 1, self: 1)',
-      ]);
-    });
-
-    it('filters based on library names', function () {
-      const { dispatch, getState } = setup();
-      dispatch(ProfileView.changeCallTreeSearchString('M'));
-      const callTree_M = selectedThreadSelectors.getCallTree(getState());
-      // Keep all stacks which include function C, which has lib name m
-      expect(formatTree(callTree_M)).toEqual([
-        '- A (total: 1, self: —)',
-        '  - B (total: 1, self: —)',
-        '    - C (total: 1, self: —)',
-        '      - D (total: 1, self: 1)',
-        '- C (total: 1, self: 1)',
-      ]);
-      dispatch(ProfileView.changeCallTreeSearchString('NN'));
-      const callTree_NN = selectedThreadSelectors.getCallTree(getState());
-      // Keep all stacks which include function D, which has lib name nNn
-      expect(formatTree(callTree_NN)).toEqual([
-        '- A (total: 1, self: —)',
-        '  - B (total: 1, self: —)',
-        '    - C (total: 1, self: —)',
-        '      - D (total: 1, self: 1)',
-        '- D (total: 1, self: 1)',
-      ]);
-    });
-  });
-
-  /**
-   * Covers the bitset returned by `getSearchFilteredFuncMatchesBitSet`, which
-   * the stack chart uses to dim non-matching nodes. The stack filter above
-   * only exercises whether each stack is kept; these tests pin down the
-   * per-func match semantics across name, filename, and library fields, and
-   * the OR semantics when multiple search strings are provided.
-   */
-  describe('getSearchFilteredFuncMatchesBitSet', function () {
-    // Each func's three searchable fields (name, resource/lib, filename) use
-    // distinct prefixes ("fn", "rs", "sc") and a unique per-func index, so
-    // every search string used below appears in exactly one field on exactly
-    // one func. That lets us assert unambiguously which field triggered a
-    // match.
-    function setup() {
-      const {
-        profile,
-        funcNamesPerThread: [funcNames],
-      } = getProfileFromTextSamples(`
-        fn1[lib:rs1][file:sc1]  fn2[lib:rs2][file:sc2]  fn3[lib:rs3][file:sc3]
-        fn4[lib:rs4][file:sc4]
-      `);
-      const { dispatch, getState } = storeWithProfile(profile);
-      return { dispatch, getState, funcNames };
-    }
-
-    function getMatchingFuncNames(
-      getState: () => any,
-      funcNames: string[]
-    ): string[] {
-      const bitSet =
-        selectedThreadSelectors.getSearchFilteredFuncMatchesBitSet(getState());
-      if (bitSet === null) {
-        return [];
-      }
-      const matched: string[] = [];
-      for (let i = 0; i < funcNames.length; i++) {
-        if (checkBit(bitSet, i)) {
-          matched.push(funcNames[i]);
-        }
-      }
-      return matched.sort();
-    }
-
-    it('returns null when there is no active search', function () {
-      const { getState } = setup();
-      expect(
-        selectedThreadSelectors.getSearchFilteredFuncMatchesBitSet(getState())
-      ).toBeNull();
-    });
-
-    it('matches a single func by its name', function () {
-      const { dispatch, getState, funcNames } = setup();
-      dispatch(ProfileView.changeCallTreeSearchString('fn1'));
-      expect(getMatchingFuncNames(getState, funcNames)).toEqual(['fn1']);
-    });
-
-    it('matches a func by its filename', function () {
-      const { dispatch, getState, funcNames } = setup();
-      // sc2 is only set on fn2.
-      dispatch(ProfileView.changeCallTreeSearchString('sc2'));
-      expect(getMatchingFuncNames(getState, funcNames)).toEqual(['fn2']);
-    });
-
-    it('matches a func by its resource/library name', function () {
-      const { dispatch, getState, funcNames } = setup();
-      // rs3 is only set on fn3. Match is case-insensitive.
-      dispatch(ProfileView.changeCallTreeSearchString('RS3'));
-      expect(getMatchingFuncNames(getState, funcNames)).toEqual(['fn3']);
-    });
-
-    it('matches every func matching any of several search strings (OR)', function () {
-      const { dispatch, getState, funcNames } = setup();
-      // "fn1" matches only func fn1; "fn3" matches only func fn3.
-      dispatch(ProfileView.changeCallTreeSearchString('fn1,fn3'));
-      expect(getMatchingFuncNames(getState, funcNames)).toEqual(['fn1', 'fn3']);
-    });
-
-    it('combines matches across different fields with OR', function () {
-      const { dispatch, getState, funcNames } = setup();
-      // "sc1" matches fn1 by filename; "rs4" matches fn4 by lib name.
-      dispatch(ProfileView.changeCallTreeSearchString('sc1,rs4'));
-      expect(getMatchingFuncNames(getState, funcNames)).toEqual(['fn1', 'fn4']);
-    });
   });
 
   /**
@@ -1132,11 +857,11 @@ describe('actions/ProfileView', function () {
       const { dispatch, getState } = storeWithProfile(profile);
 
       expect(
-        selectedThreadSelectors.getSelectedMarkerIndex(getState())
+        selectedThreadSelectors.getViewOptions(getState()).selectedMarker
       ).toEqual(null);
       dispatch(ProfileView.changeSelectedMarker(0, 0));
       expect(
-        selectedThreadSelectors.getSelectedMarkerIndex(getState())
+        selectedThreadSelectors.getViewOptions(getState()).selectedMarker
       ).toEqual(0);
     });
   });
@@ -1175,57 +900,27 @@ describe('actions/ProfileView', function () {
       expect(getMarker(markerIndexes[1]).name.includes('b')).toBeTruthy();
     });
 
-    it('filters the markers by unique-string fields', function () {
+    it('filters the markers by name excluding a name', function () {
       const profile = getProfileWithMarkers([
-        [
-          'a',
-          5,
-          10,
-          {
-            type: 'StringTesting',
-            string: 'cucumber',
-            uniqueString: 'mango',
-          },
-        ],
-        [
-          'b',
-          15,
-          20,
-          {
-            // Marker where all properties are missing.
-            type: 'StringTesting',
-          },
-        ],
+        ['a', 0, null],
+        ['b', 1, null],
+        ['c', 2, null],
       ]);
       const { dispatch, getState } = storeWithProfile(profile);
 
       expect(
         selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState())
-      ).toHaveLength(2);
+      ).toHaveLength(3);
+      dispatch(ProfileView.changeMarkersSearchString('A, !b'));
 
       const getMarker = selectedThreadSelectors.getMarkerGetter(getState());
-      const markerPayload: MixedObject = getMarker(0).data as any;
-      expect(typeof markerPayload.string).toBe('string');
-      expect(typeof markerPayload.uniqueString).toBe('number');
-
-      function getMarkerIndexesForSearch(searchString: string) {
-        dispatch(ProfileView.changeMarkersSearchString(searchString));
-        return selectedThreadSelectors.getSearchFilteredMarkerIndexes(
-          getState()
-        );
-      }
-
-      // cucumber and mango should match the marker, because those strings
-      // are contained in fields.
-      expect(getMarkerIndexesForSearch('cucumber')).toHaveLength(1);
-      expect(getMarkerIndexesForSearch('mango')).toHaveLength(1);
-
-      // papaya and onion should not match any marker.
-      expect(getMarkerIndexesForSearch('papaya')).toHaveLength(0);
-      expect(getMarkerIndexesForSearch('onion')).toHaveLength(0);
+      const markerIndexes =
+        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      expect(markerIndexes).toHaveLength(1);
+      expect(getMarker(markerIndexes[0]).name.includes('a')).toBeTruthy();
     });
 
-    it('filters the markers by a potential data payload of type FileIO', function () {
+  /*  it('filters the markers by a potential data payload of type FileIO', function () {
       const profile = getProfileWithMarkers([
         ['a', 0, null],
         ['b', 1, null],
@@ -1260,24 +955,27 @@ describe('actions/ProfileView', function () {
       // Tests the filename, but with a substring
       dispatch(ProfileView.changeMarkersSearchString('foo'));
 
-      markerIndexes =
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      markerIndexes = selectedThreadSelectors.getSearchFilteredMarkerIndexes(
+        getState()
+      );
       expect(markerIndexes).toHaveLength(1);
       expect(getMarker(markerIndexes[0]).name.includes('d')).toBeTruthy();
 
       // Tests the operation
       dispatch(ProfileView.changeMarkersSearchString('open'));
 
-      markerIndexes =
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      markerIndexes = selectedThreadSelectors.getSearchFilteredMarkerIndexes(
+        getState()
+      );
       expect(markerIndexes).toHaveLength(1);
       expect(getMarker(markerIndexes[0]).name.includes('d')).toBeTruthy();
 
       // Tests the source
       dispatch(ProfileView.changeMarkersSearchString('Interposer'));
 
-      markerIndexes =
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      markerIndexes = selectedThreadSelectors.getSearchFilteredMarkerIndexes(
+        getState()
+      );
       expect(markerIndexes).toHaveLength(1);
       expect(getMarker(markerIndexes[0]).name.includes('d')).toBeTruthy();
     });
@@ -1296,7 +994,7 @@ describe('actions/ProfileView', function () {
             sendEndTime: undefined,
             recvEndTime: undefined,
             endTime: 1031,
-            otherPid: '3333',
+            otherPid: 3333,
             sendTid: 3333,
             recvTid: 1111,
             sendThreadName: 'Parent Process (Thread ID: 3333)',
@@ -1322,7 +1020,7 @@ describe('actions/ProfileView', function () {
             sendEndTime: undefined,
             recvEndTime: undefined,
             endTime: 40,
-            otherPid: '9999',
+            otherPid: 9999,
             messageSeqno: 2,
             messageType: 'PContent::Msg_PreferenceUpdate',
             side: 'parent',
@@ -1352,15 +1050,17 @@ describe('actions/ProfileView', function () {
       // Tests otherPid
       dispatch(ProfileView.changeMarkersSearchString('3333'));
 
-      markerIndexes =
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      markerIndexes = selectedThreadSelectors.getSearchFilteredMarkerIndexes(
+        getState()
+      );
       expect(markerIndexes).toHaveLength(1);
       expect(getMarker(markerIndexes[0]).name.includes('IPCIn')).toBeTruthy();
 
       dispatch(ProfileView.changeMarkersSearchString('9'));
 
-      markerIndexes =
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      markerIndexes = selectedThreadSelectors.getSearchFilteredMarkerIndexes(
+        getState()
+      );
       expect(markerIndexes).toHaveLength(1);
       expect(getMarker(markerIndexes[0]).name.includes('IPCOut')).toBeTruthy();
     });
@@ -1477,144 +1177,20 @@ describe('actions/ProfileView', function () {
       // Tests searching for the DOMEVent type
       dispatch(ProfileView.changeMarkersSearchString('mouse'));
 
-      markerIndexes =
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      markerIndexes = selectedThreadSelectors.getSearchFilteredMarkerIndexes(
+        getState()
+      );
       expect(markerIndexes).toHaveLength(1);
       expect(getMarker(markerIndexes[0]).name.includes('a')).toBeTruthy();
 
       // This tests searching in the category.
       dispatch(ProfileView.changeMarkersSearchString('dom'));
 
-      markerIndexes =
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
+      markerIndexes = selectedThreadSelectors.getSearchFilteredMarkerIndexes(
+        getState()
+      );
       expect(markerIndexes).toHaveLength(1);
       expect(getMarker(markerIndexes[0]).name.includes('a')).toBeTruthy();
-    });
-
-    it('filters the markers by specified fields', function () {
-      const profile = getProfileWithMarkers([
-        [
-          'a',
-          0,
-          null,
-          {
-            type: 'DOMEvent',
-            latency: 1001,
-            eventType: 'mousedown',
-          },
-        ],
-        [
-          'b',
-          1002,
-          1022,
-          {
-            type: 'UserTiming',
-            name: 'mark-1',
-            entryType: 'mark',
-          },
-        ],
-        ['c', 1023, null],
-        [
-          'd',
-          1050,
-          1100,
-          {
-            type: 'UserTiming',
-            name: 'clic',
-            entryType: 'measure',
-          },
-        ],
-        ['Navigation::Start', 1110, null],
-      ]);
-      // Set the category to DOM for the marker 'a'.
-      profile.threads[0].markers.category[0] = ensureExists(
-        profile.meta.categories
-      ).findIndex((c) => c.name === 'DOM');
-
-      const { dispatch, getState } = storeWithProfile(profile);
-      const getMarker = selectedThreadSelectors.getMarkerGetter(getState());
-      const filteredMarkerNames = () => {
-        const markerIndexes =
-          selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState());
-        return markerIndexes.map((i) => getMarker(i).name);
-      };
-
-      expect(
-        selectedThreadSelectors.getSearchFilteredMarkerIndexes(getState())
-      ).toHaveLength(5);
-
-      // Tests searching for the marker name or the name of usertiming markers.
-      dispatch(ProfileView.changeMarkersSearchString('name:a'));
-      expect(filteredMarkerNames()).toEqual(['a', 'b', 'Navigation::Start']);
-
-      // Tests searching for the DOMEvent type
-      dispatch(ProfileView.changeMarkersSearchString('type:dom'));
-      expect(filteredMarkerNames()).toEqual(['a']);
-
-      // Tests searching for the UserTiming type, with a string that isn't a prefix
-      dispatch(ProfileView.changeMarkersSearchString('type:timing'));
-      expect(filteredMarkerNames()).toEqual(['b', 'd']);
-
-      // Tests searching in the category.
-      dispatch(ProfileView.changeMarkersSearchString('cat:dom'));
-      expect(filteredMarkerNames()).toEqual(['a']);
-
-      // This tests searching in all fields.
-      // The 'c' in 'cat:' should not be matched.
-      dispatch(ProfileView.changeMarkersSearchString('c'));
-      expect(filteredMarkerNames()).toEqual(['c', 'd']);
-
-      // Search for a specific field or the data payload.
-      dispatch(ProfileView.changeMarkersSearchString('eventtype:down'));
-      expect(filteredMarkerNames()).toEqual(['a']);
-
-      // Testing the negative filtering
-
-      // Tests the basic negative filtering with "-timing".
-      dispatch(ProfileView.changeMarkersSearchString('-name:mark'));
-      expect(filteredMarkerNames()).toEqual([
-        'a',
-        'c',
-        'd',
-        'Navigation::Start',
-      ]);
-
-      // Tests multiple negative filtering with "-mark,-clic".
-      dispatch(ProfileView.changeMarkersSearchString('-name:mark,-name:clic'));
-      expect(filteredMarkerNames()).toEqual(['a', 'c', 'Navigation::Start']);
-
-      // Tests the negative filtering on a field with "-timing".
-      dispatch(ProfileView.changeMarkersSearchString('-type:timing'));
-      expect(filteredMarkerNames()).toEqual(['a', 'c', 'Navigation::Start']);
-
-      // Tests searching for the UserTiming type and negative search field.
-      dispatch(ProfileView.changeMarkersSearchString('type:timing,-name:b'));
-      expect(filteredMarkerNames()).toEqual(['d']);
-
-      // Tests searching for the mark-1 string making sure that it successfully gets it.
-      dispatch(ProfileView.changeMarkersSearchString('-1'));
-      expect(filteredMarkerNames()).toEqual(['b']);
-
-      // Tests searching for the mark-1 as a field string making sure that it successfully gets it.
-      dispatch(ProfileView.changeMarkersSearchString('name:-1'));
-      expect(filteredMarkerNames()).toEqual(['b']);
-
-      // Tests searching for the mark-1 as a negative filter to make sure we exclude it.
-      dispatch(ProfileView.changeMarkersSearchString('-name:-1'));
-      expect(filteredMarkerNames()).toEqual([
-        'a',
-        'c',
-        'd',
-        'Navigation::Start',
-      ]);
-
-      // Tests searching for Navigation:: should find Navigation::Start
-      dispatch(ProfileView.changeMarkersSearchString('Navigation::'));
-      expect(filteredMarkerNames()).toEqual(['Navigation::Start']);
-      dispatch(ProfileView.changeMarkersSearchString('name:Navigation::'));
-      expect(filteredMarkerNames()).toEqual(['Navigation::Start']);
-      dispatch(ProfileView.changeMarkersSearchString('-name:Navigation::'));
-      expect(filteredMarkerNames()).toEqual(['a', 'b', 'c', 'd']);
     });
   });
 
@@ -1715,92 +1291,25 @@ describe('actions/ProfileView', function () {
     });
   });
 
-  describe('changeIncludeIdleSamples', function () {
-    function setup() {
-      // Four samples: two with an Idle leaf, two with a non-idle leaf.
-      const { profile } = getProfileFromTextSamples(`
-        A          A              A          A
-        B[cat:DOM] B[cat:Idle]    B[cat:DOM] B[cat:Idle]
-      `);
-      return storeWithProfile(profile);
-    }
-
-    it('defaults to true and toggles through the reducer', function () {
-      const { dispatch, getState } = setup();
-
-      expect(UrlStateSelectors.getIncludeIdleSamples(getState())).toEqual(true);
-      dispatch(ProfileView.changeIncludeIdleSamples(false));
-      expect(UrlStateSelectors.getIncludeIdleSamples(getState())).toEqual(
-        false
-      );
-    });
-
-    it('nulls out stacks of samples whose leaf frame is idle when off', function () {
-      const { dispatch, getState } = setup();
-
-      const beforeThread =
-        selectedThreadSelectors.getFilteredThread(getState());
-      expect(beforeThread.samples.stack.every((s) => s !== null)).toBe(true);
-
-      dispatch(ProfileView.changeIncludeIdleSamples(false));
-
-      const afterThread = selectedThreadSelectors.getFilteredThread(getState());
-      const idleCategoryIndex = ensureExists(
-        ProfileViewSelectors.getIdleCategoryIndex(getState()),
-        'Expected the test profile to have an Idle category'
-      );
-
-      // Samples 0 and 2 have DOM leaves; 1 and 3 have Idle leaves.
-      expect(afterThread.samples.stack[0]).not.toBe(null);
-      expect(afterThread.samples.stack[1]).toBe(null);
-      expect(afterThread.samples.stack[2]).not.toBe(null);
-      expect(afterThread.samples.stack[3]).toBe(null);
-
-      // The stackTable is untouched. Only sample.stack entries are nulled.
-      expect(afterThread.stackTable).toBe(beforeThread.stackTable);
-      // The kept samples still point at a stack whose category is not idle.
-      const keptStackCategories = afterThread.samples.stack
-        .filter((s): s is number => s !== null)
-        .map((s) => afterThread.stackTable.category[s]);
-      expect(keptStackCategories).not.toContain(idleCategoryIndex);
-    });
-
-    it('is a no-op when the profile has no idle category', function () {
-      const { profile } = getProfileFromTextSamples(`
-        A          A
-        B[cat:DOM] B[cat:DOM]
-      `);
-      // Replace categories with a set that has no "Idle" entry.
-      profile.meta.categories = [
-        { name: 'Other', color: 'grey', subcategories: ['Other'] },
-        { name: 'DOM', color: 'blue', subcategories: ['Other'] },
-      ];
-      const { dispatch, getState } = storeWithProfile(profile);
-
-      expect(ProfileViewSelectors.getIdleCategoryIndex(getState())).toBe(null);
-
-      const before = selectedThreadSelectors.getFilteredThread(getState());
-      dispatch(ProfileView.changeIncludeIdleSamples(false));
-      const after = selectedThreadSelectors.getFilteredThread(getState());
-      // Without an idle category there is nothing to filter.
-      expect(after).toBe(before);
-    });
-  });
-
   describe('updatePreviewSelection', function () {
     it('updates the profile selection', function () {
       const { profile } = getProfileFromTextSamples('A');
       const { dispatch, getState } = storeWithProfile(profile);
 
-      expect(ProfileViewSelectors.getPreviewSelection(getState())).toBe(null);
+      expect(ProfileViewSelectors.getPreviewSelection(getState())).toEqual({
+        hasSelection: false,
+        isModifying: false,
+      });
       dispatch(
         ProfileView.updatePreviewSelection({
+          hasSelection: true,
           isModifying: false,
           selectionStart: 0,
           selectionEnd: 1,
         })
       );
       expect(ProfileViewSelectors.getPreviewSelection(getState())).toEqual({
+        hasSelection: true,
         isModifying: false,
         selectionStart: 0,
         selectionEnd: 1,
@@ -1849,6 +1358,7 @@ describe('actions/ProfileView', function () {
       dispatch(ProfileView.commitRange(0, 10));
       dispatch(
         ProfileView.updatePreviewSelection({
+          hasSelection: true,
           isModifying: false,
           selectionStart: 1,
           selectionEnd: 9,
@@ -1858,6 +1368,7 @@ describe('actions/ProfileView', function () {
         { start: 0, end: 10 },
       ]);
       expect(ProfileViewSelectors.getPreviewSelection(getState())).toEqual({
+        hasSelection: true,
         isModifying: false,
         selectionStart: 1,
         selectionEnd: 9,
@@ -1874,7 +1385,10 @@ describe('actions/ProfileView', function () {
         { start: 0, end: 10 },
         { start: 2, end: 8 },
       ]);
-      expect(ProfileViewSelectors.getPreviewSelection(getState())).toBe(null);
+      expect(ProfileViewSelectors.getPreviewSelection(getState())).toEqual({
+        hasSelection: false,
+        isModifying: false,
+      });
       expect(ProfileViewSelectors.getPreviewSelectionRange(getState())).toEqual(
         {
           start: 2,
@@ -1910,16 +1424,18 @@ describe('actions/ProfileView', function () {
       ]);
     });
 
-    it('pops a committed range and sets the selection', function () {
+    it('pops a committed range and unsets the selection', function () {
       const { getState, dispatch } = setupStore();
       dispatch(
         ProfileView.updatePreviewSelection({
+          hasSelection: true,
           isModifying: false,
           selectionStart: 1,
           selectionEnd: 9,
         })
       );
       expect(ProfileViewSelectors.getPreviewSelection(getState())).toEqual({
+        hasSelection: true,
         isModifying: false,
         selectionEnd: 9,
         selectionStart: 1,
@@ -1937,34 +1453,9 @@ describe('actions/ProfileView', function () {
         { start: 1, end: 9 },
       ]);
       expect(ProfileViewSelectors.getPreviewSelection(getState())).toEqual({
+        hasSelection: false,
         isModifying: false,
-        selectionStart: 3,
-        selectionEnd: 7,
       });
-    });
-
-    it('unsets the selection when popping the current committed range', function () {
-      const { getState, dispatch } = setupStore();
-      expect(UrlStateSelectors.getAllCommittedRanges(getState())).toEqual([
-        { start: 0, end: 10 },
-        { start: 1, end: 9 },
-        { start: 2, end: 8 },
-        { start: 3, end: 7 },
-      ]);
-
-      dispatch(ProfileView.popCommittedRanges(2));
-      expect(UrlStateSelectors.getAllCommittedRanges(getState())).toEqual([
-        { start: 0, end: 10 },
-        { start: 1, end: 9 },
-      ]);
-      expect(ProfileViewSelectors.getPreviewSelection(getState())).toEqual({
-        isModifying: false,
-        selectionStart: 3,
-        selectionEnd: 7,
-      });
-
-      dispatch(ProfileView.popCommittedRanges(2));
-      expect(ProfileViewSelectors.getPreviewSelection(getState())).toBe(null);
     });
   });
 
@@ -2078,7 +1569,7 @@ describe('actions/ProfileView', function () {
         throw new Error('No screenshots found.');
       }
       expect(screenshots.length).toEqual(5);
-    });
+    });*/
   });
 });
 
@@ -2129,18 +1620,19 @@ describe('snapshots of selectors/profile', function () {
     const G = funcNames.indexOf('G');
     for (
       let frameIdx = 0;
-      frameIdx < profile.shared.frameTable.length;
+      frameIdx < samplesThread.frameTable.length;
       frameIdx++
     ) {
-      const func = profile.shared.frameTable.func[frameIdx];
+      const func = samplesThread.frameTable.func[frameIdx];
       if (func === G) {
-        profile.shared.frameTable.innerWindowID[frameIdx] = innerWindowID;
+        samplesThread.frameTable.innerWindowID[frameIdx] = innerWindowID;
       }
     }
-    samplesThread.usedInnerWindowIDs = [innerWindowID];
 
     // Add in a thread with markers
-    const markersThread = getThreadWithMarkers(profile.shared, [
+    const {
+      threads: [markersThread],
+    } = getProfileWithMarkers([
       ['A', 0, null],
       ['B', 1, null],
       ['C', 2, null],
@@ -2171,10 +1663,8 @@ describe('snapshots of selectors/profile', function () {
     samplesThread.samples.length = eventDelay.length;
 
     const { getState, dispatch } = storeWithProfile(profile);
-    const samplesDerivedThread = selectedThreadSelectors.getThread(getState());
-
     const mergeFunction = {
-      type: 'merge-function' as const,
+      type: 'merge-function',
       funcIndex: C,
     };
     dispatch(ProfileView.addTransformToStack(0, mergeFunction));
@@ -2184,6 +1674,7 @@ describe('snapshots of selectors/profile', function () {
     dispatch(ProfileView.commitRange(3, 7)); // Reminder: upper bound "7" is exclusive.
     dispatch(
       ProfileView.updatePreviewSelection({
+        hasSelection: true,
         isModifying: false,
         selectionStart: 4,
         selectionEnd: 6,
@@ -2192,7 +1683,7 @@ describe('snapshots of selectors/profile', function () {
     return {
       getState,
       dispatch,
-      samplesThread: samplesDerivedThread,
+      samplesThread,
       mergeFunction,
       markerThreadSelectors: getThreadSelectors(1),
       getMarker: getThreadSelectors(1).getMarkerGetter(getState()),
@@ -2261,6 +1752,15 @@ describe('snapshots of selectors/profile', function () {
       // 'Merge: C'
       { l10nId: 'TransformNavigator--merge-function', item: 'C' },
     ]);
+  });
+
+  it('matches the last stored run of selectedThreadSelector.getTabFilteredThread', function () {
+    const { getState, dispatch } = setupStore();
+
+    dispatch(changeTimelineTrackOrganization({ type: 'active-tab', tabID }));
+    expect(
+      selectedThreadSelectors.getTabFilteredThread(getState())
+    ).toMatchSnapshot();
   });
 
   it('matches the last stored run of selectedThreadSelector.getRangeFilteredThread', function () {
@@ -2340,10 +1840,17 @@ describe('snapshots of selectors/profile', function () {
     ).toMatchSnapshot();
   });
 
-  it('matches the last stored run of selectedThreadSelector.getFilteredCallNodeMaxDepthPlusOne', function () {
+  it('matches the last stored run of selectedThreadSelector.getFilteredCallNodeMaxDepth', function () {
     const { getState } = setupStore();
     expect(
-      selectedThreadSelectors.getFilteredCallNodeMaxDepthPlusOne(getState())
+      selectedThreadSelectors.getFilteredCallNodeMaxDepth(getState())
+    ).toEqual(4);
+  });
+
+  it('matches the last stored run of selectedThreadSelector.getPreviewFilteredCallNodeMaxDepth', function () {
+    const { getState } = setupStore();
+    expect(
+      selectedThreadSelectors.getPreviewFilteredCallNodeMaxDepth(getState())
     ).toEqual(4);
   });
 
@@ -2444,69 +1951,6 @@ describe('snapshots of selectors/profile', function () {
   });
 });
 
-describe('changeSelectedCallNode', function () {
-  it('switching between the call tree and the flame graph always selects a reasonable node', function () {
-    const {
-      profile,
-      funcNamesDictPerThread: [funcNamesDict],
-    } = getProfileFromTextSamples(`
-      A  A  A  A
-      B  B  B  B
-      C  C  C  H
-      D  D  F  I
-      E  E  G
-    `);
-
-    const { A, B, C, D, E, F } = funcNamesDict;
-
-    const { dispatch, getState } = storeWithProfile(profile);
-
-    dispatch(App.changeSelectedTab('calltree'));
-    dispatch(ProfileView.changeSelectedCallNode(0, [A, B, C]));
-    expect(selectedThreadSelectors.getSelectedCallNodePath(getState())).toEqual(
-      [A, B, C]
-    );
-    dispatch(ProfileView.changeInvertCallstack(true));
-    expect(UrlStateSelectors.getInvertCallstack(getState())).toEqual(true);
-
-    // Inverting the call stack should have picked the heaviest inverted stack
-    // as the new selected call node path.
-    expect(selectedThreadSelectors.getSelectedCallNodePath(getState())).toEqual(
-      [E, D, C]
-    );
-
-    dispatch(App.changeSelectedTab('flame-graph'));
-    // In the flame graph, everything should still be non-inverted.
-    expect(UrlStateSelectors.getInvertCallstack(getState())).toEqual(false);
-    // The original non-inverted selected call node should be selected.
-    expect(selectedThreadSelectors.getSelectedCallNodePath(getState())).toEqual(
-      [A, B, C]
-    );
-
-    // Now we select a different call node in the flame graph.
-    dispatch(ProfileView.changeSelectedCallNode(0, [A, B, C, F]));
-    expect(selectedThreadSelectors.getSelectedCallNodePath(getState())).toEqual(
-      [A, B, C, F]
-    );
-
-    // Switch back to the call tree tab. In the call tree tab, we should still
-    // be looking at the inverted tree, with the unchanged inverted selection.
-    dispatch(App.changeSelectedTab('calltree'));
-    expect(UrlStateSelectors.getInvertCallstack(getState())).toEqual(true);
-    expect(selectedThreadSelectors.getSelectedCallNodePath(getState())).toEqual(
-      [E, D, C]
-    );
-
-    // Switching back to non-inverted mode should pick a new non-inverted
-    // selected call node based on the selection in the inverted tree.
-    dispatch(ProfileView.changeInvertCallstack(false));
-    expect(UrlStateSelectors.getInvertCallstack(getState())).toEqual(false);
-    expect(selectedThreadSelectors.getSelectedCallNodePath(getState())).toEqual(
-      [A, B, C]
-    );
-  });
-});
-
 describe('getTimingsForSidebar', () => {
   function getGenericProfileString() {
     // Note that the first column won't be counted because a range is used,
@@ -2516,7 +1960,7 @@ describe('getTimingsForSidebar', () => {
       B    B                  B             B             B              B
       Cjs  Cjs                Cjs           Cjs           H[cat:Layout]  H[cat:Layout]
       D    D                  D             F             I[cat:Idle]
-      E    Ejs                Ejs           Ejs
+      E    Ejs[jit:baseline]  Ejs[jit:ion]  Ejs[jit:ion]
     `;
   }
 
@@ -2532,7 +1976,7 @@ describe('getTimingsForSidebar', () => {
     const threadLength = profile.threads[0].samples.length;
     store.dispatch(ProfileView.commitRange(1, threadLength));
 
-    const getTimingsForPath = (path: CallNodePath) => {
+    const getTimingsForPath = (path) => {
       store.dispatch(ProfileView.changeSelectedCallNode(0, path));
       return selectedNodeSelectors.getTimingsForSidebar(store.getState());
     };
@@ -2558,6 +2002,7 @@ describe('getTimingsForSidebar', () => {
 
   const EMPTY_TIMING = {
     value: 0,
+    breakdownByImplementation: null,
     breakdownByCategory: null,
   };
 
@@ -2569,12 +2014,16 @@ describe('getTimingsForSidebar', () => {
       } = setup();
 
       // This is a root node: it should have no self time but all the total time.
+      // Also, because the function is only present once in the tree, forPath
+      // and forFunc timings are the same, so we're extracting them in one
+      // object for a better readability.
       const timings = getTimingsForPath([A]);
 
       const expectedTiming = {
         selfTime: EMPTY_TIMING,
         totalTime: {
           value: 5,
+          breakdownByImplementation: { native: 2, baseline: 1, ion: 2 },
           breakdownByCategory: withSingleSubcategory([
             0, // Other
             1, // Idle
@@ -2589,6 +2038,7 @@ describe('getTimingsForSidebar', () => {
       };
       expect(timings).toEqual({
         forPath: expectedTiming,
+        forFunc: expectedTiming,
         rootTime: 5,
       });
     });
@@ -2604,11 +2054,15 @@ describe('getTimingsForSidebar', () => {
       //
       // This is also a JS node so it should have some js engine implementation
       // implementations.
+      //
+      // The same func is also present in 2 different stacks so it should have
+      // different timings for the `forFunc` property.
       const timings = getTimingsForPath([A, B, Cjs, D, Ejs]);
       expect(timings).toEqual({
         forPath: {
           selfTime: {
             value: 2,
+            breakdownByImplementation: { ion: 1, baseline: 1 },
             breakdownByCategory: withSingleSubcategory([
               0, // Idle
               0, // Other
@@ -2622,11 +2076,42 @@ describe('getTimingsForSidebar', () => {
           },
           totalTime: {
             value: 2,
+            breakdownByImplementation: { ion: 1, baseline: 1 },
             breakdownByCategory: withSingleSubcategory([
               0, // Idle
               0, // Other
               0, // Layout
               2, // JavaScript
+              0,
+              0,
+              0,
+              0,
+            ]),
+          },
+        },
+        forFunc: {
+          selfTime: {
+            value: 3,
+            breakdownByImplementation: { ion: 2, baseline: 1 },
+            breakdownByCategory: withSingleSubcategory([
+              0,
+              0,
+              0,
+              3, // JavaScript
+              0,
+              0,
+              0,
+              0,
+            ]),
+          },
+          totalTime: {
+            value: 3,
+            breakdownByImplementation: { ion: 2, baseline: 1 },
+            breakdownByCategory: withSingleSubcategory([
+              0,
+              0,
+              0,
+              3, // JavaScript
               0,
               0,
               0,
@@ -2648,9 +2133,13 @@ describe('getTimingsForSidebar', () => {
       // have some running time that's different than the self time.
       const timings = getTimingsForPath([A, B, H]);
 
+      // This node is present only once in the tree, so its forPath and forFunc
+      // timing values are identical. Extracting them provides a better
+      // readability.
       const expectedTiming = {
         selfTime: {
           value: 1,
+          breakdownByImplementation: { native: 1 },
           breakdownByCategory: withSingleSubcategory([
             0,
             0,
@@ -2664,6 +2153,7 @@ describe('getTimingsForSidebar', () => {
         },
         totalTime: {
           value: 2,
+          breakdownByImplementation: { native: 2 },
 
           breakdownByCategory: withSingleSubcategory([
             0, // Other
@@ -2680,6 +2170,7 @@ describe('getTimingsForSidebar', () => {
 
       expect(timings).toEqual({
         forPath: expectedTiming,
+        forFunc: expectedTiming,
         rootTime: 5,
       });
     });
@@ -2693,6 +2184,7 @@ describe('getTimingsForSidebar', () => {
 
       dispatch(
         ProfileView.updatePreviewSelection({
+          hasSelection: true,
           isModifying: false,
           selectionStart: 3,
           selectionEnd: 5,
@@ -2706,6 +2198,7 @@ describe('getTimingsForSidebar', () => {
       expect(timings.rootTime).toEqual(2);
       expect(timings.forPath.totalTime).toEqual({
         value: 2,
+        breakdownByImplementation: { native: 1, ion: 1 },
         breakdownByCategory: withSingleSubcategory([
           0, // Other
           1, // Idle
@@ -2725,7 +2218,7 @@ describe('getTimingsForSidebar', () => {
         // range in the setup.
         return `
           A    A    A              A             A
-          Bjs  Bjs  Bjs            Bjs           Bjs
+          Bjs  Bjs  Bjs            Bjs[jit:ion]  Bjs[jit:blinterp]
           C    C    C              E
                     D[cat:Layout]
         `;
@@ -2740,10 +2233,19 @@ describe('getTimingsForSidebar', () => {
         // This is a root node: it should have no self time but all the total time.
         const timings = getTimingsForPath([A]);
 
+        // This function is present only once in the call tree, so we'll get the
+        // same timing results for forPath and forFunc. So we extract the
+        // expectation to make this a bit more readable.
         const expectedTiming = {
           selfTime: EMPTY_TIMING,
           totalTime: {
             value: 4,
+            breakdownByImplementation: {
+              interpreter: 1,
+              native: 1,
+              ion: 1,
+              blinterp: 1,
+            },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
@@ -2758,6 +2260,7 @@ describe('getTimingsForSidebar', () => {
         };
         expect(timings).toEqual({
           forPath: expectedTiming,
+          forFunc: expectedTiming,
           rootTime: 4,
         });
       });
@@ -2770,9 +2273,13 @@ describe('getTimingsForSidebar', () => {
 
         const timings = getTimingsForPath([A, Bjs]);
 
+        // This function is present only once in the call tree, so we'll get the
+        // same timing results for forPath and forFunc. So we extract the
+        // expectation to make this a bit more readable.
         const expectedTiming = {
           selfTime: {
             value: 1,
+            breakdownByImplementation: { blinterp: 1 },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
@@ -2786,6 +2293,12 @@ describe('getTimingsForSidebar', () => {
           },
           totalTime: {
             value: 4,
+            breakdownByImplementation: {
+              ion: 1,
+              blinterp: 1,
+              interpreter: 1,
+              native: 1,
+            },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
@@ -2800,6 +2313,7 @@ describe('getTimingsForSidebar', () => {
         };
         expect(timings).toEqual({
           forPath: expectedTiming,
+          forFunc: expectedTiming,
           rootTime: 4,
         });
       });
@@ -2813,11 +2327,13 @@ describe('getTimingsForSidebar', () => {
         // This node is a native stack inhering the ion jit information.
         const timings = getTimingsForPath([A, Bjs, E]);
 
-        // This function has a self
+        // This function is present only once in the call tree, so we'll get the
+        // same timing results for forPath and forFunc. Also it only has a self
         // time occurrence, so selfTime and totalTime show the same timing.
         // We extract the expectations to make this a bit more readable.
         const expectedTiming = {
           value: 1,
+          breakdownByImplementation: { ion: 1 },
           breakdownByCategory: withSingleSubcategory([
             0,
             0,
@@ -2831,6 +2347,7 @@ describe('getTimingsForSidebar', () => {
         };
         expect(timings).toEqual({
           forPath: { selfTime: expectedTiming, totalTime: expectedTiming },
+          forFunc: { selfTime: expectedTiming, totalTime: expectedTiming },
           rootTime: 4,
         });
       });
@@ -2843,9 +2360,13 @@ describe('getTimingsForSidebar', () => {
 
         const timings = getTimingsForPath([A, Bjs, C]);
 
+        // This function is present only once in the call tree, so we'll get the
+        // same timing results for forPath and forFunc. So we extract the
+        // expectation to make this a bit more readable.
         const expectedTiming = {
           selfTime: {
             value: 1,
+            breakdownByImplementation: { interpreter: 1 },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
@@ -2859,6 +2380,10 @@ describe('getTimingsForSidebar', () => {
           },
           totalTime: {
             value: 2,
+            breakdownByImplementation: {
+              interpreter: 1,
+              native: 1,
+            },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
@@ -2873,6 +2398,7 @@ describe('getTimingsForSidebar', () => {
         };
         expect(timings).toEqual({
           forPath: expectedTiming,
+          forFunc: expectedTiming,
           rootTime: 4,
         });
       });
@@ -2886,11 +2412,13 @@ describe('getTimingsForSidebar', () => {
         // This node is a native stack inhering the ion jit information.
         const timings = getTimingsForPath([A, Bjs, C, D]);
 
-        // This function only has a self
+        // This function is present only once in the call tree, so we'll get the
+        // same timing results for forPath and forFunc. Also it only has a self
         // time occurrence, so selfTime and totalTime show the same timing.
         // We extract the expectations to make this a bit more readable.
         const expectedTiming = {
           value: 1,
+          breakdownByImplementation: { native: 1 },
           breakdownByCategory: withSingleSubcategory([
             0,
             0,
@@ -2904,6 +2432,7 @@ describe('getTimingsForSidebar', () => {
         };
         expect(timings).toEqual({
           forPath: { selfTime: expectedTiming, totalTime: expectedTiming },
+          forFunc: { selfTime: expectedTiming, totalTime: expectedTiming },
           rootTime: 4,
         });
       });
@@ -2911,7 +2440,7 @@ describe('getTimingsForSidebar', () => {
   });
 
   describe('for an inverted tree', function () {
-    function setupForInvertedTree(profileString?: string) {
+    function setupForInvertedTree(profileString) {
       const setupResult = setup(profileString);
       const { dispatch } = setupResult;
 
@@ -2934,9 +2463,12 @@ describe('getTimingsForSidebar', () => {
       } = setupForInvertedTree();
       const timings = getTimingsForPath([Ejs]);
 
-      // A root node will have the same values for total and selftime.
+      // A root node will have the same values for total and selftime. Also this
+      // function is present once so forPath and forFunc will have the same
+      // values.
       const expectedTiming = {
         value: 3,
+        breakdownByImplementation: { ion: 2, baseline: 1 },
         breakdownByCategory: withSingleSubcategory([
           0, // Idle
           0, // Other
@@ -2959,6 +2491,7 @@ describe('getTimingsForSidebar', () => {
           },
           totalTime: expectedTiming,
         },
+        forFunc: { selfTime: expectedTiming, totalTime: expectedTiming },
         rootTime: 5,
       });
     });
@@ -2974,11 +2507,33 @@ describe('getTimingsForSidebar', () => {
           selfTime: EMPTY_TIMING,
           totalTime: {
             value: 2,
+            breakdownByImplementation: { ion: 1, baseline: 1 },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
               0,
               2, // JavaScript
+              0,
+              0,
+              0,
+              0,
+            ]),
+          },
+        },
+        forFunc: {
+          selfTime: EMPTY_TIMING,
+          totalTime: {
+            value: 5,
+            breakdownByImplementation: {
+              ion: 2,
+              baseline: 1,
+              native: 2,
+            },
+            breakdownByCategory: withSingleSubcategory([
+              0, // Other
+              1, // Idle
+              1, // Layout
+              3, // JavaScript
               0,
               0,
               0,
@@ -3000,12 +2555,46 @@ describe('getTimingsForSidebar', () => {
       let timings = getTimingsForPath([H]);
       expect(timings).toEqual({
         forPath: {
-          selfTime: { ...EMPTY_TIMING, value: 1 },
+          selfTime: {
+            ...EMPTY_TIMING,
+            value: 1,
+          },
           totalTime: {
             value: 1,
+            breakdownByImplementation: { native: 1 },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
+              1, // Layout
+              0,
+              0,
+              0,
+              0,
+              0,
+            ]),
+          },
+        },
+        forFunc: {
+          selfTime: {
+            value: 1,
+            breakdownByImplementation: { native: 1 },
+            breakdownByCategory: withSingleSubcategory([
+              0,
+              0,
+              1, // Layout
+              0,
+              0,
+              0,
+              0,
+              0,
+            ]),
+          },
+          totalTime: {
+            value: 2,
+            breakdownByImplementation: { native: 2 },
+            breakdownByCategory: withSingleSubcategory([
+              0, // Other
+              1, // Idle
               1, // Layout
               0,
               0,
@@ -3025,10 +2614,41 @@ describe('getTimingsForSidebar', () => {
           selfTime: EMPTY_TIMING,
           totalTime: {
             value: 1,
+            breakdownByImplementation: { native: 1 },
             breakdownByCategory: withSingleSubcategory([
               0,
               1, // Idle
               0,
+              0,
+              0,
+              0,
+              0,
+              0,
+            ]),
+          },
+        },
+        forFunc: {
+          selfTime: {
+            value: 1,
+            breakdownByImplementation: { native: 1 },
+            breakdownByCategory: withSingleSubcategory([
+              0,
+              0,
+              1, // Layout
+              0,
+              0,
+              0,
+              0,
+              0,
+            ]),
+          },
+          totalTime: {
+            value: 2,
+            breakdownByImplementation: { native: 2 },
+            breakdownByCategory: withSingleSubcategory([
+              0,
+              1, // Idle
+              1, // Layout
               0,
               0,
               0,
@@ -3052,6 +2672,7 @@ describe('getTimingsForSidebar', () => {
           selfTime: EMPTY_TIMING,
           totalTime: {
             value: 1,
+            breakdownByImplementation: { native: 1 },
             breakdownByCategory: withSingleSubcategory([
               0,
               0,
@@ -3062,6 +2683,23 @@ describe('getTimingsForSidebar', () => {
               0,
               0,
             ]),
+          },
+        },
+        forFunc: {
+          selfTime: EMPTY_TIMING,
+          totalTime: {
+            value: 5,
+            breakdownByImplementation: { native: 2, ion: 2, baseline: 1 },
+            breakdownByCategory: withSingleSubcategory([
+              0, // Other
+              1, // Idle
+              1, // Layout
+              3, // JavaScript
+              0,
+              0,
+              0,
+              0,
+            ]), // [Idle, Other, Layout, JavaScript]
           },
         },
         rootTime: 5,
@@ -3077,6 +2715,7 @@ describe('getTimingsForSidebar', () => {
 
       dispatch(
         ProfileView.updatePreviewSelection({
+          hasSelection: true,
           isModifying: false,
           selectionStart: 3,
           selectionEnd: 5,
@@ -3090,6 +2729,7 @@ describe('getTimingsForSidebar', () => {
       expect(timings.rootTime).toEqual(2);
       expect(timings.forPath.totalTime).toEqual({
         value: 1,
+        breakdownByImplementation: { ion: 1 },
         breakdownByCategory: withSingleSubcategory([
           0, // Other
           0, // Idle
@@ -3109,15 +2749,15 @@ describe('getTimingsForSidebar', () => {
         // range in the setup.
         return `
           A    A    A              A             A
-          Bjs  Bjs  Bjs            Bjs           Bjs
+          Bjs  Bjs  Bjs            Bjs[jit:ion]  Bjs[jit:blinterp]
           C    C    C              E
                     D[cat:Layout]
         `;
 
-        // This is what the inverted tree looks like:
+        // This is how the inverted tree looks like:
         //
-        // C    C    D[cat:Layout]  E             Bjs
-        // Bjs  Bjs  C              Bjs           A
+        // C    C    D[cat:Layout]  E             Bjs[jit:blinterp]
+        // Bjs  Bjs  C              Bjs[jit:ion]  A
         // A    A    Bjs            A
         //           A
       }
@@ -3131,11 +2771,13 @@ describe('getTimingsForSidebar', () => {
         // This is a root node: it should have all self time.
         const timings = getTimingsForPath([D]);
 
-        // This function is a root node in
+        // This function is present only once in the call tree, so we'll get the
+        // same timing results for forPath and forFunc. Also it's a root node in
         // an inverted tree, so selfTime and totalTime show the same timing.
         // We extract the expectations to make this a bit more readable.
         const expectedTiming = {
           value: 1,
+          breakdownByImplementation: { native: 1 },
           breakdownByCategory: withSingleSubcategory([
             0,
             0,
@@ -3158,6 +2800,7 @@ describe('getTimingsForSidebar', () => {
             },
             totalTime: expectedTiming,
           },
+          forFunc: { selfTime: expectedTiming, totalTime: expectedTiming },
           rootTime: 4,
         });
       });
@@ -3171,11 +2814,13 @@ describe('getTimingsForSidebar', () => {
         // This is a root node: it should have all self time.
         const timings = getTimingsForPath([E]);
 
-        // This function is a root node in
+        // This function is present only once in the call tree, so we'll get the
+        // same timing results for forPath and forFunc. Also it's a root node in
         // an inverted tree, so selfTime and totalTime show the same timing.
         // We extract the expectations to make this a bit more readable.
         const expectedTiming = {
           value: 1,
+          breakdownByImplementation: { ion: 1 },
           breakdownByCategory: withSingleSubcategory([
             0,
             0,
@@ -3198,6 +2843,7 @@ describe('getTimingsForSidebar', () => {
             },
             totalTime: expectedTiming,
           },
+          forFunc: { selfTime: expectedTiming, totalTime: expectedTiming },
           rootTime: 4,
         });
       });
@@ -3215,11 +2861,49 @@ describe('getTimingsForSidebar', () => {
             selfTime: EMPTY_TIMING,
             totalTime: {
               value: 1,
+              breakdownByImplementation: {
+                native: 1,
+              },
               breakdownByCategory: withSingleSubcategory([
                 0,
                 0,
                 1, // Layout
                 0,
+                0,
+                0,
+                0,
+                0,
+              ]),
+            },
+          },
+          forFunc: {
+            selfTime: {
+              value: 1,
+              breakdownByImplementation: { blinterp: 1 },
+              breakdownByCategory: withSingleSubcategory([
+                0,
+                0,
+                0,
+                1, // JavaScript
+                0,
+                0,
+                0,
+                0,
+              ]),
+            },
+            totalTime: {
+              value: 4,
+              breakdownByImplementation: {
+                ion: 1,
+                blinterp: 1,
+                interpreter: 1,
+                native: 1,
+              },
+              breakdownByCategory: withSingleSubcategory([
+                0,
+                0,
+                1, // Layout
+                3, // JavaScript
                 0,
                 0,
                 0,
@@ -3236,23 +2920,23 @@ describe('getTimingsForSidebar', () => {
   describe('for a diffing track', function () {
     function setup() {
       const { profile, funcNamesDictPerThread } =
-        getMergedProfileFromTextSamples([
+        getMergedProfileFromTextSamples(
           `
-            A              A  A
-            B              B  C
-            D[cat:Layout]  E  F
-          `,
+        A              A  A
+        B              B  C
+        D[cat:Layout]  E  F
+      `,
           `
-            A    A  A
-            B    B  B
-            Gjs  I  E
-          `,
-        ]);
+        A    A  A
+        B    B  B
+        Gjs  I  E
+      `
+        );
 
       const store = storeWithProfile(profile);
       store.dispatch(ProfileView.changeSelectedThreads(new Set([2])));
 
-      const getTimingsForPath = (path: CallNodePath) => {
+      const getTimingsForPath = (path) => {
         store.dispatch(ProfileView.changeSelectedCallNode(2, path));
         return selectedNodeSelectors.getTimingsForSidebar(store.getState());
       };
@@ -3273,6 +2957,10 @@ describe('getTimingsForSidebar', () => {
         selfTime: EMPTY_TIMING,
         totalTime: {
           breakdownByCategory: withSingleSubcategory([0, 0, -1, 1, 0, 0, 0, 0]), // Other, Idle, Layout, JavaScript, etc.
+          breakdownByImplementation: {
+            interpreter: 1,
+            native: -1,
+          },
           value: 0,
         },
       });
@@ -3297,7 +2985,7 @@ describe('getTimingsForSidebar', () => {
         ProfileView.changeCallTreeSummaryStrategy('native-allocations')
       );
 
-      const getTimingsForPath = (path: CallNodePath) => {
+      const getTimingsForPath = (path) => {
         store.dispatch(ProfileView.changeSelectedCallNode(0, path));
         return selectedNodeSelectors.getTimingsForSidebar(store.getState());
       };
@@ -3320,6 +3008,10 @@ describe('getTimingsForSidebar', () => {
         selfTime: EMPTY_TIMING,
         totalTime: {
           breakdownByCategory: withSingleSubcategory([0, 0, 7, 5, 0, 0, 0, 0]), // Other, Idle, Layout, JavaScript, etc
+          breakdownByImplementation: {
+            native: 7,
+            interpreter: 5,
+          },
           value: 12,
         },
       });
@@ -3330,7 +3022,7 @@ describe('getTimingsForSidebar', () => {
 // Verify that getFriendlyThreadName gives the expected names for threads with or without processName.
 describe('getFriendlyThreadName', function () {
   // Setup a profile with threads based on the given overrides.
-  function setup(threadOverrides: Array<Partial<RawThread>>) {
+  function setup(threadOverrides: Array<$Shape<Thread>>) {
     const profile = getEmptyProfile();
     for (const threadOverride of threadOverrides) {
       profile.threads.push(getEmptyThread(threadOverride));
@@ -3474,12 +3166,12 @@ describe('counter selectors', function () {
 
   it('can get the counter pid', function () {
     const { getState } = setup();
-    expect(getCounterSelectors(0).getPid(getState())).toBe('0');
+    expect(getCounterSelectors(0).getPid(getState())).toBe(0);
   });
 
   it('can accumulate samples', function () {
     const { getState, counterA } = setup();
-    counterA.samples.count = [
+    counterA.sampleGroups[0].samples.count = [
       // The first value gets zeroed out due to a work-around for Bug 1520587. It
       // can be much larger than all the rest of the values, as it doesn't ever
       // get reset.
@@ -3487,7 +3179,7 @@ describe('counter selectors', function () {
       -2, 3, -5, 7, -11, 13, -17, 19, 23,
     ];
     expect(
-      getCounterSelectors(0).getAccumulateCounterSamples(getState())
+      getCounterSelectors(0).getAccumulateCounterSamples(getState())[0]
     ).toEqual({
       accumulatedCounts: [0, -2, 1, -4, 3, -8, 5, -12, 7, 30],
       countRange: 42,
@@ -3663,14 +3355,67 @@ describe('right clicked marker info', () => {
   });
 });
 
+describe('pages and active tab selectors', function () {
+  // Setting some IDs here so we can use those inside the setup and test functions.
+  const firstTabTabID = 1;
+  const secondTabTabID = 4;
+
+  // Setup an empty profile with pages array and activeTabID
+  function setup(activeTabID: TabID) {
+    const { profile, ...pageInfo } = addActiveTabInformationToProfile(
+      getEmptyProfile(),
+      activeTabID
+    );
+    // Adding an empty thread to the profile so the loadProfile function won't complain
+    profile.threads.push(getEmptyThread());
+
+    const { dispatch, getState } = storeWithProfile(profile);
+    dispatch(
+      changeTimelineTrackOrganization({
+        type: 'active-tab',
+        tabID: activeTabID,
+      })
+    );
+    return { profile, dispatch, getState, ...pageInfo };
+  }
+
+  it('getInnerWindowIDSetByTabID will construct the whole map correctly', function () {
+    const { getState, firstTabInnerWindowIDs, secondTabInnerWindowIDs } =
+      setup(firstTabTabID); // the given argument is not important for this test
+    const objectResult = [
+      [firstTabTabID, new Set(firstTabInnerWindowIDs)],
+      [secondTabTabID, new Set(secondTabInnerWindowIDs)],
+    ];
+    const result = new Map(objectResult);
+    expect(ProfileViewSelectors.getInnerWindowIDSetByTabID(getState())).toEqual(
+      result
+    );
+  });
+
+  it('getRelevantInnerWindowIDsForCurrentTab will get the correct InnerWindowIDs for the first tab', function () {
+    const { getState, firstTabInnerWindowIDs } = setup(firstTabTabID);
+    expect(
+      ProfileViewSelectors.getRelevantInnerWindowIDsForCurrentTab(getState())
+    ).toEqual(new Set(firstTabInnerWindowIDs));
+  });
+
+  it('getRelevantInnerWindowIDsForCurrentTab will get the correct InnerWindowIDs for the second tab', function () {
+    const { getState, secondTabInnerWindowIDs } = setup(secondTabTabID);
+    expect(
+      ProfileViewSelectors.getRelevantInnerWindowIDsForCurrentTab(getState())
+    ).toEqual(new Set(secondTabInnerWindowIDs));
+  });
+
+  it('getRelevantInnerWindowIDsForCurrentTab will return an empty set for an ID that is not in the array', function () {
+    const { getState } = setup(99999); // a non-existent TabID
+    expect(
+      ProfileViewSelectors.getRelevantInnerWindowIDsForCurrentTab(getState())
+    ).toEqual(new Set());
+  });
+});
+
 describe('traced timing', function () {
-  function setup(
-    {
-      inverted,
-      previewSelection,
-    }: { inverted: boolean; previewSelection?: StartEndRange },
-    textSamples: string
-  ) {
+  function setup({ inverted }: {| inverted: boolean |}, textSamples: string) {
     const { profile, funcNamesDictPerThread } =
       getProfileFromTextSamples(textSamples);
 
@@ -3678,37 +3423,21 @@ describe('traced timing', function () {
 
     const { getState, dispatch } = storeWithProfile(profile);
     dispatch(ProfileView.changeInvertCallstack(inverted));
+    const { callNodeTable } = selectedThreadSelectors.getCallNodeInfo(
+      getState()
+    );
 
-    if (previewSelection) {
-      const { start, end } = previewSelection;
-      dispatch(
-        ProfileView.updatePreviewSelection({
-          isModifying: false,
-          selectionStart: start,
-          selectionEnd: end,
-        })
-      );
-    }
-
-    const callNodeInfo = selectedThreadSelectors.getCallNodeInfo(getState());
-
-    const tracedTiming = ensureExists(
+    const { running, self } = ensureExists(
       selectedThreadSelectors.getTracedTiming(getState()),
       'Expected to get a traced timing.'
     );
 
     return {
       funcNames: funcNamesDictPerThread[0],
-      getSelfAndTotal: (...callNodePath: CallNodePath) => {
-        const callNodeIndex = ensureExists(
-          callNodeInfo.getCallNodeIndexFromPath(callNodePath)
-        );
-        return getSelfAndTotalForCallNode(
-          callNodeIndex,
-          callNodeInfo,
-          tracedTiming
-        );
-      },
+      getCallNode: (...callNodePath) =>
+        ensureExists(getCallNodeIndexFromPath(callNodePath, callNodeTable)),
+      running,
+      self,
       profile,
     };
   }
@@ -3716,7 +3445,9 @@ describe('traced timing', function () {
   it('computes traced timing', function () {
     const {
       funcNames: { A, B, C },
-      getSelfAndTotal,
+      getCallNode,
+      running,
+      self,
       profile,
     } = setup(
       { inverted: false },
@@ -3727,18 +3458,24 @@ describe('traced timing', function () {
       `
     );
 
-    expect(getSelfAndTotal(A)).toEqual({ self: 2, total: 6 });
-    expect(getSelfAndTotal(A, B)).toEqual({ self: 4, total: 4 });
+    expect(running[getCallNode(A)]).toBe(6);
+    expect(self[getCallNode(A)]).toBe(2);
+
+    expect(running[getCallNode(A, B)]).toBe(4);
+    expect(self[getCallNode(A, B)]).toBe(4);
 
     // This is the last sample, which is deduced to be the interval length.
-    const interval = profile.meta.interval;
-    expect(getSelfAndTotal(C)).toEqual({ self: interval, total: interval });
+    expect(running[getCallNode(C)]).toBe(profile.meta.interval);
+    expect(self[getCallNode(C)]).toBe(profile.meta.interval);
   });
 
   it('computes traced timing for an inverted tree', function () {
     const {
       funcNames: { A, B, C },
-      getSelfAndTotal,
+      getCallNode,
+      running,
+      // Rename self to make the assertions more readable.
+      self: self___,
     } = setup(
       { inverted: true },
       `
@@ -3756,15 +3493,26 @@ describe('traced timing', function () {
     );
 
     // This test is a bit hard to assert in a really readable fasshion.
-    // total: [ 1, 4, 4, 1.5, 1, 1 ]
-    // Self:  [ 1, 4, 0, 1.5, 0, 0 ]
+    // Running: [ 1, 4, 4, 1.5, 1, 1 ]
+    // Self:    [ 1, 4, 0, 1.5, 0, 0 ]
 
-    expect(getSelfAndTotal(A)).toEqual({ self: 1, total: 1 });
-    expect(getSelfAndTotal(B)).toEqual({ self: 4, total: 4 });
-    expect(getSelfAndTotal(B, A)).toEqual({ self: 0, total: 4 });
-    expect(getSelfAndTotal(C)).toEqual({ self: 1.5, total: 1.5 });
-    expect(getSelfAndTotal(C, B)).toEqual({ self: 0, total: 1 });
-    expect(getSelfAndTotal(C, B, A)).toEqual({ self: 0, total: 1 });
+    expect(running[getCallNode(A)]).toBe(1);
+    expect(self___[getCallNode(A)]).toBe(1);
+
+    expect(running[getCallNode(B)]).toBe(4);
+    expect(self___[getCallNode(B)]).toBe(4);
+
+    expect(running[getCallNode(B, A)]).toBe(4);
+    expect(self___[getCallNode(B, A)]).toBe(0);
+
+    expect(running[getCallNode(C)]).toBe(1.5);
+    expect(self___[getCallNode(C)]).toBe(1.5);
+
+    expect(running[getCallNode(C, B)]).toBe(1);
+    expect(self___[getCallNode(C, B)]).toBe(0);
+
+    expect(running[getCallNode(C, B, A)]).toBe(1);
+    expect(self___[getCallNode(C, B, A)]).toBe(0);
   });
 
   it('does not compute traced timing for other types', function () {
@@ -3776,47 +3524,17 @@ describe('traced timing', function () {
     // Create a weighted samples table.
     const [{ samples }] = profile.threads;
     samples.weightType = 'tracing-ms';
-    samples.weight = samples.stack.map(() => 1);
+    samples.weight = samples.time.map(() => 1);
 
     const { getState } = storeWithProfile(profile);
     expect(selectedThreadSelectors.getTracedTiming(getState())).toBe(null);
-  });
-
-  it('computes traced timing based on the preview selection', function () {
-    const {
-      funcNames: { A, B, C },
-      getSelfAndTotal,
-      profile,
-    } = setup(
-      { inverted: false, previewSelection: { start: 1, end: 5.5 } },
-      `
-        0  1  5  6
-        A  A  A  C
-           B
-      `
-    );
-
-    // The preview range only contains the sample at 1 and the sample at 5.
-    // The first sample will have a "traced duration" of 4ms (5ms - 1ms), and
-    // the second sample will have a "traced duration" of the interval, because
-    // it's the last sample in the range.
-
-    expect(getSelfAndTotal(A)).toEqual({
-      self: profile.meta.interval,
-      total: 4 + profile.meta.interval,
-    });
-    expect(getSelfAndTotal(A, B)).toEqual({ self: 4, total: 4 });
-
-    // Call node [C] is fully outside the preview range, so we should have no
-    // traced duration for it.
-    expect(getSelfAndTotal(C)).toEqual({ self: 0, total: 0 });
   });
 });
 
 // Verify that getProcessedEventDelays gives the correct values for event delays.
 describe('getProcessedEventDelays', function () {
   // Setup a profile with meaningful event delay values.
-  function setup(eventDelay?: Array<Milliseconds | null>) {
+  function setup(eventDelay: ?Array<?Milliseconds>) {
     const profile = getEmptyProfile();
 
     // Create event delay values.
@@ -4027,14 +3745,12 @@ describe('timeline type', function () {
     );
   });
 
-  it('should use the cpu-category view even if no cpu is provided', () => {
+  it('should use the category view when cpu is not provided', () => {
     const { profile } = getProfileFromTextSamples('A');
 
     // Load the store after mutating the profile.
     const { getState } = storeWithProfile(profile);
-    expect(UrlStateSelectors.getTimelineType(getState())).toEqual(
-      'cpu-category'
-    );
+    expect(UrlStateSelectors.getTimelineType(getState())).toEqual('category');
   });
 
   it('should use the stack height view when category and cpu is not provided', () => {

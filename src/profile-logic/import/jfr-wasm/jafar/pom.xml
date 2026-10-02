@@ -78,7 +78,7 @@
                                 <argument>${project.build.directory}</argument>
                                 <argument>${settings.localRepository}/me/bechberger/condensed-data/${condensed-data.version}/condensed-data-${condensed-data.version}-reader.jar</argument>
                                 <argument>${settings.localRepository}/me/bechberger/femtolz4/${femtolz4.version}/femtolz4-${femtolz4.version}.jar</argument>
-                                <argument>${settings.localRepository}/me/bechberger/jfrtofp/0.0.11/jfrtofp-0.0.11.jar</argument>
+                                <argument>${settings.localRepository}/me/bechberger/jfrtofp/0.0.12/jfrtofp-0.0.12.jar</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -132,7 +132,7 @@
         <dependency>
             <groupId>me.bechberger</groupId>
             <artifactId>jfrtofp</artifactId>
-            <version>0.0.11</version>
+            <version>0.0.12</version>
         </dependency>
         <dependency>
             <groupId>org.graalvm.sdk</groupId>
