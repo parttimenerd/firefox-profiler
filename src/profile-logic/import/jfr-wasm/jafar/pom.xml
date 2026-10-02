@@ -123,16 +123,43 @@
             <artifactId>condensed-data</artifactId>
             <version>${condensed-data.version}</version>
             <classifier>reader</classifier>
+            <exclusions>
+                <!-- lz4-java triggers a GraalVM WASM float-CAS compiler bug.
+                     WASM only reads CJFR (femtolz4); lz4-java (writer) is not needed. -->
+                <exclusion>
+                    <groupId>at.yawk.lz4</groupId>
+                    <artifactId>lz4-java</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.openjdk.jmc</groupId>
+                    <artifactId>common</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>me.bechberger</groupId>
             <artifactId>femtolz4</artifactId>
             <version>${femtolz4.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>at.yawk.lz4</groupId>
+                    <artifactId>lz4-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>me.bechberger</groupId>
             <artifactId>jfrtofp</artifactId>
             <version>0.0.13</version>
+            <exclusions>
+                <!-- lz4-java triggers a GraalVM WASM float-CAS compiler bug
+                     (GraalError: unhandled compare on VarHandleFloats).
+                     jafar-parser (and femtolz4) are already direct deps. -->
+                <exclusion>
+                    <groupId>at.yawk.lz4</groupId>
+                    <artifactId>lz4-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.graalvm.sdk</groupId>
